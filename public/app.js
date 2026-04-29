@@ -7,20 +7,33 @@ const resultEl = document.getElementById("result");
 const projectName = document.getElementById("project-name");
 const projectMeta = document.getElementById("project-meta");
 const writtenTo = document.getElementById("written-to");
+const sourceBadge = document.getElementById("result-source-badge");
 const fileList = document.getElementById("file-list");
 const activePath = document.getElementById("active-path");
 const fileContent = document.getElementById("file-content");
 const copyBtn = document.getElementById("copy");
 const downloadZipBtn = document.getElementById("download-zip");
+const galleryEl = document.getElementById("example-cards");
 
 let currentFiles = [];
 let activeIndex = -1;
 let lastIdea = "";
 let lastSlug = "";
+let resultSource = null; // "generate" | "example" | null
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
   statusEl.classList.toggle("error", isError);
+}
+
+function setSourceBadge(label) {
+  if (label) {
+    sourceBadge.textContent = label;
+    sourceBadge.hidden = false;
+  } else {
+    sourceBadge.textContent = "";
+    sourceBadge.hidden = true;
+  }
 }
 
 function renderFileList() {
@@ -29,7 +42,10 @@ function renderFileList() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = file.path;
-    btn.className = i === activeIndex ? "active" : "";
+    if (i === activeIndex) {
+      btn.classList.add("active");
+      btn.setAttribute("aria-current", "true");
+    }
     btn.addEventListener("click", () => selectFile(i));
     fileList.appendChild(btn);
   });
@@ -43,6 +59,186 @@ function selectFile(i) {
   fileContent.textContent = file.content;
   renderFileList();
 }
+
+function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath }) {
+  currentFiles = files;
+  activeIndex = 0;
+  lastIdea = idea;
+  lastSlug = slug;
+  resultSource = source;
+
+  projectName.textContent = title;
+  projectMeta.textContent = meta;
+  writtenTo.textContent = writtenToPath ? `Written to: ${writtenToPath}` : "";
+  setSourceBadge(source === "example" ? "Example" : "");
+  resultEl.hidden = false;
+  renderFileList();
+  selectFile(0);
+}
+
+// ---- Example gallery ----
+
+function renderExampleCards(examples) {
+  galleryEl.innerHTML = "";
+  galleryEl.setAttribute("aria-busy", "false");
+  if (!examples.length) {
+    const li = document.createElement("li");
+    li.className = "example-card placeholder";
+    li.textContent = "No examples available.";
+    galleryEl.appendChild(li);
+    return;
+  }
+  for (const ex of examples) {
+    const li = document.createElement("li");
+    li.className = "example-card";
+
+    const title = document.createElement("h3");
+    title.className = "card-title";
+    title.textContent = ex.title;
+
+    const idea = document.createElement("p");
+    idea.className = "card-idea";
+    idea.textContent = `"${ex.idea}"`;
+
+    const desc = document.createElement("p");
+    desc.className = "card-desc";
+    desc.textContent = ex.description;
+
+    const meta = document.createElement("p");
+    meta.className = "card-meta";
+    meta.textContent = `${ex.fileCount} files · slug: ${ex.slug}`;
+
+    const actions = document.createElement("div");
+    actions.className = "card-actions";
+
+    const previewBtn = document.createElement("button");
+    previewBtn.type = "button";
+    previewBtn.textContent = "Preview example";
+    previewBtn.setAttribute("aria-label", `Preview example: ${ex.title}`);
+    previewBtn.addEventListener("click", () => previewExample(ex.id, previewBtn));
+
+    const useBtn = document.createElement("button");
+    useBtn.type = "button";
+    useBtn.className = "secondary";
+    useBtn.textContent = "Use this idea";
+    useBtn.setAttribute("aria-label", `Use this idea as input: ${ex.idea}`);
+    useBtn.addEventListener("click", () => useIdea(ex.idea));
+
+    actions.append(previewBtn, useBtn);
+    li.append(title, idea, desc, meta, actions);
+    galleryEl.appendChild(li);
+  }
+}
+
+async function loadExamples() {
+  try {
+    const res = await fetch("/api/examples");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load examples.");
+    renderExampleCards(data.examples || []);
+  } catch (err) {
+    galleryEl.innerHTML = "";
+    galleryEl.setAttribute("aria-busy", "false");
+    const li = document.createElement("li");
+    li.className = "example-card placeholder";
+    li.textContent = `Could not load examples: ${err.message}`;
+    galleryEl.appendChild(li);
+  }
+}
+
+async function previewExample(id, triggerBtn) {
+  const original = triggerBtn ? triggerBtn.textContent : null;
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.textContent = "Loading…";
+  }
+  setStatus("Loading example…");
+  try {
+    const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to load example.");
+    renderResult({
+      projectName: data.context.projectName,
+      meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
+      files: data.files,
+      slug: data.context.slug,
+      idea: data.idea,
+      source: "example",
+      writtenToPath: null
+    });
+    setStatus(`Loaded example: ${data.title}.`);
+    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (err) {
+    setStatus(err.message || "Failed to load example.", true);
+  } finally {
+    if (triggerBtn) {
+      triggerBtn.disabled = false;
+      triggerBtn.textContent = original;
+    }
+  }
+}
+
+function useIdea(idea) {
+  ideaInput.value = idea;
+  ideaInput.focus();
+  ideaInput.setSelectionRange(idea.length, idea.length);
+  setStatus("Idea loaded into the form. Click Generate kit to continue.");
+}
+
+// ---- Generate flow ----
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const idea = ideaInput.value.trim();
+  if (!idea) {
+    setStatus("Enter an idea first.", true);
+    ideaInput.focus();
+    return;
+  }
+  submitBtn.disabled = true;
+  setStatus("Generating…");
+
+  try {
+    const res = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea, persist: persistInput.checked })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setStatus(data.error || "Generation failed.", true);
+      return;
+    }
+    renderResult({
+      projectName: data.context.projectName,
+      meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
+      files: data.files,
+      slug: data.context.slug,
+      idea,
+      source: "generate",
+      writtenToPath: data.writtenTo
+    });
+    setStatus(`Generated ${data.files.length} files.`);
+  } catch (err) {
+    setStatus(err.message || "Network error.", true);
+  } finally {
+    submitBtn.disabled = false;
+  }
+});
+
+// ---- Copy + Download ZIP ----
+
+copyBtn.addEventListener("click", async () => {
+  if (activeIndex < 0) return;
+  try {
+    await navigator.clipboard.writeText(currentFiles[activeIndex].content);
+    copyBtn.textContent = "Copied";
+    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1200);
+  } catch {
+    copyBtn.textContent = "Copy failed";
+    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+  }
+});
 
 downloadZipBtn.addEventListener("click", async () => {
   if (!lastIdea) return;
@@ -79,54 +275,6 @@ downloadZipBtn.addEventListener("click", async () => {
   }
 });
 
-copyBtn.addEventListener("click", async () => {
-  if (activeIndex < 0) return;
-  try {
-    await navigator.clipboard.writeText(currentFiles[activeIndex].content);
-    copyBtn.textContent = "Copied";
-    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1200);
-  } catch {
-    copyBtn.textContent = "Copy failed";
-    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
-  }
-});
+// ---- Bootstrap ----
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const idea = ideaInput.value.trim();
-  if (!idea) {
-    setStatus("Enter an idea first.", true);
-    return;
-  }
-  submitBtn.disabled = true;
-  setStatus("Generating…");
-
-  try {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idea, persist: persistInput.checked })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus(data.error || "Generation failed.", true);
-      return;
-    }
-
-    currentFiles = data.files;
-    activeIndex = 0;
-    lastIdea = idea;
-    lastSlug = data.context.slug;
-    projectName.textContent = data.context.projectName;
-    projectMeta.textContent = `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`;
-    writtenTo.textContent = data.writtenTo ? `Written to: ${data.writtenTo}` : "";
-    resultEl.hidden = false;
-    renderFileList();
-    selectFile(0);
-    setStatus(`Generated ${currentFiles.length} files.`);
-  } catch (err) {
-    setStatus(err.message || "Network error.", true);
-  } finally {
-    submitBtn.disabled = false;
-  }
-});
+loadExamples();

@@ -1,26 +1,14 @@
-import { resolve, dirname, join } from "node:path";
+import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit } from "../src/index.js";
 import { writeKit } from "../src/utils/write.js";
+import { EXAMPLES } from "../src/examples.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const EXAMPLES = [
-  {
-    folder: "small-business-website-system",
-    idea: "A website system for small local businesses",
-    now: "2026-04-29T00:00:00Z"
-  },
-  {
-    folder: "smb-accounting-saas-dashboard",
-    idea: "A SaaS dashboard for small business accountants",
-    now: "2026-04-29T00:00:00Z"
-  }
-];
-
 async function main() {
   for (const ex of EXAMPLES) {
-    const target = resolve(__dirname, "..", "examples", ex.folder);
+    const target = resolve(__dirname, "..", "examples", ex.id);
     const { files, context } = generateKit(ex.idea, { now: ex.now });
     await writeKit(files, target);
     console.log(`Built example: ${context.projectName} -> ${target}`);

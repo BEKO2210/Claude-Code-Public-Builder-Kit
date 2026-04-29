@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { generateKit, FILE_PLAN } from "../src/index.js";
 import { buildContext } from "../src/context.js";
 import { buildZipBuffer } from "../src/utils/zip.js";
+import { EXAMPLES, findExample, isSafeExampleId } from "../src/examples.js";
 import app from "../server.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -188,4 +189,124 @@ test("second example demonstrates SaaS / dashboard / accounting context", () => 
   assert.match(ctx.audience, /small business accountants/i);
   assert.equal(ctx.domain, "professional services");
   assert.match(ctx.projectName, /SaaS/);
+});
+
+test("example registry: ids are unique, safe, and resolvable", () => {
+  assert.ok(EXAMPLES.length >= 2, "registry should ship at least 2 examples");
+  const ids = EXAMPLES.map((e) => e.id);
+  assert.equal(new Set(ids).size, ids.length, "ids must be unique");
+  for (const ex of EXAMPLES) {
+    assert.ok(isSafeExampleId(ex.id), `unsafe example id: ${ex.id}`);
+    assert.equal(findExample(ex.id)?.id, ex.id);
+    assert.ok(typeof ex.idea === "string" && ex.idea.length > 0);
+    assert.ok(typeof ex.title === "string" && ex.title.length > 0);
+    assert.ok(typeof ex.description === "string" && ex.description.length > 20);
+    assert.ok(typeof ex.now === "string");
+  }
+});
+
+test("example registry: each example folder on disk matches its id", async () => {
+  for (const ex of EXAMPLES) {
+    const dir = resolve(REPO_ROOT, "examples", ex.id);
+    const files = await listMarkdownFiles(dir);
+    assert.equal(files.length, 12, `${ex.id} should have 12 .md files`);
+  }
+});
+
+test("GET /api/examples returns both examples with metadata", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/examples`);
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.ok(Array.isArray(data.examples));
+    assert.equal(data.examples.length, EXAMPLES.length);
+    for (const item of data.examples) {
+      assert.ok(item.id);
+      assert.ok(item.title);
+      assert.ok(item.idea);
+      assert.ok(item.slug);
+      assert.ok(item.description);
+      assert.equal(item.fileCount, 12);
+      assert.equal(item.files.length, 12);
+      // Files in the list endpoint are paths only, not content.
+      for (const f of item.files) assert.equal(typeof f, "string");
+    }
+    const ids = data.examples.map((e) => e.id).sort();
+    assert.deepEqual(ids, EXAMPLES.map((e) => e.id).sort());
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /api/examples/:id returns a kit with 12 files", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    for (const ex of EXAMPLES) {
+      const res = await fetch(`http://127.0.0.1:${port}/api/examples/${ex.id}`);
+      assert.equal(res.status, 200, `expected 200 for ${ex.id}`);
+      const data = await res.json();
+      assert.equal(data.id, ex.id);
+      assert.equal(data.idea, ex.idea);
+      assert.ok(data.context);
+      assert.equal(data.files.length, 12);
+      assert.deepEqual(data.files.map((f) => f.path), EXPECTED_FILES);
+      // Content is included in the detail endpoint.
+      for (const f of data.files) {
+        assert.ok(Buffer.byteLength(f.content, "utf8") >= 800);
+      }
+    }
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /api/examples/:id returns 404 for unknown id", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/examples/does-not-exist`);
+    assert.equal(res.status, 404);
+    const data = await res.json();
+    assert.match(data.error, /not found/i);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /api/examples/:id returns 400 for unsafe id (path traversal)", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    // Express normalises ".." in the path, but we still defend explicitly.
+    const res = await fetch(`http://127.0.0.1:${port}/api/examples/UPPERCASE_BAD`);
+    assert.equal(res.status, 400);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("POST /api/generate still works after gallery additions", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/generate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "A platform for indie game studios", persist: false })
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.files.length, 12);
+    assert.equal(data.writtenTo, null);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
 });

@@ -2,6 +2,70 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #003 — 2026-04-29 — Example gallery + preview experience + a11y pass
+
+**Phase:** Phase 1 — UX surface
+**Duration:** ~1 session
+**Goal going in:** Make the public UI immediately understandable — a visitor lands, browses real example kits, previews their files, and can either generate their own kit or download a ZIP without needing to read the docs first.
+
+**What changed**
+- **Example registry as single source of truth** at `src/examples.js`. Holds `{ id, idea, slug, title, description, now }` for every shipped example, plus `findExample()` and `isSafeExampleId()` helpers. Validates ids against `/^[a-z0-9][a-z0-9-]*$/` and length ≤ 80.
+- **Refactored** `scripts/build-example.js` to consume the registry. Removed the duplicate hardcoded list. `npm run generate:examples` continues to produce byte-identical output (verified via clean post-regen `git status`).
+- **New API endpoints** in `server.js`:
+  - `GET /api/examples` — returns `{ examples: [{id, title, description, idea, slug, fileCount, files[]}] }`. `files` in the list view is paths only, not content (keeps the response light).
+  - `GET /api/examples/:id` — returns the full kit `{id, title, description, idea, slug, context, files: [{path, content}]}`. Generated in-memory from the registry on each request, so it always matches what's on disk.
+  - Validates `:id` with `isSafeExampleId` (`400` on unsafe input) and uses `findExample` for lookup (`404` on unknown id). No filesystem reads in either handler — defense-in-depth against path traversal.
+- **UI: Example gallery** in `public/index.html` and `public/style.css`. Cards show title, the original idea (italic), description, and `<fileCount> files · slug: <slug>`. Each card has two buttons:
+  - **Preview example** — fetches `/api/examples/:id`, populates the existing file viewer, shows an "Example" badge in the result header.
+  - **Use this idea** — drops the idea into the textarea, focuses + selects the end of the field, and tells the user via the status line.
+- **Refactored `public/app.js`** so generate and preview both flow through a single `renderResult()` function. Avoids duplicate file-tree code and guarantees the two flows look identical.
+- **Accessibility pass** (practical, not over-engineered):
+  - Skip link (`Skip to main content`) targets `#main` with `tabindex="-1"`.
+  - Global `:focus-visible` outline using the accent color.
+  - All interactive elements use real `<button>`s; the file list adds `aria-current="true"` on the active file (and styles match).
+  - The status region has `role="status"` + `aria-live="polite"` so updates are announced.
+  - The example gallery uses `aria-busy` while loading and `aria-live="polite"` for the card list.
+  - Each gallery button has an explicit `aria-label` ("Preview example: <title>", "Use this idea as input: <idea>") so screen-reader users know which card the action belongs to.
+  - Form gets a `for=`/`id=` label, an `aria-describedby` hint, and the file viewer `<pre>` is keyboard-focusable for scrolling.
+- **Tests grew 17 → 24** in `tests/generator.test.js`:
+  - Registry: ids unique, safe, resolvable; `description` ≥ 20 chars; folder on disk for each id has 12 `.md` files.
+  - `GET /api/examples` returns the full registry with paths-only `files` and `fileCount: 12`.
+  - `GET /api/examples/:id` returns 12 files with full content for every registered example, paths match `EXPECTED_FILES`, and each file is ≥ 800 bytes.
+  - `GET /api/examples/:id` returns `404` for unknown ids and `400` for unsafe ids.
+  - `POST /api/generate` and the existing ZIP / determinism tests stay green.
+
+**Files touched**
+- Added: `src/examples.js`.
+- Modified: `server.js`, `scripts/build-example.js`, `public/index.html`, `public/style.css`, `public/app.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- Generated examples regenerated (no on-disk diff — registry refactor is byte-stable).
+
+**Tests run**
+- `npm test` → **24/24** pass.
+- `npm run generate:examples` → both example folders produced; `git status -- examples` is clean post-regen (CI gate satisfied).
+- Live smoke on `:5176`:
+  - `GET /api/examples` → 200, both examples, paths-only `files`, `fileCount: 12`.
+  - `GET /api/examples/small-business-website-system` → 200, full kit body.
+  - `GET /api/examples/bogus` → 404 with `{ "error": "Example not found." }`.
+  - `GET /api/examples/UPPER` → 400 with `{ "error": "Invalid example id." }`.
+  - `GET /` → 200 (UI loads).
+
+**Known limitations**
+- Examples are generated in-memory on each request rather than served from a static cache. Cost is negligible at current size (~80 KB markdown, fully synchronous), but for a much larger registry we'd cache once at boot. Acceptable for now.
+- Accessibility was a practical pass, not an automated audit. No axe / Lighthouse run yet (next-run candidate).
+- The file viewer doesn't yet support keyboard arrow-key navigation between files. Tab + Enter works, which is sufficient for keyboard users; arrow keys would be a nice extra.
+- The example badge appears only on previewed examples — there's no way to distinguish between two example previews in the URL bar. Acceptable; the result header already shows the title.
+
+**Decisions**
+- Generated examples in-memory rather than reading `examples/<id>/` from disk. Removes any path-traversal risk and guarantees the API matches the generator's current output (drift is impossible). CI separately enforces that the on-disk example matches.
+- Used real `<button>`s for everything interactive instead of role-styled `<div>`s. Keeps a11y "free" (focus, click, keyboard) and removes the need for custom event handlers.
+- Did not add a frontend framework, build step, or any extra runtime dependency. Gallery is ~50 lines of vanilla JS in `app.js`.
+- Did not introduce a separate caching layer. Premature.
+
+**Next session starts with**
+- Pick an item from the prioritized shortlist in `CLAUDE.md` ("Next meaningful run after this one"). The recommended one is **expanding the domain heuristics** in `src/context.js` (5–10 new keyword groups + parametric tests), since it has the highest leverage on the quality of generated docs across the long tail of possible inputs.
+
+---
+
 ## Run #002 — 2026-04-29 — Foundation hardening: LICENSE, CI, ZIP download, second example
 
 **Phase:** Phase 0 — Foundation (closing gaps)

@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { generateKit } from "./src/index.js";
 import { writeKit } from "./src/utils/write.js";
 import { buildZipBuffer } from "./src/utils/zip.js";
+import { EXAMPLES, findExample, isSafeExampleId } from "./src/examples.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5173;
@@ -52,6 +53,43 @@ function readIdea(req) {
   if (idea.length > 500) return { error: "Idea must be 500 characters or fewer." };
   return { idea };
 }
+
+app.get("/api/examples", (_req, res) => {
+  const list = EXAMPLES.map((ex) => {
+    const { context, files } = generateKit(ex.idea, { now: ex.now });
+    return {
+      id: ex.id,
+      title: ex.title,
+      description: ex.description,
+      idea: ex.idea,
+      slug: context.slug,
+      fileCount: files.length,
+      files: files.map((f) => f.path)
+    };
+  });
+  res.json({ examples: list });
+});
+
+app.get("/api/examples/:id", (req, res) => {
+  const id = req.params.id;
+  if (!isSafeExampleId(id)) {
+    return res.status(400).json({ error: "Invalid example id." });
+  }
+  const ex = findExample(id);
+  if (!ex) {
+    return res.status(404).json({ error: "Example not found." });
+  }
+  const { context, files } = generateKit(ex.idea, { now: ex.now });
+  res.json({
+    id: ex.id,
+    title: ex.title,
+    description: ex.description,
+    idea: ex.idea,
+    slug: context.slug,
+    context,
+    files
+  });
+});
 
 app.post("/api/generate.zip", async (req, res) => {
   const parsed = readIdea(req);

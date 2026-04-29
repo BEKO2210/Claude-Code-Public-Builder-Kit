@@ -14,30 +14,42 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 .
 ├── .github/workflows/ci.yml  # Tests + example reproducibility check on push/PR
 ├── LICENSE                   # MIT
-├── server.js                 # Express app: /api/health, /api/generate, /api/generate.zip
+├── server.js                 # Express app: /api/health, /api/generate, /api/generate.zip,
+│                             #              /api/examples, /api/examples/:id
 ├── public/                   # Vanilla HTML/CSS/JS — no framework, no build
-│   ├── index.html            # Form, file viewer, Copy + Download ZIP buttons
-│   ├── style.css
-│   └── app.js                # Submit → render files → optional ZIP download
+│   ├── index.html            # Form + Example gallery + file viewer
+│   ├── style.css             # Includes focus-visible, skip link, gallery cards
+│   └── app.js                # Generate / Preview / Use this idea / Copy / Download ZIP
 ├── src/
 │   ├── index.js              # generateKit(idea, opts) — orchestrates 12 templates
 │   ├── context.js            # Heuristic idea → {projectName, slug, productType, audience, domain, generatedAt}
+│   ├── examples.js           # SINGLE SOURCE OF TRUTH for worked examples (id, idea, title, description, now)
 │   ├── templates/            # 12 modules, each `(ctx) => markdown string`
 │   └── utils/
 │       ├── slug.js           # slugify + acronym-aware titleCase
 │       ├── write.js          # writeKit(files, dir)
 │       └── zip.js            # buildZipBuffer(files, rootName) using archiver
 ├── scripts/
-│   └── build-example.js      # Regenerates everything under examples/ deterministically
+│   └── build-example.js      # Iterates EXAMPLES from src/examples.js → writes examples/<id>/
 ├── examples/
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (17 tests, no external deps)
+│   └── generator.test.js     # node:test suite (24 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
 Runtime dependencies: **express** (HTTP), **archiver** (ZIP). Nothing else.
+
+### Example registry as source of truth
+
+`src/examples.js` is the single registry consumed by:
+
+- `scripts/build-example.js` (writes the folders under `examples/<id>/`)
+- `server.js` (`/api/examples`, `/api/examples/:id` — generate from registry in-memory, never read arbitrary paths from disk)
+- `tests/generator.test.js` (id uniqueness, safety, on-disk parity, API parity)
+
+Do not duplicate the example list anywhere else. Adding a new example = appending to `EXAMPLES`, running `npm run generate:examples`, and committing the resulting folder. CI will fail if the folder drifts from what the registry produces.
 
 ## Guarantees we make to users
 
@@ -94,9 +106,9 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 17 tests).
-- [ ] If templates changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
-- [ ] `RUN_LOG.md` has a new entry covering changes, tests, and next steps.
+- [ ] `npm test` passes (currently 24 tests).
+- [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
+- [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
 - [ ] No staged-but-uncommitted noise.
 - [ ] The branch is pushed.
@@ -105,10 +117,10 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Multi-example UI gallery.** Add a small "Browse examples" panel in the UI that loads the on-disk examples (read-only) so visitors can preview without typing an idea. Keep it client-only — no new backend route needed if the example folders are exposed via `express.static`.
-2. **Accessibility pass.** Audit the UI for keyboard navigation, focus order, and contrast. Document findings as a checklist in the UI section of this file.
-3. **Schema extraction.** Move the inferred-context shape into a typed schema (JSDoc + a runtime validator like Zod-or-handwritten) so contributors writing new templates can rely on it without reading `context.js`.
-4. **More heuristics.** Add 5–10 more domain keyword groups (e.g. logistics, gov-tech, climate, agriculture) and ensure each is covered by a test case in `context.js` tests.
+1. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected. Highest leverage: makes generated docs feel domain-specific for a much wider range of inputs.
+2. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
+3. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against the live UI and capture findings as a checklist here.
+4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
 
