@@ -2,6 +2,49 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #006 — 2026-04-29 — Domain heuristics: 10 → 20 groups + leading-boundary matcher
+
+**Phase:** Phase 1 — Generation quality
+**Duration:** ~0.4 session
+**Goal going in:** Make generated docs feel domain-specific for a much wider range of inputs by doubling the number of recognised domains, and harden the matcher so the existing `.includes()`-based detection stops producing latent false positives.
+
+**What changed**
+- **Doubled `DOMAIN_KEYWORDS` in `src/context.js`** from 10 groups to 20 by appending (insertion order matters — first match wins, and appending is the only safe operation): `logistics & supply chain`, `government & civic`, `climate & sustainability`, `agriculture`, `travel & tourism`, `gaming`, `non-profit & community`, `manufacturing`, `HR & recruiting`, `events & ticketing`. Each group has 5–9 keywords chosen for specificity (e.g. `gamedev`, `last-mile`, `agtech`, `ci/cd`) so they read as real-world signals, not generic nouns.
+- **Switched the matcher from `String.prototype.includes()` to a pre-compiled regex with a leading word boundary** (`\b<keyword>`, case-insensitive). Two latent bugs surfaced and were fixed in this same change:
+  - `"ci"` (a developer-tools keyword) was matching `"civic"` via substring → civic-tech ideas were classified as developer tools. Replaced bare `"ci"` / `"cd"` with the canonical phrases `"ci/cd"` and `"continuous integration"` (most ambiguous remaining bare-bigram keyword removed).
+  - `"shop"` (retail keyword) was matching `"workshop"` via substring → events ideas were classified as retail. Leading-`\b` matcher fixes this without any keyword-list change (`\bshop` matches `"shops"`, `"shopkeepers"`, but not `"workshop"`).
+  - Trailing boundary intentionally **not** required, so `"shop"` still matches `"shops"`, `"3d print"` still matches `"3d printing"`, and `"developer"` still matches `"developers"`.
+- **Added a one-line invariant comment** above `DOMAIN_KEYWORDS` documenting the first-match-wins / append-only contract — the only comment in the file, justified because the iteration-order semantics are non-obvious and the next contributor will need to know.
+- **Tests grew 24 → 35** in `tests/generator.test.js`:
+  - 10 individual parametric domain-detection tests, one per new group, with descriptive titles like `domain heuristic: "A logistics platform for last-mile couriers" → logistics & supply chain`. Each test uses an idea where the new domain is the unambiguous winner (avoiding overlap with earlier-iterated groups).
+  - 1 regression-stability test that explicitly asserts the three pre-existing example/test ideas (`"A website system for small local businesses"`, `"A SaaS dashboard for small business accountants"`, `"I want to build an app for small restaurants"`) still resolve to their original domains after the keyword expansion and the matcher change.
+
+**Files touched**
+- Modified: `src/context.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `src/templates/**`, `src/index.js`, `src/examples.js`, `src/utils/**`, `scripts/**`, `examples/**`, `docs/**`, `package.json`, CI workflow. The change is fully contained within the inference layer.
+
+**Tests run**
+- `npm test` → **35/35** pass.
+- `npm run generate:examples` → both example folders rebuilt; `git status -- examples` is clean post-regen. The matcher change and the new groups produce **byte-identical** output for both worked examples (confirmed: `"website system for small local businesses"` still resolves to `small business`, and `"SaaS dashboard for small business accountants"` still resolves to `professional services`).
+
+**Known limitations**
+- Bare 2-letter or very short keywords still need to be designed carefully. We removed `"ci"` and `"cd"` for this reason, but `"smb"` (3 letters, in `small business`) and `"ngo"` (3 letters, in `non-profit & community`) remain — both are uncommon enough as substrings of unrelated words that they're acceptable, but a future audit may want to add an opt-in trailing-boundary mode for keywords ≤ 3 chars.
+- Some domains overlap meaningfully (`"freelance designer"` is both `creative & media` and `professional services`). Today the higher-iterated group wins. A "primary + secondary domain" model would be more accurate but is out of scope until the templates are ready to consume more than one signal.
+- The 10 new groups have not been used to differentiate template content — generated docs still mention the domain in passing (e.g. `MASTERPLAN.md` writes "in **{domain}**") but don't yet specialise sections per domain. Listed as the new top priority for follow-on quality work in `CLAUDE.md`.
+- No fuzz/property test for the matcher beyond the 10+ explicit cases. With a pre-compiled regex, the failure mode would be a regex-construction error at module load time rather than a silent miss, but a basic round-trip test ("every keyword in `DOMAIN_KEYWORDS` matches itself when fed as a one-word idea") would be a cheap addition next time.
+
+**Decisions**
+- **Append-only growth of `DOMAIN_KEYWORDS`** instead of inserting groups in topical order. Reorderings would silently change which domain the existing examples land on, breaking CI's example-drift check. The new comment in `src/context.js` documents this so the next contributor doesn't lose half a session to a confusing diff.
+- **Leading-boundary regex, not full word boundary**, so plurals and natural compound suffixes still match. The `"shop" / "workshop"` and `"ci" / "civic"` failures motivated the change; full boundaries would have broken `"developers"` and `"3d printing"`.
+- **Removed `"ci"` and `"cd"` outright** rather than keeping them with a clever per-keyword length-based boundary rule. Removing two unreliable signals is simpler than encoding the rule, and the canonical replacement (`"ci/cd"`, `"continuous integration"`) is what real users actually write.
+- **Tests use `for (const c of CASES) { test(...) }`** to produce one named subtest per group — descriptive failure messages, no clever harness needed.
+- **Did not touch the templates.** Domain depth (specialising template content per domain) is a separate, larger change with its own session.
+
+**Next session starts with**
+- Schema extraction for context: write a JSDoc `@typedef` for the inferred-context shape (`{rawIdea, projectName, slug, productType, audience, domain, generatedAt, year}`) and a small runtime validator. With 20 domain values now in play, contributors writing new templates need to be able to reason about the shape without reading `src/context.js`. See `CLAUDE.md` for the new prioritized shortlist.
+
+---
+
 ## Run #005 — 2026-04-29 — Public landing page (GitHub Pages source under `/docs`)
 
 **Phase:** Phase 1 — UX surface (continued)

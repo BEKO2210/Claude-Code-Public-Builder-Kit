@@ -42,7 +42,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (24 tests, no external deps)
+│   └── generator.test.js     # node:test suite (35 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
@@ -113,7 +113,7 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 24 tests).
+- [ ] `npm test` passes (currently 35 tests).
 - [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
 - [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
@@ -124,17 +124,18 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected. Highest leverage on doc quality across the long tail of inputs.
-2. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
-3. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against both the local app and the landing page; capture findings as a checklist here.
-4. **Landing page polish.** After the page is online, iterate based on what visitors actually click — maybe add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
+1. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`. With 20 domain groups and a regex-based matcher, the contract surface is now big enough to be worth pinning down.
+2. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against both the local app and the landing page; capture findings as a checklist here.
+3. **Landing page polish.** After the page is online, iterate based on what visitors actually click — maybe add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
+4. **Domain-group depth, not breadth.** Now that we have 20 top-level groups, the next quality lever is reflecting the inferred domain *inside the templates* — e.g. `MASTERPLAN.md` could include a tiny domain-specific risks section when `ctx.domain === "climate & sustainability"`. Worth doing only after schema extraction lands.
 5. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
-- ✓ **Public landing page deployed via GitHub Pages.** Static site under `/docs/`, deployed from `main` so `npm start` keeps working. See Run #005 in `RUN_LOG.md`.
+- ✓ **Domain heuristics expanded** (10 → 20 groups) + leading-word-boundary regex matcher fixing latent false positives like `"ci" → "civic"` and `"shop" → "workshop"`. See Run #006.
+- ✓ **Public landing page deployed via GitHub Pages.** Static site under `/docs/`, deployed from `main` so `npm start` keeps working. See Run #005.
 - ✓ **Brand identity.** Animated star logo + monochrome variant + favicon (Run #004).
 - ✓ **Example gallery + preview API + accessibility pass.** (Run #003)
 

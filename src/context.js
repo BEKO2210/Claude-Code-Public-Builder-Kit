@@ -15,6 +15,8 @@ const AUDIENCE_HINTS = [
   /(?:built|made|designed)\s+for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i
 ];
 
+// First-match-wins, in insertion order. Append new groups at the end so
+// existing detection (and the worked examples on disk) remain stable.
 const DOMAIN_KEYWORDS = {
   "food & hospitality": ["restaurant", "cafe", "bistro", "bar", "menu", "kitchen", "dining"],
   "retail & e-commerce": ["shop", "store", "retail", "ecommerce", "e-commerce", "boutique"],
@@ -23,9 +25,19 @@ const DOMAIN_KEYWORDS = {
   "creative & media": ["artist", "designer", "photographer", "studio", "music", "podcast"],
   "professional services": ["lawyer", "accountant", "consultant", "agency", "freelancer"],
   "small business": ["small business", "local business", "shop owner", "smb"],
-  "developer tools": ["developer", "engineer", "devops", "ci", "cd", "code"],
+  "developer tools": ["developer", "engineer", "devops", "ci/cd", "continuous integration", "code"],
   "finance": ["bank", "finance", "invoice", "payment", "fintech"],
-  "real estate": ["property", "realtor", "rental", "lease", "house"]
+  "real estate": ["property", "realtor", "rental", "lease", "house"],
+  "logistics & supply chain": ["logistics", "shipping", "freight", "warehouse", "fleet", "dispatch", "courier", "supply chain", "last-mile"],
+  "government & civic": ["government", "civic", "public sector", "municipality", "citizen", "gov-tech", "public records"],
+  "climate & sustainability": ["climate", "sustainability", "carbon", "emissions", "renewable", "recycling", "environmental", "esg"],
+  "agriculture": ["farm", "farmer", "agriculture", "agtech", "crop", "livestock", "harvest", "ranch", "organic"],
+  "travel & tourism": ["travel", "tourism", "hotel", "booking", "trip", "itinerary", "guesthouse", "hostel", "vacation"],
+  "gaming": ["gaming", "esports", "multiplayer", "mmo", "gamedev", "indie game", "matchmaking"],
+  "non-profit & community": ["nonprofit", "non-profit", "charity", "volunteer", "ngo", "fundraising"],
+  "manufacturing": ["manufacturing", "factory", "fabrication", "cnc", "3d print", "prototyping"],
+  "HR & recruiting": ["recruiting", "hiring", "applicant tracking", "payroll", "onboarding", "human resources"],
+  "events & ticketing": ["conference", "meetup", "workshop", "ticketing", "venue"]
 };
 
 function inferProductType(idea) {
@@ -46,10 +58,22 @@ function inferAudience(idea) {
   return "early adopters in your target segment";
 }
 
+function escapeRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Pre-compile each keyword with a leading word boundary so "ci" no longer
+// matches "civic" and "shop" no longer matches "workshop". No trailing
+// boundary — we still want plurals and compound suffixes ("shops",
+// "shopkeepers", "3d printing") to match.
+const COMPILED_DOMAIN_PATTERNS = Object.entries(DOMAIN_KEYWORDS).map(([domain, keywords]) => ({
+  domain,
+  patterns: keywords.map((k) => new RegExp("\\b" + escapeRegex(k), "i"))
+}));
+
 function inferDomain(idea) {
-  const lower = idea.toLowerCase();
-  for (const [domain, keywords] of Object.entries(DOMAIN_KEYWORDS)) {
-    if (keywords.some((k) => lower.includes(k))) return domain;
+  for (const { domain, patterns } of COMPILED_DOMAIN_PATTERNS) {
+    if (patterns.some((p) => p.test(idea))) return domain;
   }
   return "general";
 }

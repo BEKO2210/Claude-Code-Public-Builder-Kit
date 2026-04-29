@@ -78,6 +78,34 @@ test("context infers product type, audience, and domain", () => {
   assert.match(ctx.slug, /small-restaurants/);
 });
 
+const DOMAIN_DETECTION_CASES = [
+  { domain: "logistics & supply chain",  idea: "A logistics platform for last-mile couriers" },
+  { domain: "government & civic",         idea: "A civic engagement app for municipality residents" },
+  { domain: "climate & sustainability",   idea: "A carbon accounting tool for sustainability teams" },
+  { domain: "agriculture",                idea: "A farm management app for organic crop growers" },
+  { domain: "travel & tourism",           idea: "A trip planning app for backpackers staying in hostels" },
+  { domain: "gaming",                     idea: "A matchmaking server for online multiplayer indie game lobbies" },
+  { domain: "non-profit & community",     idea: "A fundraising tool for nonprofit organizations" },
+  { domain: "manufacturing",              idea: "A factory floor monitoring system for manufacturing teams" },
+  { domain: "HR & recruiting",            idea: "A recruiting CRM for small-team hiring pipelines" },
+  { domain: "events & ticketing",         idea: "A ticketing platform for community workshops and meetups" }
+];
+
+for (const c of DOMAIN_DETECTION_CASES) {
+  test(`domain heuristic: "${c.idea}" → ${c.domain}`, () => {
+    const ctx = buildContext(c.idea);
+    assert.equal(ctx.domain, c.domain);
+  });
+}
+
+test("domain heuristics: existing examples remain stable after expansion", () => {
+  // The two worked examples must keep their original domain — adding new
+  // groups at the end of DOMAIN_KEYWORDS preserves first-match-wins behavior.
+  assert.equal(buildContext("A website system for small local businesses").domain, "small business");
+  assert.equal(buildContext("A SaaS dashboard for small business accountants").domain, "professional services");
+  assert.equal(buildContext("I want to build an app for small restaurants").domain, "food & hospitality");
+});
+
 test("context handles website + small-business idea", () => {
   const ctx = buildContext("A website system for small local businesses");
   assert.equal(ctx.productType, "website");
