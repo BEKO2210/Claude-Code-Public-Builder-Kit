@@ -117,10 +117,11 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected. Highest leverage: makes generated docs feel domain-specific for a much wider range of inputs.
-2. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
-3. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against the live UI and capture findings as a checklist here.
-4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
+1. **Public landing page deployed via GitHub Pages.** Author a marketing/docs surface (likely under `/docs/` published from `main`, so `npm start` keeps working) introducing the kit, embedding the logo, linking to the gallery, and providing install / usage instructions for visitors who land from search. Prerequisite for #5.
+2. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected.
+3. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
+4. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against the live UI and capture findings as a checklist here.
+5. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once the landing page is live and examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
 

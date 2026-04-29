@@ -2,6 +2,54 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #004 — 2026-04-29 — Brand identity: animated star logo + favicon
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Give the kit a real visual identity — a professional, scalable, accessible star logo with a subtle animation — and re-prioritize the next-run shortlist so the GitHub Pages landing page comes before the file-tree filter.
+
+**What changed**
+- **Logo (`public/logo.svg`)** — a five-pointed star pictorial mark. ViewBox `0 0 64 64`, geometric points computed from polar coordinates (outer radius 28, inner radius 11) so it renders crisply at any size. Two stacked polygons: a base fill using a vertical linear gradient (`#a4c2ff → #8ab4ff → #6c9bff`, matching the existing app accent colors), plus an overlay polygon filled with a radial highlight gradient (`white 35% → transparent`) for depth. Subtle `#cdd9ff` 0.8px stroke for definition.
+- **Animation** — two CSS keyframe loops embedded in the SVG (no external scripts):
+  - `bk-breathe`: `transform: scale(1) → scale(1.04) → scale(1)` over 4s, ease-in-out, infinite. Anchored at center via `transform-origin: 32px 32px`.
+  - `bk-shine`: `opacity: 0.55 → 0.95 → 0.55` over 4s on the highlight overlay, in phase with the breathe.
+  - Both wrapped in `@media (prefers-reduced-motion: reduce) { animation: none; }` so motion-sensitive users get a static logo.
+- **Accessibility** — `role="img"` + `<title>` + `<desc>` inside the SVG. The HTML `<img>` uses `alt=""` and `aria-hidden="true"` because the visible `<h1>` already names the product (avoids redundant announcement).
+- **Variants**:
+  - `public/logo-monochrome.svg` — same star geometry, `fill="currentColor"`, no animation, no gradient. For use in contexts that need a single-color or print-friendly mark.
+  - `public/favicon.svg` — same star, solid `#8ab4ff` fill, no animation, no gradient. Wired up via `<link rel="icon" type="image/svg+xml" href="/favicon.svg">` in `public/index.html`.
+- **Header lockup** — `public/index.html` now wraps the logo and `<h1>` in a `.brand` flex container so they read as a single brand mark. CSS adds a subtle outer drop-shadow on the logo (`drop-shadow(0 0 12px rgba(138, 180, 255, 0.18))`) to lift it off the dark panel, and a small responsive rule that scales the logo + heading on screens narrower than 540px.
+- **CLAUDE.md** — updated the "Next meaningful run after this one" list. New top priority is the **public landing page deployed via GitHub Pages**; the file-tree filter is now last, gated on the landing page being online.
+
+**Files touched**
+- Added: `public/logo.svg`, `public/logo-monochrome.svg`, `public/favicon.svg`.
+- Modified: `public/index.html`, `public/style.css`, `CLAUDE.md`, `RUN_LOG.md`.
+
+**Tests run**
+- `npm test` → **24/24** pass (no test changes; logo additions are static assets and don't affect the generator or API surface).
+- Live smoke on `:5177`:
+  - `GET /` → 200, 4143 bytes (HTML now references the logo + favicon).
+  - `GET /logo.svg` → 200, `image/svg+xml`, 1791 bytes.
+  - `GET /logo-monochrome.svg` → 200, `image/svg+xml`, 505 bytes.
+  - `GET /favicon.svg` → 200, `image/svg+xml`, 324 bytes.
+
+**Known limitations**
+- The skill `svg-logo-designer` referenced in the brief is not currently loaded as a Claude Code plugin in this session, so the logo was authored directly using the design principles documented there (combination-mark conventions, single concept, accessibility-first). If the skill is installed later, future logo iterations could be generated through it for full deliverable bundles (mockups, additional concepts, layout lockups).
+- Only one concept ships. The skill docs suggest 3–5 concepts per round; we picked one that fits the existing palette and shipped it. Easy to swap if the user wants alternatives.
+- No PNG raster fallback yet. Modern browsers all support SVG `<img>` and SVG favicons, so this isn't blocking. If we later need raster favicons (legacy iOS / Windows tiles), they should be exported via Inkscape / ImageMagick from `favicon.svg` and added as additional `<link rel="icon">` entries.
+- The animation uses CSS embedded in the SVG. This works fine when loaded via `<img>` in modern browsers but won't run in some very old user agents (IE11). Acceptable — the kit already requires Node ≥ 18 and modern browser features.
+
+**Decisions**
+- **One animated concept, not five.** The brief from the user emphasised "professional" and "star". A single, well-tuned star reads more professional than a buffet of options. If the user wants alternatives, this is one PR away.
+- **CSS animation, not SMIL.** SMIL is deprecated in some renderers. CSS works in `<img>`-loaded SVG and respects `prefers-reduced-motion` cleanly via a media query.
+- **Star ≠ generic Twitter star.** The 11/28 inner/outer radius ratio gives sharper points than the typical "star emoji" 0.5 ratio, which makes it feel more deliberate and less templated.
+- **Did not add a runtime dep.** Logo work is pure static SVG/CSS — zero `package.json` changes.
+
+**Next session starts with**
+- The public landing page deployed via GitHub Pages — see the new top-priority entry in `CLAUDE.md`. Recommended approach: a `/docs/` folder published from `main` (so `npm start` keeps working unaltered), with the logo embedded, the gallery summarized, and a clean install/quick-start path for visitors arriving from search. Until that's online, the file-tree filter stays parked.
+
+---
+
 ## Run #003 — 2026-04-29 — Example gallery + preview experience + a11y pass
 
 **Phase:** Phase 1 — UX surface
