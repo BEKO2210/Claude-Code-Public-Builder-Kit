@@ -167,7 +167,13 @@ Both scripts call the same builder. Each example uses a fixed `generatedAt` time
 npm test
 ```
 
-64 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), and parametric detection of all 10 newly-added domain groups (logistics, government, climate, agriculture, travel, gaming, non-profit, manufacturing, HR, events).
+67 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), parametric detection of all 10 newly-added domain groups, and accessibility (axe-core via jsdom on both HTML pages + deterministic WCAG-AA contrast).
+
+For verbose accessibility output:
+
+```bash
+npm run audit:a11y
+```
 
 ## Live landing page
 
@@ -227,7 +233,7 @@ The local Express app continues to serve `/public` and is **not** affected by an
 │   ├── small-business-website-system/   # Pre-generated worked example (12 files)
 │   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
 ├── tests/
-│   └── generator.test.js     # node:test suite (64 tests)
+│   └── generator.test.js     # node:test suite (67 tests)
 └── output/                   # Runtime-generated kits land here (git-ignored)
 ```
 

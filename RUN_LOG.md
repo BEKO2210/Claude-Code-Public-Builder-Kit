@@ -2,6 +2,103 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #012 — 2026-04-29 — A11y deep-dive: axe-core via jsdom + manual contrast pass
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.6 session
+**Goal going in:** Run an automated accessibility audit against both rendered surfaces (`public/index.html` for the local app and `docs/index.html` for the GitHub Pages landing) using the same tooling real auditors use, capture every finding, fix anything blocking, and ship a reproducible audit so future regressions are caught in CI.
+
+**What changed**
+- **Two new dev dependencies (only):** `axe-core@^4.11.4` (the de-facto WCAG runtime) and `jsdom@^29.1.0` (so we can run axe in `node:test` without spinning a real browser). Runtime dependency surface is unchanged — still just `express` + `archiver`.
+- **`tests/a11y.test.js`** — three new test cases:
+  1. axe-core run against `public/index.html` with its inlined stylesheet, asserting **zero** violations of `critical` or `serious` impact.
+  2. axe-core run against `docs/index.html` with the same assertion.
+  3. Deterministic 11-pair WCAG-AA contrast check on the actual colour pairings used in the UI (text-on-bg, muted-on-panel-2, accent-on-panel, primary-button-label-on-accent, danger-on-bg, etc.). Computed with the standard sRGB relative-luminance formula; lowest pair must be ≥ 4.5:1 for normal text or ≥ 3:1 for large text / UI components.
+- **`scripts/a11y-audit.js`** — verbose, standalone CLI version of the same audit (axe + contrast). Designed for interactive runs (`npm run audit:a11y`) when you want to see passes / incomplete / contrast ratios in full. Exit code 0 on a clean run, 1 if any axe violation or contrast failure surfaces.
+- **`package.json`** — new script `audit:a11y`. devDependencies block now exists (`axe-core`, `jsdom`).
+- **No changes to runtime code, server, templates, public/ HTML/CSS/JS, docs/ HTML/CSS, or examples.** The audit found nothing worth fixing. The manual a11y work in earlier runs (skip link in Run #003, focus-visible + aria-current + role="status" + aria-live + descriptive aria-labels) was thorough enough to clear axe at this scope.
+
+**Audit results**
+
+```
+=== PUBLIC  (npm start UI) ===
+violations:                                      0
+incomplete (jsdom limit, see contrast pass):     3
+  color-contrast      (covered by manual pass below)
+  landmark-one-main   (false-incomplete; <main> is present)
+  page-has-heading-one (false-incomplete; <h1> is present)
+passes:                                          37 rules
+
+=== DOCS   (GitHub Pages landing) ===
+violations:                                      0
+incomplete:                                      3 (same three as above)
+passes:                                          25 rules
+
+=== WCAG colour contrast (manual) ===
+✓  15.81 : 1   target 4.5   text    on bg        — body text on page background
+✓  14.59 : 1   target 4.5   text    on panel     — body text on panel surface
+✓  13.31 : 1   target 4.5   text    on panel2    — preformatted file content on panel-2
+✓   6.12 : 1   target 4.5   muted   on bg        — muted hint text on page background
+✓   5.65 : 1   target 4.5   muted   on panel     — muted hint text on panel
+✓   5.15 : 1   target 4.5   muted   on panel2    — muted text on panel-2 (file viewer header)
+✓   9.05 : 1   target 4.5   accent  on bg        — accent text/link on page background
+✓   8.34 : 1   target 4.5   accent  on panel     — accent text on panel (cards)
+✓   7.61 : 1   target 4.5   accent  on panel2    — active file name in nav
+✓   9.05 : 1   target 4.5   bg      on accent    — primary button label on accent fill
+✓  13.31 : 1   target 4.5   text    on panel2    — secondary button label on panel-2 fill
+✓   8.33 : 1   target 4.5   danger  on bg        — error status text on page background
+✓   9.05 : 1   target 3     accent  on bg        — skip-link accent on bg (large)
+all pairs pass WCAG AA
+```
+
+**A11y status checklist (locked in by tests)**
+
+- [x] Skip link to main content (`Skip to main content` → `#main`)
+- [x] Visible `:focus-visible` outline on all interactive elements
+- [x] `<main>` landmark with `tabindex="-1"` so the skip link can move focus to it
+- [x] Single, top-level `<h1>` per page; correct heading hierarchy beneath
+- [x] Form input has `<label for=>` and an `aria-describedby` hint
+- [x] All `<button>`s have visible text or descriptive `aria-label` (gallery cards: `aria-label="Preview example: <title>"`)
+- [x] Status region has `role="status"` + `aria-live="polite"` for generation feedback
+- [x] Live preview line under the textarea has `aria-live="polite"`
+- [x] Active file in the file list carries `aria-current="true"`
+- [x] Gallery list uses semantic `<ul>` of `<li>` cards with `aria-busy` while loading
+- [x] Decorative logo `<img>` is `alt=""` + `aria-hidden="true"` (h1 already names the product)
+- [x] All 11 audited colour pairs ≥ WCAG AA contrast targets
+- [x] No `target="_blank"` traps without `rel="noopener"` (verified — only the GitHub links, all with `rel="noopener"`)
+- [x] Native HTML elements throughout — no role-styled `<div>`s
+
+**Files touched**
+- Added: `tests/a11y.test.js`, `scripts/a11y-audit.js`.
+- Modified: `package.json`, `package-lock.json`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/**`, `examples/**`, `scripts/build-example.js`, CI workflow, the existing `tests/generator.test.js`. The a11y work was pure additive verification — nothing rendered needed to change.
+
+**Tests run**
+- `npm test` → **67/67** pass (64 → 67, +3 a11y tests).
+- `npm run audit:a11y` → 0 violations on either page, 0 contrast failures, exit code 0.
+- `npm run generate:examples` → both example folders rebuild byte-identically; `git status -- examples` clean.
+
+**Drift accounting**
+None. No example file changed. No template changed. No runtime code changed. Only test/script files added and docs updated.
+
+**Known limitations**
+- jsdom can't perform real layout, so axe rules that depend on it (`color-contrast`, `landmark-one-main`, `page-has-heading-one`) report `incomplete` rather than `pass`/`fail`. Color contrast is covered deterministically by the manual pair-wise pass; the other two are sanity-checked against the actual HTML (both files demonstrably have a single `<main>` and a single top-level `<h1>`).
+- The `public/index.html` audit runs against the **initial** static markup, not the post-`app.js` populated DOM (gallery cards and file list). Those parts use real `<button>`s with descriptive `aria-label`s so the structural a11y story carries over, but a future run could spin up Express in-process and use Playwright/`axe-puppeteer` for a fully-rendered audit if we ever want to upgrade.
+- We're auditing against `wcag2a + wcag2aa + wcag21a + wcag21aa + best-practice`. WCAG 2.2 (Sept 2023) added five new SC; axe-core's `wcag22aa` tag is supported but not enabled here. Worth flipping on once we've validated nothing regresses.
+- `axe-core` and `jsdom` are devDependencies, but they bring transitive dependencies (jsdom in particular). Acceptable cost for accessibility coverage; runtime surface unchanged.
+
+**Decisions**
+- **devDependencies, not runtime.** Two new packages, both audit-only. Runtime promise (`express` + `archiver`, nothing more) holds.
+- **Manual contrast pass as a separate, deterministic test.** Faster, more readable, and platform-independent compared to spinning up a real browser just to satisfy one rule.
+- **CI runs `npm test`, which now includes a11y.** No separate CI step. The verbose audit script is for human review, not gating.
+- **Sequence of `padEnd`/`padStart` formatting in the audit script** is a cosmetic choice for legibility, not a regression risk.
+- **No accessibility regressions to fix.** This is the strongest possible outcome of an audit and reflects deliberate work in earlier runs. Locking it in via tests is the right move so accidental regressions trip CI.
+
+**Next session starts with**
+- The `finance` domain depth (4th specialised domain), or one of the other entries in the next-run shortlist in `CLAUDE.md`. Suggested order: `finance` → landing-page polish (PNG OG image + asset-sync script) → one-click "Generate now" on gallery cards.
+
+---
+
 ## Run #011 — 2026-04-29 — User-value upgrade: live inference preview + better audience parsing
 
 **Phase:** Phase 1 — UX surface (continued)
