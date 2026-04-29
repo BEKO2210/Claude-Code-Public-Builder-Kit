@@ -16,10 +16,17 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 ├── LICENSE                   # MIT
 ├── server.js                 # Express app: /api/health, /api/generate, /api/generate.zip,
 │                             #              /api/examples, /api/examples/:id
-├── public/                   # Vanilla HTML/CSS/JS — no framework, no build
+├── docs/                     # Public landing page (GitHub Pages source)
+│   ├── index.html            # Hero, 12-file overview, quick start, examples, footer
+│   ├── style.css             # Same dark palette as the local app, no JS
+│   ├── logo.svg, favicon.svg # Copies of /public assets — sync manually if changed
+│   ├── .nojekyll             # Disable Jekyll preprocessing on Pages
+│   └── README.md             # How to enable Pages + asset-sync notes
+├── public/                   # Vanilla HTML/CSS/JS — the local app, no framework, no build
 │   ├── index.html            # Form + Example gallery + file viewer
 │   ├── style.css             # Includes focus-visible, skip link, gallery cards
-│   └── app.js                # Generate / Preview / Use this idea / Copy / Download ZIP
+│   ├── app.js                # Generate / Preview / Use this idea / Copy / Download ZIP
+│   └── logo.svg, logo-monochrome.svg, favicon.svg
 ├── src/
 │   ├── index.js              # generateKit(idea, opts) — orchestrates 12 templates
 │   ├── context.js            # Heuristic idea → {projectName, slug, productType, audience, domain, generatedAt}
@@ -117,13 +124,19 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Public landing page deployed via GitHub Pages.** Author a marketing/docs surface (likely under `/docs/` published from `main`, so `npm start` keeps working) introducing the kit, embedding the logo, linking to the gallery, and providing install / usage instructions for visitors who land from search. Prerequisite for #5.
-2. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected.
-3. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
-4. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against the live UI and capture findings as a checklist here.
-5. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once the landing page is live and examples grow beyond 12 files.
+1. **More heuristics.** Add 5–10 additional domain keyword groups in `src/context.js` (logistics, gov-tech, climate, agriculture, education-tech, …) with parametric tests that assert each is detected. Highest leverage on doc quality across the long tail of inputs.
+2. **Schema extraction for context.** Move the inferred-context shape into a typed schema (JSDoc `@typedef` + a small runtime validator) so contributors writing new templates can rely on its shape without reading `context.js`.
+3. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against both the local app and the landing page; capture findings as a checklist here.
+4. **Landing page polish.** After the page is online, iterate based on what visitors actually click — maybe add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
+5. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
+
+### Recently completed
+
+- ✓ **Public landing page deployed via GitHub Pages.** Static site under `/docs/`, deployed from `main` so `npm start` keeps working. See Run #005 in `RUN_LOG.md`.
+- ✓ **Brand identity.** Animated star logo + monochrome variant + favicon (Run #004).
+- ✓ **Example gallery + preview API + accessibility pass.** (Run #003)
 
 ## When the user types "/ultrareview"
 

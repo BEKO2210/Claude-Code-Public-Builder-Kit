@@ -4,6 +4,8 @@
 
 You type one sentence — *"I want to build an app for small restaurants"* — and the kit produces a 12-file Markdown scaffold that's good enough to start building from on day one.
 
+🌐 **Public landing page:** [`https://beko2210.github.io/Claude-Code-Public-Builder-Kit/`](https://beko2210.github.io/Claude-Code-Public-Builder-Kit/) (after GitHub Pages is enabled — see [Live landing page](#live-landing-page) below).
+
 ## What you get
 
 For any idea you enter, the kit produces:
@@ -166,6 +168,20 @@ npm test
 
 24 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, and full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404).
 
+## Live landing page
+
+A static landing page lives in [`docs/`](./docs/) and is published via **GitHub Pages**. It re-uses the same logo and palette as the local UI and links out to the worked examples on GitHub.
+
+### Enabling GitHub Pages (one-time, repo owner only)
+
+1. Open the repository on github.com.
+2. **Settings → Pages**.
+3. **Source:** *Deploy from a branch*.
+4. **Branch:** `main` and **Folder:** `/docs`.
+5. Save. The site appears at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` within a minute.
+
+The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`. See [`docs/README.md`](./docs/README.md) for editing notes and how to keep the logo assets in sync.
+
 ## Continuous integration
 
 `.github/workflows/ci.yml` runs on every push and pull request. It:
@@ -179,13 +195,24 @@ npm test
 ```
 .
 ├── .github/workflows/ci.yml  # GitHub Actions: tests + example reproducibility
-├── server.js                 # Express: /api/health, /api/generate, /api/generate.zip
+├── server.js                 # Express: /api/health, /api/generate, /api/generate.zip,
+│                             #          /api/examples, /api/examples/:id
 ├── package.json
 ├── LICENSE                   # MIT
-├── public/                   # Vanilla HTML/CSS/JS frontend, no build step
+├── docs/                     # Public landing page, deployed via GitHub Pages
 │   ├── index.html
 │   ├── style.css
-│   └── app.js                # Generate + Download ZIP, file viewer
+│   ├── logo.svg
+│   ├── favicon.svg
+│   ├── .nojekyll
+│   └── README.md             # How to enable Pages and keep assets in sync
+├── public/                   # Vanilla HTML/CSS/JS frontend (the local app)
+│   ├── index.html            # Form + Example gallery + file viewer
+│   ├── style.css
+│   ├── app.js                # Generate / Preview / Use this idea / Copy / Download ZIP
+│   ├── logo.svg              # Animated star (used by the local app header)
+│   ├── logo-monochrome.svg
+│   └── favicon.svg
 ├── src/
 │   ├── index.js              # generateKit(idea) — orchestrates all 12 templates
 │   ├── context.js            # Heuristic inference: idea -> {projectName, slug, …}
@@ -198,7 +225,7 @@ npm test
 │   ├── small-business-website-system/   # Pre-generated worked example (12 files)
 │   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
 ├── tests/
-│   └── generator.test.js     # node:test suite (17 tests)
+│   └── generator.test.js     # node:test suite (24 tests)
 └── output/                   # Runtime-generated kits land here (git-ignored)
 ```
 
