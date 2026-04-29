@@ -43,7 +43,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (67 tests, no external deps)
+│   └── generator.test.js     # node:test suite (69 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
@@ -117,7 +117,7 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 67 tests).
+- [ ] `npm test` passes (currently 69 tests).
 - [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
 - [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
@@ -128,15 +128,16 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Domain depth: keep extending one at a time.** Three domains are now specialised (`climate & sustainability`, `professional services`, `health & wellness`). Best next candidates: **`finance`** (regulatory drift, KYC, model risk; positioning around auditable ledgers + conservatism), then **`food & hospitality`** (seasonality, margin, shifts/staff). Same mechanism, same two templates, regen + drift inspection each time.
-2. **Landing page polish.** Add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
-3. **One-click "Generate now" on gallery cards.** Currently two-step (Use this idea → Generate). A third card action would make first-time-visitor flow one click. Small, high-value.
+1. **Landing page polish.** Add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
+2. **One-click "Generate now" on gallery cards.** Currently two-step (Use this idea → Generate). A third card action would make first-time-visitor flow one click. Small, high-value.
+3. **Domain depth: keep extending one at a time.** Four domains are now specialised (`climate & sustainability`, `professional services`, `health & wellness`, `finance`). Next candidate: **`food & hospitality`** (seasonality, margins, shift patterns / front-of-house staff turnover). Same mechanism, same two templates.
 4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **Domain depth: fourth domain (`finance`).** Same mechanism as Run #008 / #010. Risks cover regulatory drift across GDPR / MiFID II / PSD2 / DORA / SOX / GLBA / BSA + equivalents, KYC/AML obligations, model risk on predictive components, audit-trail-as-feature, and conservative-defaults-over-impressive-automation. Positioning is auditable-by-default, read-only-first defaults, clean separation between informational and advisory output, compliance-aware finance teams as the audience, and reliability as the marketing message. **Zero drift in worked examples** (neither is finance). See Run #013.
 - ✓ **A11y deep-dive: axe-core via jsdom + manual contrast pass.** Both pages (`public/index.html`, `docs/index.html`) report **zero axe violations** across 37 / 25 WCAG 2.0/2.1 A+AA + best-practice rules. Three rules are reported as `incomplete` (`color-contrast`, `landmark-one-main`, `page-has-heading-one`) because jsdom can't compute pixel-level layout — the latter two are confirmed manually (both pages ship a `<main>` and an `<h1>`); the first is covered by a deterministic 11-pair WCAG-AA contrast test in `tests/a11y.test.js`. Lowest contrast pair is **5.15:1** (muted text on panel-2), well above the 4.5:1 AA bar. Audit reproducible via `npm run audit:a11y`. See Run #012.
 - ✓ **User-value upgrade: live inference preview + smarter audience parsing.** New `POST /api/preview` (cheap, context-only). UI shows a live "Detected: …" line under the textarea as you type (debounced, with stale-response protection). Audience extraction gained four fallback patterns (`built/made/designed/tailored for`, `that helps X`, `to help X`, `aimed at X`) — additive, so existing `for X` matches keep precedence and the worked examples stay byte-stable. See Run #011.
 - ✓ **Domain depth: third domain (`health & wellness`).** Same mechanism as Run #008 — risks in `MASTERPLAN.md`, positioning in `DOCS/product-brief.md`. Health-data handling, crisis-path safety, off-label-use, clinical-claims regulatory line, trust under bad-news scenarios; positioning around trust-not-features, calm tone, evidence-backed recommendations, escalation path, self-management audience framing. **Zero drift in worked examples** (neither is health). See Run #010.

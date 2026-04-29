@@ -2,6 +2,44 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #013 — 2026-04-29 — Domain depth: fourth domain (`finance`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.2 session
+**Goal going in:** Add `finance` to the specialised set — same pipeline as Runs #008 and #010, no scope creep, no example drift.
+
+**What changed**
+- Added `"finance"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): regulatory drift across multiple regimes (GDPR, MiFID II, PSD2, DORA in EU; SOX, GLBA, BSA in US; APRA / FCA / MAS / equivalents elsewhere) with a "pin the version + re-evaluate on a calendar" rule; KYC / AML inheritance once the product touches funds, identity, or onboarding; model risk on any predictive component (training-data lineage + validation + monitoring + deterministic fallback); audit trail as non-negotiable, exportable, and shipped *before* features that depend on it; conservative defaults over impressive automation, because the blast radius of a wrong automated decision in finance is dollars and lawsuits.
+  - **Positioning** (5 bullets): auditable-by-default (audit trail is the product, not a feature flag); conservative defaults (read-only first, opt-in writes, multi-step confirmation on irreversible actions); clean separation between informational and advisory output (wording in the product is the contract with the regulator); compliance-aware finance-team audience framed in their own language (controls, evidence, reproducibility) rather than fintech-startup language; reliability as the marketing message (numbers don't disagree across screens, exports tie to the system of record, monthly close doesn't surprise anyone).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **69/69** pass (67 → 69, +2 finance tests; the `SPECIALISED_DOMAINS` test now expects four entries instead of three).
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-finance domains (`small business`, `professional services`).
+
+**Drift accounting**
+None. No file under `examples/` changed. The `domain heuristics: existing examples remain stable after expansion` test continues to pin both example domains.
+
+**Known limitations**
+- Four of 21 domain values are now specialised (~19% coverage). Next priority shifts away from breadth — see the reordered shortlist in `CLAUDE.md`.
+- Finance keyword detection (`bank`, `finance`, `invoice`, `payment`, `fintech`) is intentionally narrow. An idea like "An app for crypto traders" would still land on `general` — by design; the kit is explicit that the inferred domain is a heuristic.
+
+**Decisions**
+- **One domain per session, period.** Same rhythm as #008 / #010.
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **Did not expand the finance keyword list.** Adding `crypto` / `treasury` / `ledger` / `compliance` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run.
+- **Test idea uses an unambiguous finance phrase**: "A payment reconciliation tool for finance teams" — matches finance via `payment` and `finance`, doesn't accidentally hit any earlier-iterated domain.
+
+**Next session starts with**
+- Re-shuffled priorities in `CLAUDE.md`. Top of the list now: **landing-page polish** (PNG OG image, hero visual, `scripts/sync-docs-assets.js`) or the **one-click "Generate now"** button on gallery cards. Domain depth continues at the same cadence — `food & hospitality` is the next candidate when we return to it.
+
+---
+
 ## Run #012 — 2026-04-29 — A11y deep-dive: axe-core via jsdom + manual contrast pass
 
 **Phase:** Phase 1 — UX surface (continued)

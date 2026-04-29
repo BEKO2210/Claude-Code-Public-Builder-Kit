@@ -34,6 +34,13 @@ const DOMAIN_RISKS = {
     "Off-label use is inevitable: users will reach for the product for diagnosis, dosing, or therapy regardless of what the ToS says. Surface a clear in-product \"this is not medical advice\" line and a documented referral path; ToS-only disclaimers do not survive scrutiny.",
     "Clinical claims = different product: \"treats\", \"diagnoses\", \"cures\" language moves you into MedTech regulation (FDA SaMD, EU MDR). Wellness phrasing is fine; clinical phrasing is a regulated product class with a different launch path.",
     "Trust under bad-news scenarios: a wellness product is judged on the day a user's data leaks or a recommendation contributes to harm. Incident response, user-initiated export, and account deletion must work end-to-end before traffic scales."
+  ],
+  "finance": [
+    "Regulatory drift: applicable regimes (GDPR, MiFID II, PSD2, DORA in the EU; SOX, GLBA, BSA / FinCEN in the US; APRA, FCA, MAS, equivalents elsewhere) update yearly. Pin the version you support, store the policy artefact next to the code, and re-evaluate on a calendar — not when a regulator pings you.",
+    "KYC / AML obligations: any product that touches funds, identity verification, or account onboarding inherits Customer Due Diligence and Suspicious-Activity-Report workflows. Do not add \"deposits\" / \"transfers\" / \"wallet\" language until the program is real, documented, and reviewed.",
+    "Model risk on any predictive component: if the product scores, recommends, or auto-decides, document training-data lineage, validation methodology, ongoing monitoring, and a deterministic fallback for when the model is unavailable or wrong. Regulators will ask; users will not trust unsigned numbers either.",
+    "Audit trail is non-negotiable: every state change captured with who / when / what / why, immutably and exportable. Auditors and customers ask for the same evidence — ship the export path before you ship features that depend on it.",
+    "Conservative defaults beat impressive automation: \"we suggested + a human approved\" always wins over \"we did\". The blast radius of a wrong automated decision in finance is measured in dollars and lawsuits — design for reversibility before speed."
   ]
 };
 
@@ -57,6 +64,13 @@ const DOMAIN_POSITIONING = {
     "Evidence-backed, not influencer-backed: every recommendation cites the underlying study, guideline, or clinical source — with a date. \"Follows [guideline, 2025 update]\" beats \"trusted by 10,000 users\".",
     "Escalation path is part of the product: when someone needs a real human, the product gets out of the way fast. A visible \"talk to a real person\" route, not buried in settings.",
     "Audience framing: people self-managing their health (recovery, chronic conditions, day-to-day wellness), not patients in active acute care. The product complements clinicians; it does not replace them."
+  ],
+  "finance": [
+    "Auditable by default: every output is reproducible from the inputs, the version of the rules, and the timestamp. The audit trail is the product, not a feature flag.",
+    "Conservative defaults: read-only first; opt-in for write actions; multi-step confirmation on anything irreversible. Boring is a virtue here — finance teams pay for predictability, not for surprises.",
+    "Clear separation between informational and advisory: surface the data clearly, but never blur the line into investment / tax / accounting advice unless you are licensed for it. Wording in the product is the contract with the regulator and the user.",
+    "Audience framing: compliance-aware finance teams who already track regulatory cycles, write SOX-style controls, and pass IT audits. Sell to them in their language — controls, evidence, reproducibility — not in fintech-startup language.",
+    "Reliability as the marketing message: numbers do not disagree across screens; exports tie back to the system of record; monthly close does not surprise anyone. Predictability is the most valuable thing you can sell to a finance team."
   ]
 };
 
