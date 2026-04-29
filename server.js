@@ -2,6 +2,7 @@ import express from "express";
 import { dirname, resolve, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit } from "./src/index.js";
+import { buildContext } from "./src/context.js";
 import { writeKit } from "./src/utils/write.js";
 import { buildZipBuffer } from "./src/utils/zip.js";
 import { EXAMPLES, findExample, isSafeExampleId } from "./src/examples.js";
@@ -103,6 +104,19 @@ app.post("/api/generate.zip", async (req, res) => {
     res.end(buf);
   } catch (err) {
     res.status(500).json({ error: err.message || "ZIP generation failed." });
+  }
+});
+
+app.post("/api/preview", (req, res) => {
+  const parsed = readIdea(req);
+  if (parsed.error) return res.status(400).json({ error: parsed.error });
+  try {
+    // buildContext is cheap and pure; no template rendering, no file I/O.
+    // Suitable for live, debounced calls as the user types.
+    const context = buildContext(parsed.idea);
+    res.json({ context });
+  } catch (err) {
+    res.status(500).json({ error: err.message || "Preview failed." });
   }
 });
 

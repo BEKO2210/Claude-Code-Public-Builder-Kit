@@ -2,6 +2,63 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #011 — 2026-04-29 — User-value upgrade: live inference preview + better audience parsing
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.5 session
+**Goal going in:** Pause domain breadth/depth and concentrate the run on raising the everyday usefulness of the kit — make the inference layer visible to the user as they type, so they understand what the system is picking up before they commit; and make the inference itself catch a few common phrasings it was missing.
+
+**What changed**
+- **New endpoint `POST /api/preview`** in `server.js`. Same input contract as `/api/generate` (single `idea` string, max 500 chars), but it returns only `{ context }` — no file rendering, no ZIP, no disk write. Backed directly by `buildContext` from `src/context.js`, so the call cost is essentially regex evaluation against the idea string. Designed to be hit on every keystroke (debounced) without breaking a sweat.
+- **Live inference preview in the UI**: a new `<p id="preview-line">` lives directly under the idea textarea. As the user types, a debounced 350 ms call to `/api/preview` populates it with `Detected: <productType> · for <audience> · in <domain>`. Empty input clears the line; stale responses are dropped via a sequence number guard so a fast typist doesn't see flickering older results. Programmatic value updates (e.g. when "Use this idea" populates the field from a gallery card) now dispatch a synthetic `input` event so the preview line refreshes too.
+- **Smarter audience extraction in `src/context.js`**. Replaced the two-pattern `AUDIENCE_HINTS` array with five patterns ordered most-specific first:
+  1. `(?:built|made|designed|tailored)\s+for\s+X` — explicit "built for / designed for / made for / tailored for" phrasing.
+  2. `for\s+X` — the original generic pattern. Still wins for any idea that uses it, so existing examples are byte-stable.
+  3. `(?:that|which)\s+helps?\s+X` — catches "an app that helps freelancers …".
+  4. `to\s+help\s+X` — catches "software to help dental clinics …".
+  5. `(?:aimed|targeted)\s+at\s+X` — catches "a platform aimed at indie podcasters …".
+  Patterns 3–5 only fire when 1–2 don't match, so the change is additive. Inline comment explains the precedence rule for future contributors.
+- **Tests grew 57 → 64** (+7):
+  - 4 new audience-extraction tests covering "that helps X", "to help X", "aimed at X", and a guard test that the existing `for X` precedence wins when both patterns could match (preventing a future re-order from silently re-routing audience captures).
+  - 3 new HTTP tests on `/api/preview`: happy path returns `context.productType`, `context.domain`, `context.audience` for a known idea and explicitly does **not** include `files` / `fileCount` (cheap-call contract). 400 for empty idea. 400 for over-500-char idea.
+- **CSS**: small `.preview-line` rule with `min-height: 20px` so the inference line never causes layout shift, plus a 120 ms opacity transition; empty content collapses to opacity 0.
+
+**Files touched**
+- Added: nothing.
+- Modified: `server.js`, `src/context.js`, `public/index.html`, `public/style.css`, `public/app.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `docs/**`, `src/index.js`, `src/schema.js`, `src/examples.js`, `src/templates/**`, `src/utils/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **64/64** pass.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty after regen. The new audience patterns are additive and the existing `for X` pattern still wins for both worked-example ideas, so generated content is byte-identical.
+- Live smoke on `:5180`:
+  - `POST /api/preview` for `"An app that helps freelancers track invoices"` → 200, `productType: "app"`, `domain: "professional services"` (previously this would have hit the generic `"early adopters …"` audience fallback), `audience` includes "freelancers".
+  - `POST /api/preview` with empty idea → 400.
+  - `POST /api/preview` with 501-char idea → 400.
+
+**Drift accounting**
+None. Worked examples are byte-identical post-regen. Existing tests remain green at their original assertions.
+
+**Known limitations**
+- Audience extraction is still string-pattern matching, not NLP. For an idea without a terminating punctuation mark, the lazy quantifier expands to end-of-string, so `"An app that helps freelancers track invoices"` produces `audience: "freelancers track invoices"` rather than just `"freelancers"`. The user can sharpen this in `MASTERPLAN.md`; the kit already advertises that the inference is a heuristic.
+- The live preview hits the network on every keystroke (debounced 350 ms). On a flaky connection, the preview line silently clears rather than showing a stale state. No retry, no offline mode — appropriate for a local-first dev tool.
+- The preview endpoint returns the full `Context` object, which includes `generatedAt` (a timestamp). On every preview call this changes, which means a smart client that wanted to compare preview-vs-generate context would need to ignore that field. Not a real problem today (the UI only displays `productType / audience / domain`), but worth knowing.
+- Preview rate-limiting is not implemented. A malicious tab could fire thousands of requests per second. Acceptable for a local-only tool; if this is ever exposed publicly, a debounce on the server side (e.g. token bucket per IP) would be the right addition.
+
+**Decisions**
+- **`POST` not `GET`** for preview, matching the rest of the API surface. Idea strings are short enough to fit in a query string, but consistency wins; documentation surface stays smaller.
+- **`buildContext` directly, not `generateKit`**. `generateKit` runs all 12 templates and validates each output; the preview only needs the context, so we skip ~95% of the work and keep keystroke-rate calls comfortable.
+- **Debounce on the client at 350 ms**, not on the server. Lower-latency than waiting for server-side throttling, and means the preview feels instant on local dev where the round-trip is sub-10ms.
+- **Sequence-number guard against stale responses**, not request cancellation via `AbortController`. Simpler, no DOM-API edge cases on iOS Safari, and the cost is one in-flight fetch that returns dropped data instead of being torn down.
+- **Audience patterns reordered specific-first**, not appended. The original code had `for X` ahead of `built for X`; the reordering is functionally identical for current inputs (since `for X` always matched any `built for X` input first anyway), but reading the array top-down now describes precedence honestly: "explicit phrasing → generic phrasing → semantic fallbacks".
+- **No new dependency.** Live preview is plain `fetch` + `setTimeout` + `dispatchEvent(new Event("input"))`. ~30 LOC of vanilla JS.
+
+**Next session starts with**
+- **Domain depth: `finance`** — the next-priority domain on the shortlist. Risks (regulatory drift across GDPR / MiFID II / PSD2 / DORA, KYC/AML, model risk, audit trail), positioning (auditable-by-default, conservative defaults, clear advisory-vs-informational separation, fit for compliance-aware finance teams). Same mechanism as Run #010, expected drift only in any future finance-domain example.
+- Or, if you'd rather keep stacking user-value wins: a one-click "Generate now" button on each example card that goes idea→result panel without the intermediate "Use this idea + Generate" two-step.
+
+---
+
 ## Run #010 — 2026-04-29 — Domain depth: third domain (`health & wellness`)
 
 **Phase:** Phase 1 — Generation quality (continued)

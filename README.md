@@ -89,6 +89,7 @@ The examples are served from a registry in `src/examples.js`, which is also the 
 | `GET`  | `/api/health` | Liveness check. Returns `{ "ok": true }`. |
 | `GET`  | `/api/examples` | Lists registered examples with metadata + file paths (no content). |
 | `GET`  | `/api/examples/:id` | Returns the full kit (12 files with content) for one example. `400` on unsafe ids, `404` on unknown ids. |
+| `POST` | `/api/preview` | Returns just the inferred `Context` for an idea — no files. Cheap, designed for live "what does this look like?" previews as the user types. |
 | `POST` | `/api/generate` | Generate a kit from an idea and return JSON. Optionally writes to `output/<slug>/`. |
 | `POST` | `/api/generate.zip` | Generate a kit and return a ZIP attachment. |
 
@@ -166,7 +167,7 @@ Both scripts call the same builder. Each example uses a fixed `generatedAt` time
 npm test
 ```
 
-57 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), and parametric detection of all 10 newly-added domain groups (logistics, government, climate, agriculture, travel, gaming, non-profit, manufacturing, HR, events).
+64 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), and parametric detection of all 10 newly-added domain groups (logistics, government, climate, agriculture, travel, gaming, non-profit, manufacturing, HR, events).
 
 ## Live landing page
 
@@ -226,7 +227,7 @@ The local Express app continues to serve `/public` and is **not** affected by an
 │   ├── small-business-website-system/   # Pre-generated worked example (12 files)
 │   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
 ├── tests/
-│   └── generator.test.js     # node:test suite (57 tests)
+│   └── generator.test.js     # node:test suite (64 tests)
 └── output/                   # Runtime-generated kits land here (git-ignored)
 ```
 

@@ -536,6 +536,86 @@ test("GET /api/examples/:id returns 400 for unsafe id (path traversal)", async (
   }
 });
 
+test("audience extraction: 'that helps X' fallback fires when 'for X' is absent", () => {
+  const ctx = buildContext("An app that helps freelancers track invoices");
+  assert.match(ctx.audience, /freelancers/i);
+  assert.notEqual(ctx.audience, "early adopters in your target segment");
+});
+
+test("audience extraction: 'to help X' fallback fires when 'for X' is absent", () => {
+  const ctx = buildContext("Software to help dental clinics manage appointments");
+  assert.match(ctx.audience, /dental clinics/i);
+});
+
+test("audience extraction: 'aimed at X' fallback fires", () => {
+  const ctx = buildContext("A platform aimed at indie podcasters who edit on the road");
+  assert.match(ctx.audience, /indie podcasters/i);
+});
+
+test("audience extraction: existing 'for X' still wins over new fallbacks", () => {
+  // Both patterns could match; existing 'for' must keep precedence so worked
+  // examples remain stable.
+  const ctx = buildContext("A reporting tool for accountants that helps law firms file taxes");
+  assert.match(ctx.audience, /accountants/i);
+});
+
+test("POST /api/preview returns context for a valid idea", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "A SaaS dashboard for small business accountants" })
+    });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") || "", /application\/json/);
+    const data = await res.json();
+    assert.ok(data.context);
+    assert.equal(data.context.productType, "web app");
+    assert.equal(data.context.domain, "professional services");
+    assert.match(data.context.audience, /small business accountants/i);
+    // Preview must NOT include files — that's the cheap-call contract.
+    assert.equal(data.files, undefined);
+    assert.equal(data.fileCount, undefined);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("POST /api/preview rejects empty idea (400)", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "   " })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("POST /api/preview rejects oversized idea (400)", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/preview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "x".repeat(501) })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
 test("POST /api/generate still works after gallery additions", async () => {
   const server = app.listen(0);
   await new Promise((r) => server.once("listening", r));

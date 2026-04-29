@@ -43,7 +43,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (57 tests, no external deps)
+│   └── generator.test.js     # node:test suite (64 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
@@ -87,7 +87,7 @@ These are non-negotiable. Don't regress them:
 - `src/templates/*.js` — each exports a default function `(ctx: Context) => string`. Keep templates close to 100–250 lines of generated markdown. Longer is fine if substantive; padding is not.
 - `src/templates/domain-blocks.js` — small helper holding domain-conditional content for `MASTERPLAN.md` and `DOCS/product-brief.md`. Keys must be values from `DOMAIN_VALUES` (the load-time check throws on typos). Returns `""` for any unspecialised domain — never an empty heading. To specialise a new domain, add bullets here and run `npm run generate:examples`; drift in `examples/<id>/` is acceptable only if that example's domain matches the key you added.
 - `src/utils/zip.js` — pure function. Validates root name and entry paths against traversal. Don't allow callers to bypass that validation.
-- `server.js` — keep it boring. Validate input at the boundary (`/api/generate`, `/api/generate.zip`), reject anything > 500 chars, never let the slug escape `output/`.
+- `server.js` — keep it boring. Validate input at the boundary (`/api/generate`, `/api/generate.zip`, `/api/preview`), reject anything > 500 chars, never let the slug escape `output/`. The lightweight `/api/preview` endpoint exists so the UI can show live inference results as the user types — it must stay cheap (calls `buildContext` only, no template rendering).
 - `public/` — plain HTML/CSS/JS only. No frameworks, no transpilers.
 - `tests/generator.test.js` — `node:test`. Adding a new template means updating `EXPECTED_FILES` and the file-count assertions.
 
@@ -116,7 +116,7 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 57 tests).
+- [ ] `npm test` passes (currently 64 tests).
 - [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
 - [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
@@ -136,6 +136,7 @@ Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **User-value upgrade: live inference preview + smarter audience parsing.** New `POST /api/preview` (cheap, context-only). UI shows a live "Detected: …" line under the textarea as you type (debounced, with stale-response protection). Audience extraction gained four fallback patterns (`built/made/designed/tailored for`, `that helps X`, `to help X`, `aimed at X`) — additive, so existing `for X` matches keep precedence and the worked examples stay byte-stable. See Run #011.
 - ✓ **Domain depth: third domain (`health & wellness`).** Same mechanism as Run #008 — risks in `MASTERPLAN.md`, positioning in `DOCS/product-brief.md`. Health-data handling, crisis-path safety, off-label-use, clinical-claims regulatory line, trust under bad-news scenarios; positioning around trust-not-features, calm tone, evidence-backed recommendations, escalation path, self-management audience framing. **Zero drift in worked examples** (neither is health). See Run #010.
 - ✓ **Brand identity v2.** Twelve-pointed compass-star logo replaces the generic five-point mark (Run #009). Twelve rays = the twelve generated files; four longer cardinal points = the user's "compass" of next steps. Same blue palette, same `prefers-reduced-motion` handling, plus a soft north-glow that pulses to anchor the "north star" reading.
 - ✓ **Domain depth: first cut.** `src/templates/domain-blocks.js` adds domain-conditional sections to `MASTERPLAN.md` (risks) and `DOCS/product-brief.md` (positioning) for `climate & sustainability` and `professional services`. Other domains see no change; drift in worked examples was limited to the professional-services example only. See Run #008.
