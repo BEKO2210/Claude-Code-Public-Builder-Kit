@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Code Public Builder Kit</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <h1>Claude Code Public Builder Kit</h1>
+        <p class="tagline">
+          Turn a one-line project idea into a clean, structured planning
+          foundation: vision, roadmap, acceptance criteria, architecture, prompts.
+        </p>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="generator">
+        <form id="generate-form" novalidate>
+          <label for="idea">Your project idea</label>
+          <textarea
+            id="idea"
+            name="idea"
+            rows="3"
+            maxlength="500"
+            placeholder="e.g. I want to build an app for small restaurants"
+            required
+          ></textarea>
+          <div class="row">
+            <label class="checkbox">
+              <input type="checkbox" id="persist" checked />
+              Also write files to <code>output/&lt;slug&gt;/</code>
+            </label>
+            <button type="submit" id="submit">Generate kit</button>
+          </div>
+          <p id="status" class="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section id="result" class="result" hidden>
+        <header class="result-header">
+          <div>
+            <h2 id="project-name"></h2>
+            <p id="project-meta" class="muted"></p>
+          </div>
+          <div id="written-to" class="muted"></div>
+        </header>
+        <div class="result-body">
+          <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
+          <article class="file-view">
+            <header class="file-view-header">
+              <span id="active-path" class="path"></span>
+              <button id="copy" type="button">Copy</button>
+            </header>
+            <pre id="file-content" class="file-content"></pre>
+          </article>
+        </div>
+      </section>
+
+      <section class="example">
+        <h2>Worked example</h2>
+        <p>
+          A pre-generated kit for the prompt
+          <em>"A website system for small local businesses"</em> lives in
+          <code>examples/small-business-website-system/</code>. Browse it on disk
+          to see exactly what the kit produces.
+        </p>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          MIT licensed. Generated docs are yours — edit them freely.
+          See <code>CLAUDE.md</code> for how to drive subsequent Claude Code
+          sessions inside a generated kit.
+        </p>
+      </div>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
