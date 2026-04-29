@@ -27,6 +27,13 @@ const DOMAIN_RISKS = {
     "Liability and expectation management: the product assists, it does not give legal / financial / tax / strategic advice. Make this boundary explicit in the UI, not buried in the ToS.",
     "Boundary between software help and professional judgement: the user is still the licensed expert. Avoid UX patterns that nudge them to rubber-stamp model output.",
     "Onboarding for non-technical users: partners / consultants / advisors are domain experts, not power users. First-run flow has to make the daily core action obvious in under three minutes."
+  ],
+  "health & wellness": [
+    "Health-data handling: assume HIPAA-style obligations even outside the US (GDPR Art. 9 covers health data as special-category). Encryption at rest and in transit, minimal retention, audit logs, and a clear data-residency story are entry-cost, not differentiators.",
+    "Crisis-path safety: anything that touches mental health, self-harm, or acute medical situations needs a designed and tested escalation path — visible, fast, with real-human routing — *before* launch, not after the first incident.",
+    "Off-label use is inevitable: users will reach for the product for diagnosis, dosing, or therapy regardless of what the ToS says. Surface a clear in-product \"this is not medical advice\" line and a documented referral path; ToS-only disclaimers do not survive scrutiny.",
+    "Clinical claims = different product: \"treats\", \"diagnoses\", \"cures\" language moves you into MedTech regulation (FDA SaMD, EU MDR). Wellness phrasing is fine; clinical phrasing is a regulated product class with a different launch path.",
+    "Trust under bad-news scenarios: a wellness product is judged on the day a user's data leaks or a recommendation contributes to harm. Incident response, user-initiated export, and account deletion must work end-to-end before traffic scales."
   ]
 };
 
@@ -43,6 +50,13 @@ const DOMAIN_POSITIONING = {
     "Better client communication: drafts, summaries, and status updates that the practitioner can send with confidence after a quick review.",
     "Professional documentation by default: every output is presentable to a client without rework.",
     "Reliable workflows for small teams — partner / consultant / firm of 1–10 — without a 90-day rollout."
+  ],
+  "health & wellness": [
+    "Lead with trust, not features: clear data ownership, clear opt-out, clear deletion. People share more here than they intend; the product has to be worth that trust.",
+    "Calm tone, no gamification of distress: streaks, leaderboards, and shame-based nudges hurt health-adjacent audiences. Default to gentle, opt-in encouragement.",
+    "Evidence-backed, not influencer-backed: every recommendation cites the underlying study, guideline, or clinical source — with a date. \"Follows [guideline, 2025 update]\" beats \"trusted by 10,000 users\".",
+    "Escalation path is part of the product: when someone needs a real human, the product gets out of the way fast. A visible \"talk to a real person\" route, not buried in settings.",
+    "Audience framing: people self-managing their health (recovery, chronic conditions, day-to-day wellness), not patients in active acute care. The product complements clinicians; it does not replace them."
   ]
 };
 

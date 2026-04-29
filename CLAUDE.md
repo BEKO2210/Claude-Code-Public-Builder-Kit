@@ -43,7 +43,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (55 tests, no external deps)
+│   └── generator.test.js     # node:test suite (57 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
@@ -116,7 +116,7 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 55 tests).
+- [ ] `npm test` passes (currently 57 tests).
 - [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
 - [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
@@ -127,7 +127,7 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Domain depth: extend coverage carefully.** Two domains are now specialised (`climate & sustainability`, `professional services`) in two templates. Good next candidates with similar leverage and similar template fit: `health & wellness`, `finance`, `food & hospitality`. Keep the cadence small — one domain at a time, in the existing two templates, with tests and an example regen each time.
+1. **Domain depth: keep extending one at a time.** Three domains are now specialised (`climate & sustainability`, `professional services`, `health & wellness`). Best next candidates: **`finance`** (regulatory drift, KYC, model risk; positioning around auditable ledgers + conservatism), then **`food & hospitality`** (seasonality, margin, shifts/staff). Same mechanism, same two templates, regen + drift inspection each time.
 2. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against both the local app and the landing page; capture findings as a checklist here.
 3. **Landing page polish.** After the page is online, iterate based on what visitors actually click — maybe add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
 4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
@@ -136,6 +136,7 @@ Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **Domain depth: third domain (`health & wellness`).** Same mechanism as Run #008 — risks in `MASTERPLAN.md`, positioning in `DOCS/product-brief.md`. Health-data handling, crisis-path safety, off-label-use, clinical-claims regulatory line, trust under bad-news scenarios; positioning around trust-not-features, calm tone, evidence-backed recommendations, escalation path, self-management audience framing. **Zero drift in worked examples** (neither is health). See Run #010.
 - ✓ **Brand identity v2.** Twelve-pointed compass-star logo replaces the generic five-point mark (Run #009). Twelve rays = the twelve generated files; four longer cardinal points = the user's "compass" of next steps. Same blue palette, same `prefers-reduced-motion` handling, plus a soft north-glow that pulses to anchor the "north star" reading.
 - ✓ **Domain depth: first cut.** `src/templates/domain-blocks.js` adds domain-conditional sections to `MASTERPLAN.md` (risks) and `DOCS/product-brief.md` (positioning) for `climate & sustainability` and `professional services`. Other domains see no change; drift in worked examples was limited to the professional-services example only. See Run #008.
 - ✓ **Schema extraction for context.** `src/schema.js` now defines the `Context` typedef, the canonical `PRODUCT_TYPE_VALUES` (8) and `DOMAIN_VALUES` (21) lists, and a `validateContext` / `assertContext` pair. `buildContext` calls `assertContext` so no invalid context can ever reach a template. See Run #007.

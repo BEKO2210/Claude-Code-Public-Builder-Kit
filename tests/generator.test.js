@@ -196,8 +196,11 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the two expected entries", () => {
-  assert.deepEqual([...SPECIALISED_DOMAINS].sort(), ["climate & sustainability", "professional services"]);
+test("domain depth: SPECIALISED_DOMAINS has exactly the three expected entries", () => {
+  assert.deepEqual(
+    [...SPECIALISED_DOMAINS].sort(),
+    ["climate & sustainability", "health & wellness", "professional services"]
+  );
 });
 
 test("domain depth: climate & sustainability — MASTERPLAN.md has the risks subsection", () => {
@@ -226,6 +229,22 @@ test("domain depth: professional services — DOCS/product-brief.md has the posi
   assert.match(md, /### Domain-specific positioning \(professional services\)/);
   assert.match(md, /Repeatable processes/);
   assert.match(md, /Better client communication/);
+});
+
+test("domain depth: health & wellness — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A wellness coaching app for fitness clients", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(health & wellness\)/);
+  assert.match(md, /HIPAA/);
+  assert.match(md, /Crisis-path/);
+  assert.match(md, /Off-label/);
+});
+
+test("domain depth: health & wellness — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A wellness coaching app for fitness clients", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(health & wellness\)/);
+  assert.match(md, /Calm tone/);
+  assert.match(md, /Escalation path/);
+  assert.match(md, /Evidence-backed/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {

@@ -2,6 +2,45 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #010 — 2026-04-29 — Domain depth: third domain (`health & wellness`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.2 session
+**Goal going in:** Add `health & wellness` to the specialised set — same mechanism as Run #008, no scope creep, no example drift.
+
+**What changed**
+- Added `"health & wellness"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): health-data handling under HIPAA-style and GDPR Art. 9 obligations; designed-and-tested crisis/escalation path **before** launch; off-label-use is inevitable, surface in-product disclaimers + a referral path; clinical-claims language ("treats / diagnoses / cures") moves the product into FDA SaMD / EU MDR territory; trust under bad-news scenarios (incident response and user-data export must work end-to-end before traffic scales).
+  - **Positioning** (5 bullets): trust over features; calm tone, no gamification of distress; evidence-backed (cite the study or guideline with a date), not influencer-backed; visible escalation-to-a-real-human path; audience framing as people self-managing health, complementing — not replacing — clinicians.
+- Module-load key check now sees three keys; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow. The change is purely additive in one file plus tests.
+
+**Tests run**
+- `npm test` → **57/57** pass (55 → 57, +2 new health tests; the `SPECIALISED_DOMAINS` test now expects three entries instead of two).
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-health domains (`small business`, `professional services`), so the new specialisation is invisible to them — exactly the safety property the helper was designed for.
+- No `npm run build` or `npm run lint` scripts exist; not run.
+
+**Drift accounting**
+None. No file under `examples/` changed. The `domain heuristics: existing examples remain stable after expansion` test continues to pin both example domains.
+
+**Known limitations**
+- Three of 21 domain values are now specialised — 17% coverage. The other 18 still produce the prior generic content. Continued one-at-a-time expansion is the chosen pace.
+- The wellness vs. clinical-product framing is encoded in copy, not in code. If a future contributor adds clinical-grade vocabulary to a different template, the disclaimer language here won't propagate — they'd need to add an analogous block where it lands.
+- Health domain detection uses keywords like `clinic`, `doctor`, `patient`, `therapy`, `wellness`, `fitness`, `gym`. Edge cases ("a journaling app for anxious teens" → `general`) are by design — `MASTERPLAN.md` is explicit that the domain is a heuristic and the user is expected to sharpen it.
+
+**Decisions**
+- **One domain per session, period.** The same rhythm as Run #008 keeps each step diff-small, regen-clean, and easy to revert if the copy ever needs revision.
+- **Five bullets each, not three or seven.** Matches the prior two specialisations; visually consistent across kits when readers compare two domain outputs side by side.
+- **No new test for cross-domain isolation.** The existing `non-target domains get no domain-specific subsection` test already exercises four non-health ideas; the new health tests round-trip the positive case.
+
+**Next session starts with**
+- **`finance`** as the fourth specialised domain. Risks: regulatory drift (GDPR, MiFID II, PSD2 / open banking, DORA), KYC/AML, model risk on any predictive component, audit-trail expectations. Positioning: auditable-by-default, conservative defaults over flashy automation, clear separation between informational and advisory output, fit for compliance-aware finance teams.
+
+---
+
 ## Run #009 — 2026-04-29 — Brand identity v2: twelve-pointed compass star
 
 **Phase:** Phase 1 — UX surface
