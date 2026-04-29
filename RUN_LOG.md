@@ -2,6 +2,164 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #008 — 2026-04-29 — Domain depth (first cut): risks + positioning for two domains
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Make generated docs noticeably more useful for two domains where we have something specific to say, without rewriting the templates and without affecting any other domain. Strict scope: two templates, two domains, additive only.
+
+**What changed**
+- **New helper `src/templates/domain-blocks.js`** with two short tables (`DOMAIN_RISKS`, `DOMAIN_POSITIONING`) and two render helpers (`domainRisksBlock(ctx)`, `domainPositioningBlock(ctx)`). For specialised domains it returns a fully-formatted `### Domain-specific …` subsection. For every other domain it returns `""`, so the host template's spacing and section numbering stay byte-identical.
+  - Keys are validated at module load against `DOMAIN_VALUES` from `src/schema.js`; a typo would throw `domain-blocks.js: "<key>" is not in DOMAIN_VALUES …` at server start and during `npm test`.
+  - Exports a frozen `SPECIALISED_DOMAINS` array so tests and tooling can introspect coverage without re-reading the tables.
+- **Specialised exactly two domains:**
+  - **`climate & sustainability`** — risks call out greenwashing exposure, impact measurability with explicit scope/methodology, third-party data quality, regulatory / reporting drift, and audit-trail traceability. Positioning leads with credible impact (claims cite the underlying number), transparent metrics (visible in-product, not in PDFs), honest data sources (modeled labelled as modeled), and an audience framed around the operators reporting the number — not board-deck consumers.
+  - **`professional services`** — risks cover trust/credibility, client-data privacy (PII / privileged data), liability + expectation management, the boundary between software help and licensed professional judgement, and onboarding for non-technical experts. Positioning emphasises time saved, repeatable workflows with version history, client-ready drafts, professional documentation by default, and reliable workflows for firms of 1–10 (no 90-day rollout).
+- **`src/templates/masterplan.js`** — added `import { domainRisksBlock }` and a single interpolation `${domainRisksBlock(ctx)}` between the existing risks/mitigations table and the `## 9. Open questions` heading. Section numbering unchanged.
+- **`src/templates/productBrief.js`** — added `import { domainPositioningBlock }` and a single interpolation `${domainPositioningBlock(ctx)}` between section 5 (Tone and voice) and section 6 (Open questions). Section numbering unchanged.
+- **No new dependency, no server change, no public-UI change, no schema or matcher change, no new domain.**
+- **Tests grew 47 → 55** (8 new tests):
+  - `SPECIALISED_DOMAINS` has exactly the two expected entries.
+  - `MASTERPLAN.md` for a climate idea contains the heading + "Greenwashing" + "methodology".
+  - `MASTERPLAN.md` for a professional-services idea contains the heading + "Liability" + "Client-data privacy".
+  - `DOCS/product-brief.md` for a climate idea contains the heading + "credible impact" + "transparent metrics".
+  - `DOCS/product-brief.md` for a professional-services idea contains the heading + "Repeatable processes" + "Better client communication".
+  - Non-target domains (small business, food & hospitality, gaming, general) get **no** "Domain-specific risks" or "Domain-specific positioning" heading, and section 8 / 9 / 5 / 6 are still in place.
+  - Helpers return `""` for unspecialised domains (smoke check on the helper itself).
+  - No generated file across five different ideas contains the strings `"undefined"` or `"[object Object]"`.
+
+**Files touched**
+- Added: `src/templates/domain-blocks.js`.
+- Modified: `src/templates/masterplan.js`, `src/templates/productBrief.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- Examples regenerated (intentional drift, see below).
+
+**Tests run**
+- `npm test` → **55/55** pass.
+- `npm run generate:examples` → both example folders rebuilt; **drift was limited to exactly two files in one example**:
+  - `examples/smb-accounting-saas-dashboard/MASTERPLAN.md` — gained 8 lines (the 5-bullet professional-services risks block).
+  - `examples/smb-accounting-saas-dashboard/DOCS/product-brief.md` — gained 8 lines (the 5-bullet professional-services positioning block).
+  - `examples/small-business-website-system/` — **byte-identical** (its domain `small business` is not specialised in this run).
+  - `git diff --stat examples/` → 2 files changed, 16 insertions(+), 0 deletions(-).
+- No `npm run build` or `npm run lint` scripts exist in this project, so they were not run.
+
+**Drift accounting**
+The drift is exactly the expected, narrowly-scoped consequence of specialising the `professional services` domain. The existing test `domain heuristics: existing examples remain stable after expansion` confirms domain values are unchanged for both examples. Worked-example file count remains 12 in both folders (covered by the existing on-disk tests).
+
+**Known limitations**
+- Only two domains specialised. The other 18 (and `general`) still produce the prior generic content. That's by design — see "Quality bar" in the brief — and the next run can extend coverage one domain at a time using the same helper.
+- The specialisation lives in `src/templates/domain-blocks.js`. If a third template ever wants domain depth (say `ARCHITECTURE.md`'s open-questions list), it should add a third small table + helper in the same file rather than a new module.
+- The bullets are static text, not parameterised on `ctx`. They reference the domain category, not the user's specific idea. That's a deliberate trade-off — the alternative is a template-engine-shaped rabbit hole.
+- Tests assert presence of distinctive phrases (e.g. "Greenwashing", "Liability"). A future contributor rewording the bullets must update the assertions in lockstep — acceptable cost for cheap content-level coverage.
+
+**Decisions**
+- **Helper module, not inline duplication.** Two templates need the same conditional logic; one helper module with two render functions keeps the domain decision in one place.
+- **`""` for fallback, not a generic placeholder section.** Avoids any risk of an empty heading or a stub bullet block, and keeps non-target examples byte-identical.
+- **Subsection (`###`) inside an existing numbered section, not a new numbered section.** Adding `## 6. Domain-specific positioning` would have renumbered Open questions, drifting every example regardless of domain. The chosen `###` slot makes the change purely additive.
+- **Load-time key check** instead of a runtime per-call check. The cost is paid once at module init; typos surface immediately, not at the first matching domain.
+- **Tests use distinctive substrings**, not equality on the full block, so editorial tweaks to a single bullet don't flap the suite.
+
+**Next session starts with**
+- **Extend domain depth carefully.** Best candidates: `health & wellness`, `finance`, `food & hospitality` — each has clean, defensible risks and positioning angles that fit the same two templates without redesign. Cadence should stay small: one domain per session, with a regen + drift inspection of the worked examples.
+
+---
+
+## Run #007 — 2026-04-29 — Context schema extraction (typedef + runtime validator)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Make the inferred-context shape an explicit, machine-checkable contract so contributors writing new templates can rely on it without reading `src/context.js`. With 20 domain groups and 7 product-type patterns now in play, the surface area was big enough to be worth pinning down.
+
+**What changed**
+- **New file `src/schema.js`** containing:
+  - A JSDoc `@typedef` for `Context` (8 fields: `rawIdea`, `projectName`, `slug`, `productType`, `audience`, `domain`, `generatedAt`, `year`).
+  - Closed-set typedefs for `ProductType` (8 string literals) and `Domain` (21 string literals — the 20 keyword groups plus `"general"` as the fallback).
+  - `validateContext(ctx)` returning `{ ok: boolean, errors: string[] }` — non-throwing, so callers can decide how to react.
+  - `assertContext(ctx)` — strict variant that throws `Invalid context: <reasons>`. Called at the end of every `buildContext()`, so no invalid context can ever reach a template.
+  - Re-exports `PRODUCT_TYPE_VALUES` and `DOMAIN_VALUES` so consumers have a single import point for both shape and runtime data.
+- **`src/context.js`** now exports the canonical value lists, **derived** from the existing inference data (`PRODUCT_TYPES.map(p => p.type)` + fallback; `Object.keys(DOMAIN_KEYWORDS)` + fallback) and frozen with `Object.freeze`. Adding a new productType / domain stays a one-line change in `context.js` — the schema picks it up automatically. Also added a JSDoc annotation on `buildContext` pointing readers at the `Context` typedef.
+- **Cycle handling.** `context.js` and `schema.js` form a small ES-module cycle (`context.js` imports `assertContext`, `schema.js` imports `*_VALUES`). It works because schema.js only reads the imports inside function bodies, not at module top level — by the time `assertContext` is invoked, both modules' top-level code has fully evaluated.
+- **`tests/generator.test.js`** grew 35 → 47 with a focused schema test cluster:
+  - PRODUCT_TYPE_VALUES contains the expected 8 entries.
+  - DOMAIN_VALUES contains 21 entries including `"general"`.
+  - Both lists are frozen.
+  - `validateContext` accepts the round-trip output of `buildContext` for five varied ideas (including the "general" fallback case).
+  - `validateContext` rejects null / non-object input.
+  - `validateContext` flags every required-string field individually when emptied.
+  - `validateContext` rejects malformed slug, unknown productType, unknown domain, bad year (sub-1970, fractional, stringified), and unparseable `generatedAt`.
+  - `assertContext` throws on invalid, no-throws on valid.
+  - Every example in the registry produces a context that passes `validateContext`.
+  - Round-trip canary: 10 single-keyword ideas (one per new domain group from Run #006) all match a non-`"general"` domain — surfaces any future keyword-overlap regression.
+
+**Files touched**
+- Added: `src/schema.js`.
+- Modified: `src/context.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/examples.js`, `src/templates/**`, `src/utils/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow. The change is fully contained in the inference + validation layer.
+
+**Tests run**
+- `npm test` → **47/47** pass.
+- `npm run generate:examples` → both example folders rebuild byte-identically; `git status -- examples` is clean (the validator runs in their generation path now, so this also confirms nothing the validator touches changes the output).
+
+**Known limitations**
+- The validator is internal-use only. It's exported, but no public API surface (`/api/generate`) accepts a caller-supplied context, so the validator is currently useful as a developer guard rather than a request-validation tool. That's the right balance for v1; if a future contributor adds a "regenerate from a saved context" endpoint, the validator is ready.
+- JSDoc typedefs aren't enforced at runtime by Node — they're only consumed by editors / TypeScript-aware tools. The runtime validator covers the actual enforcement gap. A future move to TypeScript would make the static and runtime stories converge; out of scope today.
+- Year bounds (`1970..9999`) are arbitrary. They protect against `0` / `NaN` / typos rather than encoding a meaningful business rule.
+- The validator doesn't enforce upper bounds on string length. `buildContext` already caps the project name and idea length elsewhere, but a defensive max-length per field would be a small addition for the next round.
+
+**Decisions**
+- **Validator returns errors instead of throwing**, with a separate `assertContext` for the strict path. Tests can read the error array; production code calls `assertContext`. Two tiny functions, one shared check — no clever options-object or class.
+- **`*_VALUES` are derived in `context.js`, not redeclared in `schema.js`**. A redeclared list would silently drift the moment someone adds a domain in `context.js` and forgets the schema. Derivation eliminates the failure mode.
+- **`Object.freeze` on the value arrays** so a caller can't accidentally `.push()` a "valid" value at runtime. Cheap insurance.
+- **Validator runs inside `buildContext`**, not in `generateKit`. Every entry point — including any future test or REPL caller — gets validation for free. The cost is a single function call per invocation; immeasurable.
+- **Did not introduce a third-party validator** (Zod / Yup / Ajv). The shape is small, the rules are simple, and adding a runtime dependency for ~40 LOC of hand-rolled validation would violate the project's two-deps guarantee. Documented this explicitly in `CLAUDE.md`.
+
+**Next session starts with**
+- Domain depth: pick one or two domains (suggested: `"climate & sustainability"` and `"professional services"`, since both worked examples cover the latter) and add a small domain-conditional section to one or two templates (e.g. `MASTERPLAN.md` risks list, `DOCS/product-brief.md` audience phrasing). Use the `Domain` typedef from `src/schema.js` to make typos visible to editor tooling. New top entry in `CLAUDE.md`'s prioritized shortlist.
+
+---
+
+## Run #006 — 2026-04-29 — Domain heuristics: 10 → 20 groups + leading-boundary matcher
+
+**Phase:** Phase 1 — Generation quality
+**Duration:** ~0.4 session
+**Goal going in:** Make generated docs feel domain-specific for a much wider range of inputs by doubling the number of recognised domains, and harden the matcher so the existing `.includes()`-based detection stops producing latent false positives.
+
+**What changed**
+- **Doubled `DOMAIN_KEYWORDS` in `src/context.js`** from 10 groups to 20 by appending (insertion order matters — first match wins, and appending is the only safe operation): `logistics & supply chain`, `government & civic`, `climate & sustainability`, `agriculture`, `travel & tourism`, `gaming`, `non-profit & community`, `manufacturing`, `HR & recruiting`, `events & ticketing`. Each group has 5–9 keywords chosen for specificity (e.g. `gamedev`, `last-mile`, `agtech`, `ci/cd`) so they read as real-world signals, not generic nouns.
+- **Switched the matcher from `String.prototype.includes()` to a pre-compiled regex with a leading word boundary** (`\b<keyword>`, case-insensitive). Two latent bugs surfaced and were fixed in this same change:
+  - `"ci"` (a developer-tools keyword) was matching `"civic"` via substring → civic-tech ideas were classified as developer tools. Replaced bare `"ci"` / `"cd"` with the canonical phrases `"ci/cd"` and `"continuous integration"` (most ambiguous remaining bare-bigram keyword removed).
+  - `"shop"` (retail keyword) was matching `"workshop"` via substring → events ideas were classified as retail. Leading-`\b` matcher fixes this without any keyword-list change (`\bshop` matches `"shops"`, `"shopkeepers"`, but not `"workshop"`).
+  - Trailing boundary intentionally **not** required, so `"shop"` still matches `"shops"`, `"3d print"` still matches `"3d printing"`, and `"developer"` still matches `"developers"`.
+- **Added a one-line invariant comment** above `DOMAIN_KEYWORDS` documenting the first-match-wins / append-only contract — the only comment in the file, justified because the iteration-order semantics are non-obvious and the next contributor will need to know.
+- **Tests grew 24 → 35** in `tests/generator.test.js`:
+  - 10 individual parametric domain-detection tests, one per new group, with descriptive titles like `domain heuristic: "A logistics platform for last-mile couriers" → logistics & supply chain`. Each test uses an idea where the new domain is the unambiguous winner (avoiding overlap with earlier-iterated groups).
+  - 1 regression-stability test that explicitly asserts the three pre-existing example/test ideas (`"A website system for small local businesses"`, `"A SaaS dashboard for small business accountants"`, `"I want to build an app for small restaurants"`) still resolve to their original domains after the keyword expansion and the matcher change.
+
+**Files touched**
+- Modified: `src/context.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `src/templates/**`, `src/index.js`, `src/examples.js`, `src/utils/**`, `scripts/**`, `examples/**`, `docs/**`, `package.json`, CI workflow. The change is fully contained within the inference layer.
+
+**Tests run**
+- `npm test` → **35/35** pass.
+- `npm run generate:examples` → both example folders rebuilt; `git status -- examples` is clean post-regen. The matcher change and the new groups produce **byte-identical** output for both worked examples (confirmed: `"website system for small local businesses"` still resolves to `small business`, and `"SaaS dashboard for small business accountants"` still resolves to `professional services`).
+
+**Known limitations**
+- Bare 2-letter or very short keywords still need to be designed carefully. We removed `"ci"` and `"cd"` for this reason, but `"smb"` (3 letters, in `small business`) and `"ngo"` (3 letters, in `non-profit & community`) remain — both are uncommon enough as substrings of unrelated words that they're acceptable, but a future audit may want to add an opt-in trailing-boundary mode for keywords ≤ 3 chars.
+- Some domains overlap meaningfully (`"freelance designer"` is both `creative & media` and `professional services`). Today the higher-iterated group wins. A "primary + secondary domain" model would be more accurate but is out of scope until the templates are ready to consume more than one signal.
+- The 10 new groups have not been used to differentiate template content — generated docs still mention the domain in passing (e.g. `MASTERPLAN.md` writes "in **{domain}**") but don't yet specialise sections per domain. Listed as the new top priority for follow-on quality work in `CLAUDE.md`.
+- No fuzz/property test for the matcher beyond the 10+ explicit cases. With a pre-compiled regex, the failure mode would be a regex-construction error at module load time rather than a silent miss, but a basic round-trip test ("every keyword in `DOMAIN_KEYWORDS` matches itself when fed as a one-word idea") would be a cheap addition next time.
+
+**Decisions**
+- **Append-only growth of `DOMAIN_KEYWORDS`** instead of inserting groups in topical order. Reorderings would silently change which domain the existing examples land on, breaking CI's example-drift check. The new comment in `src/context.js` documents this so the next contributor doesn't lose half a session to a confusing diff.
+- **Leading-boundary regex, not full word boundary**, so plurals and natural compound suffixes still match. The `"shop" / "workshop"` and `"ci" / "civic"` failures motivated the change; full boundaries would have broken `"developers"` and `"3d printing"`.
+- **Removed `"ci"` and `"cd"` outright** rather than keeping them with a clever per-keyword length-based boundary rule. Removing two unreliable signals is simpler than encoding the rule, and the canonical replacement (`"ci/cd"`, `"continuous integration"`) is what real users actually write.
+- **Tests use `for (const c of CASES) { test(...) }`** to produce one named subtest per group — descriptive failure messages, no clever harness needed.
+- **Did not touch the templates.** Domain depth (specialising template content per domain) is a separate, larger change with its own session.
+
+**Next session starts with**
+- Schema extraction for context: write a JSDoc `@typedef` for the inferred-context shape (`{rawIdea, projectName, slug, productType, audience, domain, generatedAt, year}`) and a small runtime validator. With 20 domain values now in play, contributors writing new templates need to be able to reason about the shape without reading `src/context.js`. See `CLAUDE.md` for the new prioritized shortlist.
+
+---
+
 ## Run #005 — 2026-04-29 — Public landing page (GitHub Pages source under `/docs`)
 
 **Phase:** Phase 1 — UX surface (continued)

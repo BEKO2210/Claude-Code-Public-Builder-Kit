@@ -4,9 +4,15 @@ import { readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit, FILE_PLAN } from "../src/index.js";
-import { buildContext } from "../src/context.js";
+import { buildContext, PRODUCT_TYPE_VALUES, DOMAIN_VALUES } from "../src/context.js";
 import { buildZipBuffer } from "../src/utils/zip.js";
 import { EXAMPLES, findExample, isSafeExampleId } from "../src/examples.js";
+import { validateContext, assertContext } from "../src/schema.js";
+import {
+  domainRisksBlock,
+  domainPositioningBlock,
+  SPECIALISED_DOMAINS
+} from "../src/templates/domain-blocks.js";
 import app from "../server.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -40,6 +46,13 @@ function countCentralDirectoryEntries(buf) {
 async function listMarkdownFiles(dir) {
   const all = await readdir(dir, { recursive: true, withFileTypes: true });
   return all.filter((d) => d.isFile() && d.name.endsWith(".md")).map((d) => d.name);
+}
+
+function fileFromKit(idea, path, opts) {
+  const { files } = generateKit(idea, opts);
+  const file = files.find((f) => f.path === path);
+  if (!file) throw new Error(`File ${path} missing for idea: ${idea}`);
+  return file.content;
 }
 
 test("generates exactly the 12 expected files", () => {
@@ -76,6 +89,218 @@ test("context infers product type, audience, and domain", () => {
   assert.match(ctx.audience, /small restaurants/i);
   assert.equal(ctx.domain, "food & hospitality");
   assert.match(ctx.slug, /small-restaurants/);
+});
+
+const DOMAIN_DETECTION_CASES = [
+  { domain: "logistics & supply chain",  idea: "A logistics platform for last-mile couriers" },
+  { domain: "government & civic",         idea: "A civic engagement app for municipality residents" },
+  { domain: "climate & sustainability",   idea: "A carbon accounting tool for sustainability teams" },
+  { domain: "agriculture",                idea: "A farm management app for organic crop growers" },
+  { domain: "travel & tourism",           idea: "A trip planning app for backpackers staying in hostels" },
+  { domain: "gaming",                     idea: "A matchmaking server for online multiplayer indie game lobbies" },
+  { domain: "non-profit & community",     idea: "A fundraising tool for nonprofit organizations" },
+  { domain: "manufacturing",              idea: "A factory floor monitoring system for manufacturing teams" },
+  { domain: "HR & recruiting",            idea: "A recruiting CRM for small-team hiring pipelines" },
+  { domain: "events & ticketing",         idea: "A ticketing platform for community workshops and meetups" }
+];
+
+for (const c of DOMAIN_DETECTION_CASES) {
+  test(`domain heuristic: "${c.idea}" → ${c.domain}`, () => {
+    const ctx = buildContext(c.idea);
+    assert.equal(ctx.domain, c.domain);
+  });
+}
+
+test("schema: PRODUCT_TYPE_VALUES contains the 8 expected values", () => {
+  const expected = ["mobile app", "web app", "website", "platform", "tool", "service", "app", "product"];
+  assert.deepEqual([...PRODUCT_TYPE_VALUES].sort(), [...expected].sort());
+});
+
+test("schema: DOMAIN_VALUES has 21 entries (20 groups + general)", () => {
+  assert.equal(DOMAIN_VALUES.length, 21);
+  assert.ok(DOMAIN_VALUES.includes("general"));
+  assert.ok(DOMAIN_VALUES.includes("food & hospitality"));
+  assert.ok(DOMAIN_VALUES.includes("events & ticketing"));
+});
+
+test("schema: PRODUCT_TYPE_VALUES and DOMAIN_VALUES are immutable (frozen)", () => {
+  assert.ok(Object.isFrozen(PRODUCT_TYPE_VALUES));
+  assert.ok(Object.isFrozen(DOMAIN_VALUES));
+});
+
+test("schema: validateContext accepts the output of buildContext for varied ideas", () => {
+  const ideas = [
+    "I want to build an app for small restaurants",
+    "A SaaS dashboard for small business accountants",
+    "A platform for indie game studios",
+    "A logistics platform for last-mile couriers",
+    "Just a tool" // falls back to general / tool
+  ];
+  for (const idea of ideas) {
+    const ctx = buildContext(idea);
+    const r = validateContext(ctx);
+    assert.equal(r.ok, true, `expected valid ctx for "${idea}", got: ${r.errors.join("; ")}`);
+  }
+});
+
+test("schema: validateContext rejects null / non-object input", () => {
+  assert.equal(validateContext(null).ok, false);
+  assert.equal(validateContext(undefined).ok, false);
+  assert.equal(validateContext("string").ok, false);
+  assert.equal(validateContext(42).ok, false);
+});
+
+test("schema: validateContext flags missing required string fields", () => {
+  const base = buildContext("A platform for indie studios");
+  for (const field of ["rawIdea", "projectName", "slug", "audience", "generatedAt"]) {
+    const broken = { ...base, [field]: "" };
+    const r = validateContext(broken);
+    assert.equal(r.ok, false, `expected failure when ${field} is empty`);
+    assert.ok(r.errors.some((e) => e.includes(field)), `error must mention '${field}'`);
+  }
+});
+
+test("schema: validateContext rejects malformed slug", () => {
+  const base = buildContext("A platform for indie studios");
+  const r = validateContext({ ...base, slug: "Bad Slug With Spaces" });
+  assert.equal(r.ok, false);
+  assert.ok(r.errors.some((e) => /slug/.test(e)));
+});
+
+test("schema: validateContext rejects unknown productType / domain", () => {
+  const base = buildContext("A platform for indie studios");
+  assert.equal(validateContext({ ...base, productType: "spaceship" }).ok, false);
+  assert.equal(validateContext({ ...base, domain: "atlantis" }).ok, false);
+});
+
+test("schema: validateContext rejects bad year and bad generatedAt", () => {
+  const base = buildContext("A platform for indie studios");
+  assert.equal(validateContext({ ...base, year: 1969 }).ok, false);
+  assert.equal(validateContext({ ...base, year: 2026.5 }).ok, false);
+  assert.equal(validateContext({ ...base, year: "2026" }).ok, false);
+  assert.equal(validateContext({ ...base, generatedAt: "not-a-date" }).ok, false);
+});
+
+test("schema: assertContext throws on invalid, returns nothing on valid", () => {
+  const valid = buildContext("A platform for indie studios");
+  assert.doesNotThrow(() => assertContext(valid));
+  assert.throws(() => assertContext({ ...valid, domain: "atlantis" }), /Invalid context/);
+  assert.throws(() => assertContext(null), /Invalid context/);
+});
+
+test("schema: every generated example's context is valid", () => {
+  for (const ex of EXAMPLES) {
+    const ctx = buildContext(ex.idea, { now: ex.now });
+    const r = validateContext(ctx);
+    assert.equal(r.ok, true, `example ${ex.id} produced an invalid context: ${r.errors.join("; ")}`);
+  }
+});
+
+test("domain depth: SPECIALISED_DOMAINS has exactly the two expected entries", () => {
+  assert.deepEqual([...SPECIALISED_DOMAINS].sort(), ["climate & sustainability", "professional services"]);
+});
+
+test("domain depth: climate & sustainability — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A carbon accounting tool for sustainability teams", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(climate & sustainability\)/);
+  assert.match(md, /Greenwashing/);
+  assert.match(md, /methodology/);
+});
+
+test("domain depth: professional services — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A SaaS dashboard for small business accountants", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(professional services\)/);
+  assert.match(md, /Liability/);
+  assert.match(md, /Client-data privacy/);
+});
+
+test("domain depth: climate & sustainability — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A carbon accounting tool for sustainability teams", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(climate & sustainability\)/);
+  assert.match(md, /credible impact/);
+  assert.match(md, /transparent metrics/);
+});
+
+test("domain depth: professional services — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A SaaS dashboard for small business accountants", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(professional services\)/);
+  assert.match(md, /Repeatable processes/);
+  assert.match(md, /Better client communication/);
+});
+
+test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
+  // small business — already a worked example; must not regress.
+  const sbMaster = fileFromKit("A website system for small local businesses", "MASTERPLAN.md", { now: "2026-04-29T00:00:00Z" });
+  const sbBrief = fileFromKit("A website system for small local businesses", "DOCS/product-brief.md", { now: "2026-04-29T00:00:00Z" });
+  assert.doesNotMatch(sbMaster, /Domain-specific risks/);
+  assert.doesNotMatch(sbBrief, /Domain-specific positioning/);
+
+  // food & hospitality, gaming, general — sample three more non-target domains.
+  for (const idea of [
+    "I want to build an app for small restaurants",
+    "A matchmaking server for online multiplayer indie game lobbies",
+    "Just a tool for keeping track of stuff"
+  ]) {
+    const m = fileFromKit(idea, "MASTERPLAN.md");
+    const b = fileFromKit(idea, "DOCS/product-brief.md");
+    assert.doesNotMatch(m, /Domain-specific risks/, `MASTERPLAN.md leaked domain heading for "${idea}"`);
+    assert.doesNotMatch(b, /Domain-specific positioning/, `product-brief.md leaked domain heading for "${idea}"`);
+    // Existing structure is intact.
+    assert.match(m, /## 8\. Risks and mitigations/);
+    assert.match(m, /## 9\. Open questions/);
+    assert.match(b, /## 5\. Tone and voice/);
+    assert.match(b, /## 6\. Open questions/);
+  }
+});
+
+test("domain depth: helpers return empty string for unspecialised domains", () => {
+  for (const ctx of [
+    { domain: "general" },
+    { domain: "food & hospitality" },
+    { domain: "gaming" },
+    { domain: "small business" }
+  ]) {
+    assert.equal(domainRisksBlock(ctx), "");
+    assert.equal(domainPositioningBlock(ctx), "");
+  }
+});
+
+test("no generated file leaks 'undefined' or '[object Object]'", () => {
+  const ideas = [
+    "I want to build an app for small restaurants",
+    "A carbon accounting tool for sustainability teams",
+    "A SaaS dashboard for small business accountants",
+    "A platform for indie game studios",
+    "Just a thing"
+  ];
+  for (const idea of ideas) {
+    const { files } = generateKit(idea);
+    for (const f of files) {
+      assert.ok(!f.content.includes("undefined"), `${f.path} contains 'undefined' for idea "${idea}"`);
+      assert.ok(!f.content.includes("[object Object]"), `${f.path} contains '[object Object]' for idea "${idea}"`);
+    }
+  }
+});
+
+test("schema: every keyword in DOMAIN_KEYWORDS round-trips to its declared domain", () => {
+  // Round-trip canary — if we ever add a keyword that contains a substring of
+  // an earlier-iterated keyword, this test will surface the conflict.
+  for (const idea of [
+    "logistics", "civic", "carbon", "farm", "trip",
+    "gamedev", "nonprofit", "factory", "recruiting", "ticketing"
+  ]) {
+    const ctx = buildContext(idea);
+    assert.ok(DOMAIN_VALUES.includes(ctx.domain), `domain "${ctx.domain}" not in DOMAIN_VALUES`);
+    assert.notEqual(ctx.domain, "general", `keyword "${idea}" should match a non-general domain`);
+  }
+});
+
+test("domain heuristics: existing examples remain stable after expansion", () => {
+  // The two worked examples must keep their original domain — adding new
+  // groups at the end of DOMAIN_KEYWORDS preserves first-match-wins behavior.
+  assert.equal(buildContext("A website system for small local businesses").domain, "small business");
+  assert.equal(buildContext("A SaaS dashboard for small business accountants").domain, "professional services");
+  assert.equal(buildContext("I want to build an app for small restaurants").domain, "food & hospitality");
 });
 
 test("context handles website + small-business idea", () => {

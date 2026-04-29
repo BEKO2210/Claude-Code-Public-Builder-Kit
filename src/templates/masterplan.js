@@ -1,3 +1,5 @@
+import { domainRisksBlock } from "./domain-blocks.js";
+
 export default function masterplan(ctx) {
   return `# MASTERPLAN — ${ctx.projectName}
 
@@ -75,7 +77,7 @@ Targets for the first 90 days post-launch:
 | Scope creep from enthusiastic users | High | Medium | Hard enforcement of \`ACCEPTANCE_CRITERIA.md\`. |
 | Stack choice locks us in | Low | Medium | Boring, swappable components. ADR required for any lock-in dependency. |
 | Solo-developer burnout | Medium | High | One phase at a time. Each phase has a clear "stop and reassess" gate. |
-
+${domainRisksBlock(ctx)}
 ## 9. Open questions
 
 These are the questions we will answer in the first two weeks. Each gets an ADR.

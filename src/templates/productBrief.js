@@ -1,3 +1,5 @@
+import { domainPositioningBlock } from "./domain-blocks.js";
+
 export default function productBrief(ctx) {
   return `# Product brief — ${ctx.projectName}
 
@@ -49,7 +51,7 @@ If demand from these segments grows, we revisit via an ADR. Not before.
 - Plain language. No jargon.
 - Confident, not breathless. We help people get on with their work; we are not a lifestyle.
 - Show, don't tell. Empty states explain by example.
-
+${domainPositioningBlock(ctx)}
 ## 6. Open questions
 
 - Who exactly is the first cohort of 10 users? Names go here once we know them.

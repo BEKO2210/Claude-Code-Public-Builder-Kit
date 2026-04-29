@@ -49,6 +49,14 @@ If demand from these segments grows, we revisit via an ADR. Not before.
 - Confident, not breathless. We help people get on with their work; we are not a lifestyle.
 - Show, don't tell. Empty states explain by example.
 
+### Domain-specific positioning (professional services)
+
+- Sell time saved on the boring half of the work — repeatable workflows, not productivity theatre.
+- Repeatable processes: every recurring task lives in one place, with a recorded version history that can be shown to a client.
+- Better client communication: drafts, summaries, and status updates that the practitioner can send with confidence after a quick review.
+- Professional documentation by default: every output is presentable to a client without rework.
+- Reliable workflows for small teams — partner / consultant / firm of 1–10 — without a 90-day rollout.
+
 ## 6. Open questions
 
 - Who exactly is the first cohort of 10 users? Names go here once we know them.
