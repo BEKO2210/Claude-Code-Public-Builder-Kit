@@ -1,0 +1,22 @@
+{
+  "name": "claude-code-public-builder-kit",
+  "version": "0.1.0",
+  "description": "Turn a one-line project idea into a structured, opinionated Markdown foundation for building with Claude Code.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js",
+    "generate:example": "node scripts/build-example.js",
+    "generate:examples": "node scripts/build-example.js"
+  },
+  "dependencies": {
+    "archiver": "^7.0.1",
+    "express": "^4.19.2"
+  },
+  "license": "MIT"
+}

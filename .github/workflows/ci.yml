@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Run tests
+        run: npm test
+
+      - name: Regenerate worked examples
+        run: npm run generate:examples
+
+      - name: Verify examples are reproducible (no diff)
+        run: |
+          if ! git diff --quiet --exit-code -- examples; then
+            echo "::error::Worked examples drifted. Re-run 'npm run generate:examples' locally and commit the result."
+            git --no-pager diff -- examples
+            exit 1
+          fi

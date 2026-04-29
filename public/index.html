@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Code Public Builder Kit</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+      <div class="container">
+        <h1>Claude Code Public Builder Kit</h1>
+        <p class="tagline">
+          Turn a one-line project idea into a clean, structured planning
+          foundation: vision, roadmap, acceptance criteria, architecture, prompts.
+        </p>
+      </div>
+    </header>
+
+    <main id="main" class="container" tabindex="-1">
+      <section class="generator" aria-labelledby="generator-heading">
+        <h2 id="generator-heading" class="visually-hidden">Generate a kit</h2>
+        <form id="generate-form" novalidate>
+          <label for="idea">Your project idea</label>
+          <textarea
+            id="idea"
+            name="idea"
+            rows="3"
+            maxlength="500"
+            placeholder="e.g. I want to build an app for small restaurants"
+            aria-describedby="idea-hint"
+            required
+          ></textarea>
+          <p id="idea-hint" class="hint">
+            One sentence is enough. The kit infers product type, audience, and domain — you sharpen the rest in <code>MASTERPLAN.md</code>.
+          </p>
+          <div class="row">
+            <label class="checkbox">
+              <input type="checkbox" id="persist" checked />
+              Also write files to <code>output/&lt;slug&gt;/</code>
+            </label>
+            <button type="submit" id="submit">Generate kit</button>
+          </div>
+          <p id="status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <section class="gallery" aria-labelledby="gallery-heading">
+        <header class="section-header">
+          <h2 id="gallery-heading">Example gallery</h2>
+          <p class="muted">
+            Real kits produced by the same generator. Preview the files, or load an idea into the form to start your own.
+          </p>
+        </header>
+        <ul id="example-cards" class="example-cards" aria-live="polite" aria-busy="true">
+          <li class="example-card placeholder">Loading examples…</li>
+        </ul>
+      </section>
+
+      <section id="result" class="result" aria-labelledby="result-heading" hidden>
+        <header class="result-header">
+          <div>
+            <h2 id="result-heading" class="result-title">
+              <span id="project-name"></span>
+              <span id="result-source-badge" class="badge" hidden></span>
+            </h2>
+            <p id="project-meta" class="muted"></p>
+          </div>
+          <div class="result-actions">
+            <button id="download-zip" type="button" class="secondary">Download ZIP</button>
+            <p id="written-to" class="muted" role="status" aria-live="polite"></p>
+          </div>
+        </header>
+        <div class="result-body">
+          <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
+          <article class="file-view" aria-labelledby="active-path">
+            <header class="file-view-header">
+              <span id="active-path" class="path"></span>
+              <button id="copy" type="button">Copy</button>
+            </header>
+            <pre id="file-content" class="file-content" tabindex="0"></pre>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>
+          MIT licensed. Generated docs are yours — edit them freely.
+          See <code>CLAUDE.md</code> for how to drive subsequent Claude Code
+          sessions inside a generated kit.
+        </p>
+      </div>
+    </footer>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
