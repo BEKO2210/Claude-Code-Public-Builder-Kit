@@ -1,27 +1,51 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readdir } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { generateKit, FILE_PLAN } from "../src/index.js";
 import { buildContext } from "../src/context.js";
+import { buildZipBuffer } from "../src/utils/zip.js";
+import app from "../server.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(__dirname, "..");
+const EXPECTED_FILES = [
+  "README.md",
+  "CLAUDE.md",
+  "MASTERPLAN.md",
+  "ROADMAP.md",
+  "RUN_LOG.md",
+  "ACCEPTANCE_CRITERIA.md",
+  "ARCHITECTURE.md",
+  "PROMPTS/initial-prompt.md",
+  "PROMPTS/run-plan-20-sessions.md",
+  "DOCS/product-brief.md",
+  "DOCS/market-positioning.md",
+  "DOCS/technical-decisions.md"
+];
+
+function countCentralDirectoryEntries(buf) {
+  // ZIP central directory header signature: 0x02014b50 (little-endian PK\x01\x02).
+  let count = 0;
+  for (let i = 0; i + 3 < buf.length; i++) {
+    if (buf[i] === 0x50 && buf[i + 1] === 0x4b && buf[i + 2] === 0x01 && buf[i + 3] === 0x02) {
+      count++;
+    }
+  }
+  return count;
+}
+
+async function listMarkdownFiles(dir) {
+  const all = await readdir(dir, { recursive: true, withFileTypes: true });
+  return all.filter((d) => d.isFile() && d.name.endsWith(".md")).map((d) => d.name);
+}
 
 test("generates exactly the 12 expected files", () => {
   const { files } = generateKit("I want to build an app for small restaurants");
   assert.equal(files.length, 12);
-  const expected = [
-    "README.md",
-    "CLAUDE.md",
-    "MASTERPLAN.md",
-    "ROADMAP.md",
-    "RUN_LOG.md",
-    "ACCEPTANCE_CRITERIA.md",
-    "ARCHITECTURE.md",
-    "PROMPTS/initial-prompt.md",
-    "PROMPTS/run-plan-20-sessions.md",
-    "DOCS/product-brief.md",
-    "DOCS/market-positioning.md",
-    "DOCS/technical-decisions.md"
-  ];
-  assert.deepEqual(files.map((f) => f.path), expected);
-  assert.equal(FILE_PLAN.length, expected.length);
+  assert.deepEqual(files.map((f) => f.path), EXPECTED_FILES);
+  assert.equal(FILE_PLAN.length, EXPECTED_FILES.length);
 });
 
 test("every generated file has substantial content (>= 800 bytes)", () => {
@@ -84,4 +108,84 @@ test("deterministic output when 'now' is fixed", () => {
   const a = generateKit("A platform for indie game studios", { now: "2026-04-29T00:00:00Z" });
   const b = generateKit("A platform for indie game studios", { now: "2026-04-29T00:00:00Z" });
   assert.deepEqual(a.files, b.files);
+});
+
+test("buildZipBuffer produces a valid zip with 12 entries", async () => {
+  const { context, files } = generateKit("A SaaS dashboard for small business accountants");
+  const buf = await buildZipBuffer(files, context.slug);
+  assert.ok(Buffer.isBuffer(buf));
+  assert.deepEqual(Array.from(buf.subarray(0, 4)), [0x50, 0x4b, 0x03, 0x04]);
+  assert.equal(countCentralDirectoryEntries(buf), 12);
+  for (const path of EXPECTED_FILES) {
+    assert.ok(
+      buf.toString("latin1").includes(`${context.slug}/${path}`),
+      `zip missing entry: ${context.slug}/${path}`
+    );
+  }
+});
+
+test("buildZipBuffer rejects unsafe entry paths", async () => {
+  const evil = [{ path: "../escape.md", content: "x" }];
+  await assert.rejects(() => buildZipBuffer(evil, "ok-slug"), /Unsafe entry path/);
+});
+
+test("buildZipBuffer rejects unsafe root names", async () => {
+  await assert.rejects(() => buildZipBuffer([], "../etc"), /Unsafe root name/);
+});
+
+test("POST /api/generate.zip returns a zip response", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/generate.zip`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "A SaaS dashboard for small business accountants" })
+    });
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") || "", /application\/zip/);
+    assert.match(res.headers.get("content-disposition") || "", /attachment/);
+    const buf = Buffer.from(await res.arrayBuffer());
+    assert.deepEqual(Array.from(buf.subarray(0, 4)), [0x50, 0x4b, 0x03, 0x04]);
+    assert.equal(countCentralDirectoryEntries(buf), 12);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("POST /api/generate.zip rejects empty idea", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/generate.zip`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: "" })
+    });
+    assert.equal(res.status, 400);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("worked example: small-business-website-system has all 12 files on disk", async () => {
+  const dir = resolve(REPO_ROOT, "examples/small-business-website-system");
+  const files = await listMarkdownFiles(dir);
+  assert.equal(files.length, 12, `expected 12 .md files, got ${files.length}`);
+});
+
+test("worked example: smb-accounting-saas-dashboard has all 12 files on disk", async () => {
+  const dir = resolve(REPO_ROOT, "examples/smb-accounting-saas-dashboard");
+  const files = await listMarkdownFiles(dir);
+  assert.equal(files.length, 12, `expected 12 .md files, got ${files.length}`);
+});
+
+test("second example demonstrates SaaS / dashboard / accounting context", () => {
+  const ctx = buildContext("A SaaS dashboard for small business accountants");
+  assert.equal(ctx.productType, "web app");
+  assert.match(ctx.audience, /small business accountants/i);
+  assert.equal(ctx.domain, "professional services");
+  assert.match(ctx.projectName, /SaaS/);
 });

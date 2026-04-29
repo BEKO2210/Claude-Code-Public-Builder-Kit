@@ -11,9 +11,12 @@ const fileList = document.getElementById("file-list");
 const activePath = document.getElementById("active-path");
 const fileContent = document.getElementById("file-content");
 const copyBtn = document.getElementById("copy");
+const downloadZipBtn = document.getElementById("download-zip");
 
 let currentFiles = [];
 let activeIndex = -1;
+let lastIdea = "";
+let lastSlug = "";
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
@@ -40,6 +43,41 @@ function selectFile(i) {
   fileContent.textContent = file.content;
   renderFileList();
 }
+
+downloadZipBtn.addEventListener("click", async () => {
+  if (!lastIdea) return;
+  const originalLabel = downloadZipBtn.textContent;
+  downloadZipBtn.disabled = true;
+  downloadZipBtn.textContent = "Building ZIP…";
+  try {
+    const res = await fetch("/api/generate.zip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idea: lastIdea })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || `Download failed (${res.status}).`);
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${lastSlug || "kit"}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    downloadZipBtn.textContent = "Downloaded";
+    setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
+  } catch (err) {
+    downloadZipBtn.textContent = "Failed";
+    setStatus(err.message || "ZIP download failed.", true);
+    setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
+  } finally {
+    downloadZipBtn.disabled = false;
+  }
+});
 
 copyBtn.addEventListener("click", async () => {
   if (activeIndex < 0) return;
@@ -77,6 +115,8 @@ form.addEventListener("submit", async (e) => {
 
     currentFiles = data.files;
     activeIndex = 0;
+    lastIdea = idea;
+    lastSlug = data.context.slug;
     projectName.textContent = data.context.projectName;
     projectMeta.textContent = `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`;
     writtenTo.textContent = data.writtenTo ? `Written to: ${data.writtenTo}` : "";

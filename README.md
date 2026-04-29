@@ -55,7 +55,31 @@ Then open <http://localhost:5173>. Enter an idea, click **Generate kit**, and:
 
 Override the port with `PORT=5174 npm start`.
 
-## Use the API directly
+## Download as ZIP
+
+After generating a kit in the UI, click **Download ZIP** to save the whole bundle as a single archive. The button reuses the idea you typed and shows a loading state while the server builds the archive.
+
+You can also call the ZIP endpoint directly:
+
+```bash
+curl -s -X POST http://localhost:5173/api/generate.zip \
+  -H 'Content-Type: application/json' \
+  -d '{"idea":"A SaaS dashboard for small business accountants"}' \
+  -o kit.zip
+unzip -l kit.zip
+```
+
+The archive contains all 12 generated files nested under a single root folder named after the project slug.
+
+## API endpoints
+
+| Method | Path | Description |
+| --- | --- | --- |
+| `GET`  | `/api/health` | Liveness check. Returns `{ "ok": true }`. |
+| `POST` | `/api/generate` | Generate the kit and return JSON. Optionally writes to `output/<slug>/`. |
+| `POST` | `/api/generate.zip` | Generate the kit and return a ZIP attachment. |
+
+### `POST /api/generate`
 
 ```bash
 curl -s -X POST http://localhost:5173/api/generate \
@@ -68,7 +92,7 @@ Request body:
 
 ```json
 {
-  "idea": "string (required, <= 500 chars)",
+  "idea":    "string (required, <= 500 chars)",
   "persist": "boolean (optional, default true) — also write to output/<slug>/"
 }
 ```
@@ -83,6 +107,10 @@ Response:
 }
 ```
 
+### `POST /api/generate.zip`
+
+Same request body as `/api/generate` (`idea` field; `persist` is ignored — nothing is written to disk). The response is a `application/zip` attachment containing all 12 files under `<slug>/`.
+
 ## Use the generator from Node
 
 ```js
@@ -93,19 +121,22 @@ const { context, files } = generateKit("A platform for indie game studios");
 await writeKit(files, `./output/${context.slug}`);
 ```
 
-## Worked example
+## Worked examples
 
-A pre-generated kit for *"A website system for small local businesses"* lives in
-`examples/small-business-website-system/`. Browse those 12 files to see exactly
-what the generator produces.
+Two pre-generated kits live in `examples/` so you can browse exactly what the generator produces without running anything:
 
-To regenerate it from scratch:
+- `examples/small-business-website-system/` — *"A website system for small local businesses"*
+- `examples/smb-accounting-saas-dashboard/` — *"A SaaS dashboard for small business accountants"* (showcases acronym preservation and inferred domain `professional services`)
+
+Regenerate both from scratch:
 
 ```bash
+npm run generate:examples
+# alias kept for backward compatibility:
 npm run generate:example
 ```
 
-The example uses a fixed `generatedAt` timestamp so the output is byte-stable.
+Both scripts call the same builder. Each example uses a fixed `generatedAt` timestamp so the output is byte-stable, and CI fails if regeneration produces a non-empty git diff.
 
 ## Tests
 
@@ -113,29 +144,40 @@ The example uses a fixed `generatedAt` timestamp so the output is byte-stable.
 npm test
 ```
 
-Nine tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, and round-trip content checks.
+17 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, and the on-disk integrity of both worked examples.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every push and pull request. It:
+
+1. Installs dependencies (`npm ci` if a lockfile is present, else `npm install`).
+2. Runs `npm test`.
+3. Runs `npm run generate:examples` and fails if any example file changed — making example drift impossible to merge unnoticed.
 
 ## Project structure
 
 ```
 .
-├── server.js                 # Express server: serves /public and /api/generate
+├── .github/workflows/ci.yml  # GitHub Actions: tests + example reproducibility
+├── server.js                 # Express: /api/health, /api/generate, /api/generate.zip
 ├── package.json
+├── LICENSE                   # MIT
 ├── public/                   # Vanilla HTML/CSS/JS frontend, no build step
 │   ├── index.html
 │   ├── style.css
-│   └── app.js
+│   └── app.js                # Generate + Download ZIP, file viewer
 ├── src/
 │   ├── index.js              # generateKit(idea) — orchestrates all 12 templates
 │   ├── context.js            # Heuristic inference: idea -> {projectName, slug, …}
-│   ├── templates/            # One file per generated document
-│   └── utils/                # slug, file writer
+│   ├── templates/            # One file per generated document (12 of them)
+│   └── utils/                # slug, file writer, zip builder
 ├── scripts/
-│   └── build-example.js      # Regenerates examples/small-business-website-system
+│   └── build-example.js      # Regenerates every entry in examples/ deterministically
 ├── examples/
-│   └── small-business-website-system/   # Pre-generated worked example (12 files)
+│   ├── small-business-website-system/   # Pre-generated worked example (12 files)
+│   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
 ├── tests/
-│   └── generator.test.js     # node:test suite
+│   └── generator.test.js     # node:test suite (17 tests)
 └── output/                   # Runtime-generated kits land here (git-ignored)
 ```
 
@@ -145,6 +187,7 @@ Nine tests covering: file count, file size floors, no leaked placeholder lines, 
 - **No build step.** ESM straight off disk in both Node and the browser.
 - **Templates are functions.** Each generated document is a `(ctx) => string` in `src/templates/`. To add a thirteenth file, add a template and one row to `FILE_PLAN` in `src/index.js`.
 - **Honest assumptions.** Every generated doc is upfront about what's a guess and how to sharpen it. There are no `TODO`-only stubs.
+- **Two runtime dependencies.** Express (HTTP) and archiver (ZIP). Both are widely deployed and easy to audit.
 
 ## How to extend
 

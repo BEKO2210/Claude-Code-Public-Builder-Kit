@@ -10,6 +10,11 @@ const EXAMPLES = [
     folder: "small-business-website-system",
     idea: "A website system for small local businesses",
     now: "2026-04-29T00:00:00Z"
+  },
+  {
+    folder: "smb-accounting-saas-dashboard",
+    idea: "A SaaS dashboard for small business accountants",
+    now: "2026-04-29T00:00:00Z"
   }
 ];
 

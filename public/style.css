@@ -63,7 +63,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
 .result-header h2 { margin: 0 0 4px; font-size: 20px; }
+.result-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
 .muted { color: var(--muted); font-size: 14px; margin: 0; }
+button.secondary { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); }
+button.secondary:hover { background: #232a3b; }
 
 .result-body { display: grid; grid-template-columns: 280px 1fr; min-height: 480px; }
 @media (max-width: 720px) { .result-body { grid-template-columns: 1fr; } }

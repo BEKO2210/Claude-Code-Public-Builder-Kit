@@ -3,6 +3,7 @@ import { dirname, resolve, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit } from "./src/index.js";
 import { writeKit } from "./src/utils/write.js";
+import { buildZipBuffer } from "./src/utils/zip.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5173;
@@ -42,6 +43,28 @@ app.post("/api/generate", async (req, res) => {
     res.json({ context, files, writtenTo });
   } catch (err) {
     res.status(500).json({ error: err.message || "Generation failed." });
+  }
+});
+
+function readIdea(req) {
+  const idea = typeof req.body?.idea === "string" ? req.body.idea.trim() : "";
+  if (!idea) return { error: "Field 'idea' is required." };
+  if (idea.length > 500) return { error: "Idea must be 500 characters or fewer." };
+  return { idea };
+}
+
+app.post("/api/generate.zip", async (req, res) => {
+  const parsed = readIdea(req);
+  if (parsed.error) return res.status(400).json({ error: parsed.error });
+  try {
+    const { context, files } = generateKit(parsed.idea);
+    const buf = await buildZipBuffer(files, context.slug);
+    res.setHeader("Content-Type", "application/zip");
+    res.setHeader("Content-Disposition", `attachment; filename="${context.slug}.zip"`);
+    res.setHeader("Content-Length", buf.length);
+    res.end(buf);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "ZIP generation failed." });
   }
 });
 
