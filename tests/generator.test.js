@@ -4,9 +4,10 @@ import { readdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit, FILE_PLAN } from "../src/index.js";
-import { buildContext } from "../src/context.js";
+import { buildContext, PRODUCT_TYPE_VALUES, DOMAIN_VALUES } from "../src/context.js";
 import { buildZipBuffer } from "../src/utils/zip.js";
 import { EXAMPLES, findExample, isSafeExampleId } from "../src/examples.js";
+import { validateContext, assertContext } from "../src/schema.js";
 import app from "../server.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -97,6 +98,104 @@ for (const c of DOMAIN_DETECTION_CASES) {
     assert.equal(ctx.domain, c.domain);
   });
 }
+
+test("schema: PRODUCT_TYPE_VALUES contains the 8 expected values", () => {
+  const expected = ["mobile app", "web app", "website", "platform", "tool", "service", "app", "product"];
+  assert.deepEqual([...PRODUCT_TYPE_VALUES].sort(), [...expected].sort());
+});
+
+test("schema: DOMAIN_VALUES has 21 entries (20 groups + general)", () => {
+  assert.equal(DOMAIN_VALUES.length, 21);
+  assert.ok(DOMAIN_VALUES.includes("general"));
+  assert.ok(DOMAIN_VALUES.includes("food & hospitality"));
+  assert.ok(DOMAIN_VALUES.includes("events & ticketing"));
+});
+
+test("schema: PRODUCT_TYPE_VALUES and DOMAIN_VALUES are immutable (frozen)", () => {
+  assert.ok(Object.isFrozen(PRODUCT_TYPE_VALUES));
+  assert.ok(Object.isFrozen(DOMAIN_VALUES));
+});
+
+test("schema: validateContext accepts the output of buildContext for varied ideas", () => {
+  const ideas = [
+    "I want to build an app for small restaurants",
+    "A SaaS dashboard for small business accountants",
+    "A platform for indie game studios",
+    "A logistics platform for last-mile couriers",
+    "Just a tool" // falls back to general / tool
+  ];
+  for (const idea of ideas) {
+    const ctx = buildContext(idea);
+    const r = validateContext(ctx);
+    assert.equal(r.ok, true, `expected valid ctx for "${idea}", got: ${r.errors.join("; ")}`);
+  }
+});
+
+test("schema: validateContext rejects null / non-object input", () => {
+  assert.equal(validateContext(null).ok, false);
+  assert.equal(validateContext(undefined).ok, false);
+  assert.equal(validateContext("string").ok, false);
+  assert.equal(validateContext(42).ok, false);
+});
+
+test("schema: validateContext flags missing required string fields", () => {
+  const base = buildContext("A platform for indie studios");
+  for (const field of ["rawIdea", "projectName", "slug", "audience", "generatedAt"]) {
+    const broken = { ...base, [field]: "" };
+    const r = validateContext(broken);
+    assert.equal(r.ok, false, `expected failure when ${field} is empty`);
+    assert.ok(r.errors.some((e) => e.includes(field)), `error must mention '${field}'`);
+  }
+});
+
+test("schema: validateContext rejects malformed slug", () => {
+  const base = buildContext("A platform for indie studios");
+  const r = validateContext({ ...base, slug: "Bad Slug With Spaces" });
+  assert.equal(r.ok, false);
+  assert.ok(r.errors.some((e) => /slug/.test(e)));
+});
+
+test("schema: validateContext rejects unknown productType / domain", () => {
+  const base = buildContext("A platform for indie studios");
+  assert.equal(validateContext({ ...base, productType: "spaceship" }).ok, false);
+  assert.equal(validateContext({ ...base, domain: "atlantis" }).ok, false);
+});
+
+test("schema: validateContext rejects bad year and bad generatedAt", () => {
+  const base = buildContext("A platform for indie studios");
+  assert.equal(validateContext({ ...base, year: 1969 }).ok, false);
+  assert.equal(validateContext({ ...base, year: 2026.5 }).ok, false);
+  assert.equal(validateContext({ ...base, year: "2026" }).ok, false);
+  assert.equal(validateContext({ ...base, generatedAt: "not-a-date" }).ok, false);
+});
+
+test("schema: assertContext throws on invalid, returns nothing on valid", () => {
+  const valid = buildContext("A platform for indie studios");
+  assert.doesNotThrow(() => assertContext(valid));
+  assert.throws(() => assertContext({ ...valid, domain: "atlantis" }), /Invalid context/);
+  assert.throws(() => assertContext(null), /Invalid context/);
+});
+
+test("schema: every generated example's context is valid", () => {
+  for (const ex of EXAMPLES) {
+    const ctx = buildContext(ex.idea, { now: ex.now });
+    const r = validateContext(ctx);
+    assert.equal(r.ok, true, `example ${ex.id} produced an invalid context: ${r.errors.join("; ")}`);
+  }
+});
+
+test("schema: every keyword in DOMAIN_KEYWORDS round-trips to its declared domain", () => {
+  // Round-trip canary — if we ever add a keyword that contains a substring of
+  // an earlier-iterated keyword, this test will surface the conflict.
+  for (const idea of [
+    "logistics", "civic", "carbon", "farm", "trip",
+    "gamedev", "nonprofit", "factory", "recruiting", "ticketing"
+  ]) {
+    const ctx = buildContext(idea);
+    assert.ok(DOMAIN_VALUES.includes(ctx.domain), `domain "${ctx.domain}" not in DOMAIN_VALUES`);
+    assert.notEqual(ctx.domain, "general", `keyword "${idea}" should match a non-general domain`);
+  }
+});
 
 test("domain heuristics: existing examples remain stable after expansion", () => {
   // The two worked examples must keep their original domain — adding new

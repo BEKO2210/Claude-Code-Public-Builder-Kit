@@ -1,4 +1,5 @@
 import { slugify, titleCase } from "./utils/slug.js";
+import { assertContext } from "./schema.js";
 
 const PRODUCT_TYPES = [
   { type: "mobile app", patterns: [/\bmobile app\b/, /\bios\b/, /\bandroid\b/] },
@@ -39,6 +40,19 @@ const DOMAIN_KEYWORDS = {
   "HR & recruiting": ["recruiting", "hiring", "applicant tracking", "payroll", "onboarding", "human resources"],
   "events & ticketing": ["conference", "meetup", "workshop", "ticketing", "venue"]
 };
+
+// Canonical value lists derived from the inference data above. Consumed by
+// src/schema.js for runtime validation and by external readers (templates,
+// docs) that need to know the closed set of legal values without parsing
+// the keyword tables.
+export const PRODUCT_TYPE_VALUES = Object.freeze([
+  ...PRODUCT_TYPES.map((p) => p.type),
+  "product"
+]);
+export const DOMAIN_VALUES = Object.freeze([
+  ...Object.keys(DOMAIN_KEYWORDS),
+  "general"
+]);
 
 function inferProductType(idea) {
   const lower = idea.toLowerCase();
@@ -91,6 +105,13 @@ function deriveProjectName(idea, audience, productType) {
   return titleCase(cleaned);
 }
 
+/**
+ * Build the inferred Context for a raw idea string.
+ *
+ * @param {string} rawIdea
+ * @param {{ now?: string|number|Date }} [opts]
+ * @returns {import("./schema.js").Context}
+ */
 export function buildContext(rawIdea, opts = {}) {
   const idea = String(rawIdea || "").trim();
   if (!idea) throw new Error("Idea is required.");
@@ -102,7 +123,7 @@ export function buildContext(rawIdea, opts = {}) {
   const slug = slugify(projectName);
   const generatedAt = opts.now ? new Date(opts.now).toISOString() : new Date().toISOString();
 
-  return {
+  const ctx = {
     rawIdea: idea,
     projectName,
     slug,
@@ -112,4 +133,6 @@ export function buildContext(rawIdea, opts = {}) {
     generatedAt,
     year: new Date(generatedAt).getUTCFullYear()
   };
+  assertContext(ctx);
+  return ctx;
 }

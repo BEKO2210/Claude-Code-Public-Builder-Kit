@@ -2,6 +2,60 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #007 — 2026-04-29 — Context schema extraction (typedef + runtime validator)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Make the inferred-context shape an explicit, machine-checkable contract so contributors writing new templates can rely on it without reading `src/context.js`. With 20 domain groups and 7 product-type patterns now in play, the surface area was big enough to be worth pinning down.
+
+**What changed**
+- **New file `src/schema.js`** containing:
+  - A JSDoc `@typedef` for `Context` (8 fields: `rawIdea`, `projectName`, `slug`, `productType`, `audience`, `domain`, `generatedAt`, `year`).
+  - Closed-set typedefs for `ProductType` (8 string literals) and `Domain` (21 string literals — the 20 keyword groups plus `"general"` as the fallback).
+  - `validateContext(ctx)` returning `{ ok: boolean, errors: string[] }` — non-throwing, so callers can decide how to react.
+  - `assertContext(ctx)` — strict variant that throws `Invalid context: <reasons>`. Called at the end of every `buildContext()`, so no invalid context can ever reach a template.
+  - Re-exports `PRODUCT_TYPE_VALUES` and `DOMAIN_VALUES` so consumers have a single import point for both shape and runtime data.
+- **`src/context.js`** now exports the canonical value lists, **derived** from the existing inference data (`PRODUCT_TYPES.map(p => p.type)` + fallback; `Object.keys(DOMAIN_KEYWORDS)` + fallback) and frozen with `Object.freeze`. Adding a new productType / domain stays a one-line change in `context.js` — the schema picks it up automatically. Also added a JSDoc annotation on `buildContext` pointing readers at the `Context` typedef.
+- **Cycle handling.** `context.js` and `schema.js` form a small ES-module cycle (`context.js` imports `assertContext`, `schema.js` imports `*_VALUES`). It works because schema.js only reads the imports inside function bodies, not at module top level — by the time `assertContext` is invoked, both modules' top-level code has fully evaluated.
+- **`tests/generator.test.js`** grew 35 → 47 with a focused schema test cluster:
+  - PRODUCT_TYPE_VALUES contains the expected 8 entries.
+  - DOMAIN_VALUES contains 21 entries including `"general"`.
+  - Both lists are frozen.
+  - `validateContext` accepts the round-trip output of `buildContext` for five varied ideas (including the "general" fallback case).
+  - `validateContext` rejects null / non-object input.
+  - `validateContext` flags every required-string field individually when emptied.
+  - `validateContext` rejects malformed slug, unknown productType, unknown domain, bad year (sub-1970, fractional, stringified), and unparseable `generatedAt`.
+  - `assertContext` throws on invalid, no-throws on valid.
+  - Every example in the registry produces a context that passes `validateContext`.
+  - Round-trip canary: 10 single-keyword ideas (one per new domain group from Run #006) all match a non-`"general"` domain — surfaces any future keyword-overlap regression.
+
+**Files touched**
+- Added: `src/schema.js`.
+- Modified: `src/context.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/examples.js`, `src/templates/**`, `src/utils/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow. The change is fully contained in the inference + validation layer.
+
+**Tests run**
+- `npm test` → **47/47** pass.
+- `npm run generate:examples` → both example folders rebuild byte-identically; `git status -- examples` is clean (the validator runs in their generation path now, so this also confirms nothing the validator touches changes the output).
+
+**Known limitations**
+- The validator is internal-use only. It's exported, but no public API surface (`/api/generate`) accepts a caller-supplied context, so the validator is currently useful as a developer guard rather than a request-validation tool. That's the right balance for v1; if a future contributor adds a "regenerate from a saved context" endpoint, the validator is ready.
+- JSDoc typedefs aren't enforced at runtime by Node — they're only consumed by editors / TypeScript-aware tools. The runtime validator covers the actual enforcement gap. A future move to TypeScript would make the static and runtime stories converge; out of scope today.
+- Year bounds (`1970..9999`) are arbitrary. They protect against `0` / `NaN` / typos rather than encoding a meaningful business rule.
+- The validator doesn't enforce upper bounds on string length. `buildContext` already caps the project name and idea length elsewhere, but a defensive max-length per field would be a small addition for the next round.
+
+**Decisions**
+- **Validator returns errors instead of throwing**, with a separate `assertContext` for the strict path. Tests can read the error array; production code calls `assertContext`. Two tiny functions, one shared check — no clever options-object or class.
+- **`*_VALUES` are derived in `context.js`, not redeclared in `schema.js`**. A redeclared list would silently drift the moment someone adds a domain in `context.js` and forgets the schema. Derivation eliminates the failure mode.
+- **`Object.freeze` on the value arrays** so a caller can't accidentally `.push()` a "valid" value at runtime. Cheap insurance.
+- **Validator runs inside `buildContext`**, not in `generateKit`. Every entry point — including any future test or REPL caller — gets validation for free. The cost is a single function call per invocation; immeasurable.
+- **Did not introduce a third-party validator** (Zod / Yup / Ajv). The shape is small, the rules are simple, and adding a runtime dependency for ~40 LOC of hand-rolled validation would violate the project's two-deps guarantee. Documented this explicitly in `CLAUDE.md`.
+
+**Next session starts with**
+- Domain depth: pick one or two domains (suggested: `"climate & sustainability"` and `"professional services"`, since both worked examples cover the latter) and add a small domain-conditional section to one or two templates (e.g. `MASTERPLAN.md` risks list, `DOCS/product-brief.md` audience phrasing). Use the `Domain` typedef from `src/schema.js` to make typos visible to editor tooling. New top entry in `CLAUDE.md`'s prioritized shortlist.
+
+---
+
 ## Run #006 — 2026-04-29 — Domain heuristics: 10 → 20 groups + leading-boundary matcher
 
 **Phase:** Phase 1 — Generation quality
