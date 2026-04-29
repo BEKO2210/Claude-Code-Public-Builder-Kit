@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Claude Code Public Builder Kit — turn one sentence into a planning foundation</title>
+    <meta name="description" content="An open-source tool that turns a one-line project idea into 12 substantive Markdown files: vision, roadmap, acceptance criteria, architecture, and Claude Code prompts. Local-first. No build step. MIT licensed." />
+    <meta name="color-scheme" content="dark" />
+    <meta property="og:title" content="Claude Code Public Builder Kit" />
+    <meta property="og:description" content="Turn a one-line project idea into 12 substantive Markdown files. Local-first. No build step. MIT." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <header class="site-header">
+      <div class="container header-row">
+        <a class="brand" href="#top" aria-label="Claude Code Public Builder Kit — home">
+          <img class="brand-logo" src="./logo.svg" alt="" aria-hidden="true" width="40" height="40" />
+          <span class="brand-name">Builder Kit</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="#what-you-get">What you get</a>
+          <a href="#quick-start">Quick start</a>
+          <a href="#examples">Examples</a>
+          <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <section id="top" class="hero">
+        <div class="container">
+          <p class="eyebrow">Open-source · MIT · Node ≥ 18</p>
+          <h1>Turn one sentence into a planning foundation.</h1>
+          <p class="lede">
+            The Claude Code Public Builder Kit takes a one-line project idea —
+            <em>"a SaaS dashboard for small business accountants"</em> — and produces
+            <strong>12 substantive Markdown files</strong>: vision, roadmap, acceptance
+            criteria, architecture, and ready-to-paste Claude Code prompts. Locally,
+            in a few seconds, with no cloud account and no LLM dependency.
+          </p>
+          <div class="hero-actions">
+            <a class="cta primary" href="#quick-start">Get started locally</a>
+            <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">View on GitHub</a>
+          </div>
+          <p class="hero-meta">
+            Local-first · No build step · Two runtime dependencies · Deterministic output
+          </p>
+        </div>
+      </section>
+
+      <section id="what-you-get" class="section">
+        <div class="container">
+          <header class="section-head">
+            <h2>What you get</h2>
+            <p>For every idea you enter, the kit produces the same twelve files. Substantial content; no orphan <code>TODO</code> stubs (the test suite enforces it).</p>
+          </header>
+
+          <div class="files-grid">
+            <article class="file-card">
+              <h3>README.md</h3>
+              <p>Project entry point with quick start and structure.</p>
+            </article>
+            <article class="file-card">
+              <h3>CLAUDE.md</h3>
+              <p>Operating rules for any Claude Code session in your repo.</p>
+            </article>
+            <article class="file-card">
+              <h3>MASTERPLAN.md</h3>
+              <p>Vision, scope, success metrics — the single source of truth.</p>
+            </article>
+            <article class="file-card">
+              <h3>ROADMAP.md</h3>
+              <p>Five phases from foundation to scale, each with an exit gate.</p>
+            </article>
+            <article class="file-card">
+              <h3>RUN_LOG.md</h3>
+              <p>Append-only session journal, seeded with Run #001.</p>
+            </article>
+            <article class="file-card">
+              <h3>ACCEPTANCE_CRITERIA.md</h3>
+              <p>Phase-tied checklists of what "done" actually means.</p>
+            </article>
+            <article class="file-card">
+              <h3>ARCHITECTURE.md</h3>
+              <p>Recommended starting architecture and open questions.</p>
+            </article>
+            <article class="file-card">
+              <h3>PROMPTS/initial-prompt.md</h3>
+              <p>A drop-in first prompt to start your Phase 0 session.</p>
+            </article>
+            <article class="file-card">
+              <h3>PROMPTS/run-plan-20-sessions.md</h3>
+              <p>A 20-session execution plan from empty repo to product.</p>
+            </article>
+            <article class="file-card">
+              <h3>DOCS/product-brief.md</h3>
+              <p>Audience, jobs-to-be-done, top user stories.</p>
+            </article>
+            <article class="file-card">
+              <h3>DOCS/market-positioning.md</h3>
+              <p>Positioning statement and competitive frame.</p>
+            </article>
+            <article class="file-card">
+              <h3>DOCS/technical-decisions.md</h3>
+              <p>Stack candidates and an ADR template for the decisions you make.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="quick-start" class="section section-alt">
+        <div class="container">
+          <header class="section-head">
+            <h2>Quick start</h2>
+            <p>Anything with Node 18+ runs this. No accounts. No build step.</p>
+          </header>
+          <pre class="codeblock"><code>git clone https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit
+cd Claude-Code-Public-Builder-Kit
+npm install
+npm start
+# open http://localhost:5173</code></pre>
+          <p class="muted">
+            From the UI you can generate a kit, copy any of the 12 files, or
+            download the whole bundle as a ZIP. Generated kits land in
+            <code>output/&lt;slug&gt;/</code> on disk.
+          </p>
+          <h3>Use the API directly</h3>
+          <pre class="codeblock"><code>curl -s -X POST http://localhost:5173/api/generate.zip \
+  -H 'Content-Type: application/json' \
+  -d '{"idea":"A SaaS dashboard for small business accountants"}' \
+  -o kit.zip</code></pre>
+        </div>
+      </section>
+
+      <section id="examples" class="section">
+        <div class="container">
+          <header class="section-head">
+            <h2>Worked examples</h2>
+            <p>Real kits produced by the same generator. Browse the actual 12 files on GitHub.</p>
+          </header>
+          <div class="example-cards">
+            <article class="example-card">
+              <h3>Small Business Website System</h3>
+              <p class="card-idea">"A website system for small local businesses"</p>
+              <p>A focused website system that local shops, cafes, and service businesses can run themselves — get found, take bookings, update hours, no developer required.</p>
+              <p class="card-meta">12 files · slug: <code>website-system-for-small-local-businesses</code></p>
+              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/tree/main/examples/small-business-website-system" rel="noopener">Browse on GitHub</a>
+            </article>
+            <article class="example-card">
+              <h3>SMB Accounting SaaS Dashboard</h3>
+              <p class="card-idea">"A SaaS dashboard for small business accountants"</p>
+              <p>A SaaS dashboard built for accountants serving small business clients — month-end status at a glance, client requests in one place, and a clear answer to "what do I work on next?".</p>
+              <p class="card-meta">12 files · slug: <code>saas-dashboard-for-small-business-accountants</code></p>
+              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/tree/main/examples/smb-accounting-saas-dashboard" rel="noopener">Browse on GitHub</a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="why" class="section section-alt">
+        <div class="container narrow">
+          <header class="section-head">
+            <h2>Why this exists</h2>
+          </header>
+          <p>
+            The hardest part of starting a project isn't writing code — it's
+            answering "what am I actually building?" without spending two weeks
+            on a wiki nobody reads.
+          </p>
+          <p>
+            This kit collapses that gap. Twelve files, opinionated where it
+            helps, explicit about its assumptions where it can't know. You sharpen
+            them in <code>MASTERPLAN.md</code>, drop the initial prompt into Claude
+            Code, and start building from a clear starting line.
+          </p>
+          <p>
+            Nothing is hidden. The generator is a few hundred lines of plain
+            Node.js, deterministic, with a 24-test suite and CI that fails if a
+            worked example drifts. There is no telemetry, no LLM call, no cloud
+            dependency.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <p>
+          MIT licensed · <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">Source on GitHub</a> · <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE" rel="noopener">LICENSE</a>
+        </p>
+        <p class="muted small">
+          This page is a static site published from <code>/docs</code> via GitHub Pages. No tracking. No JavaScript required.
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

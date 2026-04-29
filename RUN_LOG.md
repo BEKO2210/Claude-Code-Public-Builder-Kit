@@ -2,6 +2,55 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #005 — 2026-04-29 — Public landing page (GitHub Pages source under `/docs`)
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Ship a polished, professional public landing page that GitHub Pages can serve from `main` / `/docs`, without touching the local Express app or its tests. Target: visitors arriving from search understand what the kit is, how to install it, and where the worked examples live, in under 30 seconds.
+
+**What changed**
+- **`docs/index.html`** — single-page static landing site, mobile-first. Sections: sticky header (logo + product name + nav), hero (eyebrow tag, h1, lede, two CTAs, meta strip), "What you get" (12 file cards), "Quick start" (clone + install + API curl), "Worked examples" (two cards linking to the example folders on github.com), "Why this exists" (three honest paragraphs about the problem the kit solves), and a footer with license + repo links.
+- **`docs/style.css`** — same dark palette as the local app (`--bg`, `--panel`, `--accent`, etc.) so the brand reads as one product. Sticky translucent header with `backdrop-filter`, `clamp()`-based fluid typography for the hero h1 (34→56px), responsive grid for file and example cards, visible `:focus-visible` outlines, `scroll-behavior: smooth`, and a `prefers-reduced-motion`-aware logo (inherited from the SVG itself).
+- **`docs/logo.svg`** + **`docs/favicon.svg`** — copies of the assets in `/public`, kept manually in sync. The animated star renders correctly when loaded via `<img>` in modern browsers (CSS keyframes embedded in the SVG continue to run).
+- **`docs/.nojekyll`** — empty file disabling GitHub Pages' Jekyll preprocessing so dotfiles and underscores work consistently.
+- **`docs/README.md`** — explains what's in the folder, the exact GitHub Pages settings to enable, how to preview locally with any static server, and the manual asset-sync convention until a future `scripts/sync-docs-assets.js` is added.
+- **Root `README.md`** — added a Pages link near the top, a new "Live landing page" section with the four-step Settings → Pages enable instructions, and updated the project tree to show both `docs/` and the new logo files in `public/`.
+- **`CLAUDE.md`** — architecture diagram now includes `docs/`. The "Next meaningful run after this one" list is reordered: the landing page is moved to a new "Recently completed" subsection (with checkmarks for Runs #003-#005), and the priority order for the next run becomes (1) more domain heuristics, (2) schema extraction for context, (3) automated a11y audit, (4) landing page polish (OG image, illustration, asset-sync script), (5) optional file-tree filter.
+
+**Files touched**
+- Added: `docs/index.html`, `docs/style.css`, `docs/logo.svg`, `docs/favicon.svg`, `docs/.nojekyll`, `docs/README.md`.
+- Modified: `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `src/**`, `tests/**`, `examples/**`, `scripts/**`, `package.json`, `.github/workflows/ci.yml`. Zero blast radius on the local app, the API, the generator, the worked examples, the test suite, and CI.
+
+**Tests run**
+- `npm test` → **24/24** pass (no test changes — landing page is static).
+- Live smoke on a static server (`python3 -m http.server` against `docs/`):
+  - `/` → 200, `text/html`, 9874 B; `<title>` and `og:title` present; nav anchors and section ids resolve.
+  - `/style.css` → 200, `text/css`, 6135 B.
+  - `/logo.svg` → 200, `image/svg+xml`, 1791 B.
+  - `/favicon.svg` → 200, `image/svg+xml`, 324 B.
+  - `/README.md` → 200, `text/markdown`, 1553 B.
+- Confirmed Express isn't affected: started `npm start` on `:5178` after the changes; `GET /` → 200, `GET /api/health` → `{"ok":true}`.
+
+**Known limitations**
+- **Pages must be enabled by the repo owner.** The site only goes live after Settings → Pages is configured to deploy from `main` / `/docs`. The README spells out the four steps, but until that's done the URL `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` returns 404. This is by design — only the repo owner has the permission to enable it.
+- **No OG image yet.** Major social platforms (Twitter, Slack, LinkedIn) still don't reliably render SVG `og:image`, and adding a build step to rasterise one isn't worth it for a v1 page. `og:title` and `og:description` are present so links unfurl with text. A PNG OG image is in the `landing page polish` follow-up in `CLAUDE.md`.
+- **Asset duplication.** `docs/logo.svg` and `docs/favicon.svg` are byte-copies of the same files in `/public`. If anyone edits the `/public` versions and forgets to copy them, the landing page will drift. `docs/README.md` documents the sync command, and a future run can replace this with a `scripts/sync-docs-assets.js`.
+- **No tests for the landing page itself.** It's static HTML with no JavaScript, so a meaningful test would be an HTML-validator or a Lighthouse run; both are in the next-run shortlist (a11y deep-dive). For now we rely on the smoke-test results above and the fact that the page has no behaviour to break.
+- **External links are hardcoded** to `https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/...`. If the repo is forked or moved, the landing page will need a one-line search-and-replace.
+
+**Decisions**
+- **Static HTML, no framework, no JavaScript.** The page renders correctly with JS disabled. This matches the kit's "no build step" guarantee and means there is literally nothing that can break at runtime.
+- **`/docs` on `main`, not a `gh-pages` branch.** Single source of truth for everything in the repo; no extra branch to maintain; `npm start` keeps working unaltered. The trade-off (deploys on every `main` push) is acceptable since the page changes rarely.
+- **External links to GitHub for example browsing**, instead of duplicating the markdown content into the landing page or rendering it client-side. GitHub renders `.md` natively and is always the freshest source; embedding would create a third copy that could drift.
+- **No tracking, no analytics.** Documented in the footer ("No tracking. No JavaScript required.") so the user-facing claim matches the code.
+
+**Next session starts with**
+- Pick the new top priority from `CLAUDE.md`: **expand the domain heuristics** in `src/context.js` (5–10 new keyword groups + parametric tests). Highest leverage on the quality of generated docs across the long tail of inputs.
+- Or pick from the rest of the prioritized shortlist if the user has a different preference.
+
+---
+
 ## Run #004 — 2026-04-29 — Brand identity: animated star logo + favicon
 
 **Phase:** Phase 1 — UX surface (continued)
