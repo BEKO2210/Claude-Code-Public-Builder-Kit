@@ -14,6 +14,7 @@ const fileContent = document.getElementById("file-content");
 const copyBtn = document.getElementById("copy");
 const downloadZipBtn = document.getElementById("download-zip");
 const galleryEl = document.getElementById("example-cards");
+const previewLineEl = document.getElementById("preview-line");
 
 let currentFiles = [];
 let activeIndex = -1;
@@ -180,6 +181,7 @@ async function previewExample(id, triggerBtn) {
 
 function useIdea(idea) {
   ideaInput.value = idea;
+  ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
   ideaInput.focus();
   ideaInput.setSelectionRange(idea.length, idea.length);
   setStatus("Idea loaded into the form. Click Generate kit to continue.");
@@ -273,6 +275,56 @@ downloadZipBtn.addEventListener("click", async () => {
   } finally {
     downloadZipBtn.disabled = false;
   }
+});
+
+// ---- Live inference preview ----
+
+let previewTimer = null;
+let previewSeq = 0;
+
+function clearPreview() {
+  previewLineEl.textContent = "";
+}
+
+function renderPreview(ctx) {
+  previewLineEl.innerHTML = "";
+  const label = document.createElement("span");
+  label.className = "pv-label";
+  label.textContent = "Detected: ";
+  const value = document.createElement("span");
+  value.className = "pv-value";
+  value.textContent = `${ctx.productType} · for ${ctx.audience} · in ${ctx.domain}`;
+  previewLineEl.append(label, value);
+}
+
+ideaInput.addEventListener("input", () => {
+  clearTimeout(previewTimer);
+  const idea = ideaInput.value.trim();
+  if (!idea) {
+    clearPreview();
+    return;
+  }
+  const seq = ++previewSeq;
+  previewTimer = setTimeout(async () => {
+    try {
+      const res = await fetch("/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea })
+      });
+      // Drop stale responses if the user kept typing.
+      if (seq !== previewSeq) return;
+      if (!res.ok) {
+        clearPreview();
+        return;
+      }
+      const data = await res.json();
+      if (data.context) renderPreview(data.context);
+    } catch {
+      // Network blip — silently clear so we don't show stale state.
+      if (seq === previewSeq) clearPreview();
+    }
+  }, 350);
 });
 
 // ---- Bootstrap ----

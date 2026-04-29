@@ -60,6 +60,16 @@ main { flex: 1; padding: 32px 0 64px; display: flex; flex-direction: column; gap
 .generator label { font-weight: 600; font-size: 14px; }
 .hint { color: var(--muted); font-size: 13px; margin: -4px 0 0; }
 .hint code { font-family: var(--mono); background: var(--panel-2); padding: 1px 5px; border-radius: 4px; }
+.preview-line {
+  margin: 0; min-height: 20px;
+  font-family: var(--mono); font-size: 12.5px; color: var(--accent);
+  line-height: 20px;
+  opacity: 0.85;
+  transition: opacity 120ms ease;
+}
+.preview-line:empty { opacity: 0; }
+.preview-line .pv-label { color: var(--muted); }
+.preview-line .pv-value { color: var(--accent); }
 .generator textarea {
   width: 100%; resize: vertical; min-height: 80px;
   background: var(--panel-2); color: var(--text);

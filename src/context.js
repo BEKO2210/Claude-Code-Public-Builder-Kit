@@ -11,9 +11,15 @@ const PRODUCT_TYPES = [
   { type: "app", patterns: [/\bapp\b/, /\bapplication\b/] }
 ];
 
+// Ordered: stronger / more idiomatic patterns first, looser fallbacks last.
+// First match wins, so adding a pattern at the end never changes existing
+// detection — only catches ideas that would otherwise hit the generic fallback.
 const AUDIENCE_HINTS = [
+  /(?:built|made|designed|tailored)\s+for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i,
   /for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i,
-  /(?:built|made|designed)\s+for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i
+  /(?:that|which)\s+helps?\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i,
+  /to\s+help\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i,
+  /(?:aimed\s+at|targeted\s+at|targeting)\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i
 ];
 
 // First-match-wins, in insertion order. Append new groups at the end so

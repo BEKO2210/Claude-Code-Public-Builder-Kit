@@ -2,6 +2,161 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #011 — 2026-04-29 — User-value upgrade: live inference preview + better audience parsing
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.5 session
+**Goal going in:** Pause domain breadth/depth and concentrate the run on raising the everyday usefulness of the kit — make the inference layer visible to the user as they type, so they understand what the system is picking up before they commit; and make the inference itself catch a few common phrasings it was missing.
+
+**What changed**
+- **New endpoint `POST /api/preview`** in `server.js`. Same input contract as `/api/generate` (single `idea` string, max 500 chars), but it returns only `{ context }` — no file rendering, no ZIP, no disk write. Backed directly by `buildContext` from `src/context.js`, so the call cost is essentially regex evaluation against the idea string. Designed to be hit on every keystroke (debounced) without breaking a sweat.
+- **Live inference preview in the UI**: a new `<p id="preview-line">` lives directly under the idea textarea. As the user types, a debounced 350 ms call to `/api/preview` populates it with `Detected: <productType> · for <audience> · in <domain>`. Empty input clears the line; stale responses are dropped via a sequence number guard so a fast typist doesn't see flickering older results. Programmatic value updates (e.g. when "Use this idea" populates the field from a gallery card) now dispatch a synthetic `input` event so the preview line refreshes too.
+- **Smarter audience extraction in `src/context.js`**. Replaced the two-pattern `AUDIENCE_HINTS` array with five patterns ordered most-specific first:
+  1. `(?:built|made|designed|tailored)\s+for\s+X` — explicit "built for / designed for / made for / tailored for" phrasing.
+  2. `for\s+X` — the original generic pattern. Still wins for any idea that uses it, so existing examples are byte-stable.
+  3. `(?:that|which)\s+helps?\s+X` — catches "an app that helps freelancers …".
+  4. `to\s+help\s+X` — catches "software to help dental clinics …".
+  5. `(?:aimed|targeted)\s+at\s+X` — catches "a platform aimed at indie podcasters …".
+  Patterns 3–5 only fire when 1–2 don't match, so the change is additive. Inline comment explains the precedence rule for future contributors.
+- **Tests grew 57 → 64** (+7):
+  - 4 new audience-extraction tests covering "that helps X", "to help X", "aimed at X", and a guard test that the existing `for X` precedence wins when both patterns could match (preventing a future re-order from silently re-routing audience captures).
+  - 3 new HTTP tests on `/api/preview`: happy path returns `context.productType`, `context.domain`, `context.audience` for a known idea and explicitly does **not** include `files` / `fileCount` (cheap-call contract). 400 for empty idea. 400 for over-500-char idea.
+- **CSS**: small `.preview-line` rule with `min-height: 20px` so the inference line never causes layout shift, plus a 120 ms opacity transition; empty content collapses to opacity 0.
+
+**Files touched**
+- Added: nothing.
+- Modified: `server.js`, `src/context.js`, `public/index.html`, `public/style.css`, `public/app.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `docs/**`, `src/index.js`, `src/schema.js`, `src/examples.js`, `src/templates/**`, `src/utils/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **64/64** pass.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty after regen. The new audience patterns are additive and the existing `for X` pattern still wins for both worked-example ideas, so generated content is byte-identical.
+- Live smoke on `:5180`:
+  - `POST /api/preview` for `"An app that helps freelancers track invoices"` → 200, `productType: "app"`, `domain: "professional services"` (previously this would have hit the generic `"early adopters …"` audience fallback), `audience` includes "freelancers".
+  - `POST /api/preview` with empty idea → 400.
+  - `POST /api/preview` with 501-char idea → 400.
+
+**Drift accounting**
+None. Worked examples are byte-identical post-regen. Existing tests remain green at their original assertions.
+
+**Known limitations**
+- Audience extraction is still string-pattern matching, not NLP. For an idea without a terminating punctuation mark, the lazy quantifier expands to end-of-string, so `"An app that helps freelancers track invoices"` produces `audience: "freelancers track invoices"` rather than just `"freelancers"`. The user can sharpen this in `MASTERPLAN.md`; the kit already advertises that the inference is a heuristic.
+- The live preview hits the network on every keystroke (debounced 350 ms). On a flaky connection, the preview line silently clears rather than showing a stale state. No retry, no offline mode — appropriate for a local-first dev tool.
+- The preview endpoint returns the full `Context` object, which includes `generatedAt` (a timestamp). On every preview call this changes, which means a smart client that wanted to compare preview-vs-generate context would need to ignore that field. Not a real problem today (the UI only displays `productType / audience / domain`), but worth knowing.
+- Preview rate-limiting is not implemented. A malicious tab could fire thousands of requests per second. Acceptable for a local-only tool; if this is ever exposed publicly, a debounce on the server side (e.g. token bucket per IP) would be the right addition.
+
+**Decisions**
+- **`POST` not `GET`** for preview, matching the rest of the API surface. Idea strings are short enough to fit in a query string, but consistency wins; documentation surface stays smaller.
+- **`buildContext` directly, not `generateKit`**. `generateKit` runs all 12 templates and validates each output; the preview only needs the context, so we skip ~95% of the work and keep keystroke-rate calls comfortable.
+- **Debounce on the client at 350 ms**, not on the server. Lower-latency than waiting for server-side throttling, and means the preview feels instant on local dev where the round-trip is sub-10ms.
+- **Sequence-number guard against stale responses**, not request cancellation via `AbortController`. Simpler, no DOM-API edge cases on iOS Safari, and the cost is one in-flight fetch that returns dropped data instead of being torn down.
+- **Audience patterns reordered specific-first**, not appended. The original code had `for X` ahead of `built for X`; the reordering is functionally identical for current inputs (since `for X` always matched any `built for X` input first anyway), but reading the array top-down now describes precedence honestly: "explicit phrasing → generic phrasing → semantic fallbacks".
+- **No new dependency.** Live preview is plain `fetch` + `setTimeout` + `dispatchEvent(new Event("input"))`. ~30 LOC of vanilla JS.
+
+**Next session starts with**
+- **Domain depth: `finance`** — the next-priority domain on the shortlist. Risks (regulatory drift across GDPR / MiFID II / PSD2 / DORA, KYC/AML, model risk, audit trail), positioning (auditable-by-default, conservative defaults, clear advisory-vs-informational separation, fit for compliance-aware finance teams). Same mechanism as Run #010, expected drift only in any future finance-domain example.
+- Or, if you'd rather keep stacking user-value wins: a one-click "Generate now" button on each example card that goes idea→result panel without the intermediate "Use this idea + Generate" two-step.
+
+---
+
+## Run #010 — 2026-04-29 — Domain depth: third domain (`health & wellness`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.2 session
+**Goal going in:** Add `health & wellness` to the specialised set — same mechanism as Run #008, no scope creep, no example drift.
+
+**What changed**
+- Added `"health & wellness"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): health-data handling under HIPAA-style and GDPR Art. 9 obligations; designed-and-tested crisis/escalation path **before** launch; off-label-use is inevitable, surface in-product disclaimers + a referral path; clinical-claims language ("treats / diagnoses / cures") moves the product into FDA SaMD / EU MDR territory; trust under bad-news scenarios (incident response and user-data export must work end-to-end before traffic scales).
+  - **Positioning** (5 bullets): trust over features; calm tone, no gamification of distress; evidence-backed (cite the study or guideline with a date), not influencer-backed; visible escalation-to-a-real-human path; audience framing as people self-managing health, complementing — not replacing — clinicians.
+- Module-load key check now sees three keys; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow. The change is purely additive in one file plus tests.
+
+**Tests run**
+- `npm test` → **57/57** pass (55 → 57, +2 new health tests; the `SPECIALISED_DOMAINS` test now expects three entries instead of two).
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-health domains (`small business`, `professional services`), so the new specialisation is invisible to them — exactly the safety property the helper was designed for.
+- No `npm run build` or `npm run lint` scripts exist; not run.
+
+**Drift accounting**
+None. No file under `examples/` changed. The `domain heuristics: existing examples remain stable after expansion` test continues to pin both example domains.
+
+**Known limitations**
+- Three of 21 domain values are now specialised — 17% coverage. The other 18 still produce the prior generic content. Continued one-at-a-time expansion is the chosen pace.
+- The wellness vs. clinical-product framing is encoded in copy, not in code. If a future contributor adds clinical-grade vocabulary to a different template, the disclaimer language here won't propagate — they'd need to add an analogous block where it lands.
+- Health domain detection uses keywords like `clinic`, `doctor`, `patient`, `therapy`, `wellness`, `fitness`, `gym`. Edge cases ("a journaling app for anxious teens" → `general`) are by design — `MASTERPLAN.md` is explicit that the domain is a heuristic and the user is expected to sharpen it.
+
+**Decisions**
+- **One domain per session, period.** The same rhythm as Run #008 keeps each step diff-small, regen-clean, and easy to revert if the copy ever needs revision.
+- **Five bullets each, not three or seven.** Matches the prior two specialisations; visually consistent across kits when readers compare two domain outputs side by side.
+- **No new test for cross-domain isolation.** The existing `non-target domains get no domain-specific subsection` test already exercises four non-health ideas; the new health tests round-trip the positive case.
+
+**Next session starts with**
+- **`finance`** as the fourth specialised domain. Risks: regulatory drift (GDPR, MiFID II, PSD2 / open banking, DORA), KYC/AML, model risk on any predictive component, audit-trail expectations. Positioning: auditable-by-default, conservative defaults over flashy automation, clear separation between informational and advisory output, fit for compliance-aware finance teams.
+
+---
+
+## Run #009 — 2026-04-29 — Brand identity v2: twelve-pointed compass star
+
+**Phase:** Phase 1 — UX surface
+**Duration:** ~0.3 session
+**Goal going in:** Replace the generic five-point mark with a logo that *means* something: a unique silhouette tied directly to what the kit produces, recognisable at favicon size, and not a Mercedes-grade rip but at least a Mercedes-grade *commitment* — one symbol, one story.
+
+**The story (one sentence)**
+*Twelve rays — one per generated file — anchored by four longer cardinal points: a compass for what to build next.*
+
+**Geometry**
+- 12 outer points spaced at 30°. Four cardinal rays (N / E / S / W) at radius 28; the eight intermediate rays at radius 22. Twelve inner valleys at radius 9, offset 15°.
+- Resulting silhouette: a stylised compass rose / dodecagonal star. Distinct from the generic five-point form, still mathematically clean (24-vertex polygon, no curves).
+- Same `viewBox="0 0 64 64"` so all existing CSS that sized the logo continues to work.
+
+**Why this and not B / C**
+- A (compass star) evolves the existing star without breaking the brand recognition built up over Runs #004–#008.
+- It encodes the product literally — the count of rays equals the count of generated files.
+- It survives the favicon test: the compass-rose silhouette is recognisable at 16 px because the cardinal rays poke past the rest of the perimeter, giving the mark a distinctive irregular-but-symmetric outline. A generic five-point star at 16 px reads as "any star".
+
+**Animation (subtle, three layers)**
+- `bk-breathe` — gentle scale 1 → 1.035 → 1 over 4.8 s, anchored at center.
+- `bk-shine` — radial highlight overlay opacity 0.55 → 0.95 → 0.55, in phase with the breathe.
+- `bk-north` — soft white glow centred just above the top cardinal point, opacity 0.30 → 0.85 → 0.30 over 6.4 s. Slightly longer cycle so it phases in and out of the breathe rather than locking to it. Visually anchors the "north star" reading without being literal.
+- All three respect `@media (prefers-reduced-motion: reduce)`.
+
+**Files touched**
+- Replaced (same path): `public/logo.svg` (1791 B → 2652 B; new geometry + north-glow layer), `public/logo-monochrome.svg` (505 B → 652 B), `public/favicon.svg` (324 B → 460 B). Same paths, same names, so no HTML changes needed.
+- Synced byte-copies: `docs/logo.svg`, `docs/favicon.svg`. Same manual-sync convention as Run #005; a `scripts/sync-docs-assets.js` is still in the polish backlog.
+- Updated: `CLAUDE.md` (new "Recently completed" entry referencing Run #009), `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/index.html`, `public/style.css`, `public/app.js`, `docs/index.html`, `docs/style.css`, `docs/README.md`, `src/**`, `tests/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **55/55** pass (logo is static; no test changes needed, but a re-run confirms zero collateral damage).
+- `npm run generate:examples` → both example folders rebuild **byte-identically**; `git status -- examples` is clean.
+- Live smoke on `:5179`:
+  - `/logo.svg` → 200 `image/svg+xml` 2652 B.
+  - `/logo-monochrome.svg` → 200 `image/svg+xml` 652 B.
+  - `/favicon.svg` → 200 `image/svg+xml` 460 B.
+
+**Known limitations**
+- Still no PNG raster fallback (OG cards on Twitter/Slack/LinkedIn don't render SVG `og:image`). Carried forward as the highest-leverage landing-page-polish item.
+- No PNG / ICO export pipeline. If anyone needs the logo for a context that requires raster (favicons for older browsers, app icons), they have to convert via Inkscape / ImageMagick by hand. Not blocking; documented in `docs/README.md`.
+- Asset sync between `/public` and `/docs` is still manual. `scripts/sync-docs-assets.js` remains in the polish backlog.
+- `bk-north` glow uses a `radialGradient` with `cy="0%"`. On rendering engines that interpret percentage gradient stops differently from Chromium / Firefox / Safari (extremely rare), the glow could shift. Acceptable cost; the headline three-engine majority renders correctly.
+
+**Decisions**
+- **Evolution, not reinvention.** Same palette, same animation tempo, same accessibility hooks. Brand recognition is preserved while the silhouette becomes meaningful.
+- **Polygon, not paths with curves.** A 24-vertex polygon is `~2.6 KB` total and renders identically on every SVG implementation. Bezier curves would have looked smoother but added complexity for a marginal aesthetic win at sizes ≥ 32 px and made the favicon noisier at 16 px.
+- **Three subtle animation layers, not one literal compass-needle sweep.** A rotating sweep would have been more on-the-nose but harder to tune to the "professional, not gimmicky" bar. Three layered breathing animations achieve "alive, calm" without dipping into novelty.
+- **No new test for the logo itself.** It's a static asset with no behavioural surface; the existing `npm test` + the live HTTP smoke check + the visual review are enough for v1. If we later add a `scripts/verify-logo.js` that validates SVG well-formedness, that's its own session.
+
+**Next session starts with**
+- Pick from the existing `CLAUDE.md` shortlist. Top remaining items:
+  1. **Domain depth, one more domain.** `health & wellness` → `MASTERPLAN.md` risks (HIPAA-style data handling, crisis-path safety, off-label-use disclaimer) + `DOCS/product-brief.md` positioning (trust, calm tone, escalation path).
+  2. **A11y deep-dive** with axe / Lighthouse against the local app and the landing page.
+  3. **Landing-page polish** — PNG OG image, tiny static hero visual, `scripts/sync-docs-assets.js` to end the manual asset-sync debt from Run #005 / #009.
+
+---
+
 ## Run #008 — 2026-04-29 — Domain depth (first cut): risks + positioning for two domains
 
 **Phase:** Phase 1 — Generation quality (continued)
