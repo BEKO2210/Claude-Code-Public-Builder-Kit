@@ -2,6 +2,67 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #008 — 2026-04-29 — Domain depth (first cut): risks + positioning for two domains
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Make generated docs noticeably more useful for two domains where we have something specific to say, without rewriting the templates and without affecting any other domain. Strict scope: two templates, two domains, additive only.
+
+**What changed**
+- **New helper `src/templates/domain-blocks.js`** with two short tables (`DOMAIN_RISKS`, `DOMAIN_POSITIONING`) and two render helpers (`domainRisksBlock(ctx)`, `domainPositioningBlock(ctx)`). For specialised domains it returns a fully-formatted `### Domain-specific …` subsection. For every other domain it returns `""`, so the host template's spacing and section numbering stay byte-identical.
+  - Keys are validated at module load against `DOMAIN_VALUES` from `src/schema.js`; a typo would throw `domain-blocks.js: "<key>" is not in DOMAIN_VALUES …` at server start and during `npm test`.
+  - Exports a frozen `SPECIALISED_DOMAINS` array so tests and tooling can introspect coverage without re-reading the tables.
+- **Specialised exactly two domains:**
+  - **`climate & sustainability`** — risks call out greenwashing exposure, impact measurability with explicit scope/methodology, third-party data quality, regulatory / reporting drift, and audit-trail traceability. Positioning leads with credible impact (claims cite the underlying number), transparent metrics (visible in-product, not in PDFs), honest data sources (modeled labelled as modeled), and an audience framed around the operators reporting the number — not board-deck consumers.
+  - **`professional services`** — risks cover trust/credibility, client-data privacy (PII / privileged data), liability + expectation management, the boundary between software help and licensed professional judgement, and onboarding for non-technical experts. Positioning emphasises time saved, repeatable workflows with version history, client-ready drafts, professional documentation by default, and reliable workflows for firms of 1–10 (no 90-day rollout).
+- **`src/templates/masterplan.js`** — added `import { domainRisksBlock }` and a single interpolation `${domainRisksBlock(ctx)}` between the existing risks/mitigations table and the `## 9. Open questions` heading. Section numbering unchanged.
+- **`src/templates/productBrief.js`** — added `import { domainPositioningBlock }` and a single interpolation `${domainPositioningBlock(ctx)}` between section 5 (Tone and voice) and section 6 (Open questions). Section numbering unchanged.
+- **No new dependency, no server change, no public-UI change, no schema or matcher change, no new domain.**
+- **Tests grew 47 → 55** (8 new tests):
+  - `SPECIALISED_DOMAINS` has exactly the two expected entries.
+  - `MASTERPLAN.md` for a climate idea contains the heading + "Greenwashing" + "methodology".
+  - `MASTERPLAN.md` for a professional-services idea contains the heading + "Liability" + "Client-data privacy".
+  - `DOCS/product-brief.md` for a climate idea contains the heading + "credible impact" + "transparent metrics".
+  - `DOCS/product-brief.md` for a professional-services idea contains the heading + "Repeatable processes" + "Better client communication".
+  - Non-target domains (small business, food & hospitality, gaming, general) get **no** "Domain-specific risks" or "Domain-specific positioning" heading, and section 8 / 9 / 5 / 6 are still in place.
+  - Helpers return `""` for unspecialised domains (smoke check on the helper itself).
+  - No generated file across five different ideas contains the strings `"undefined"` or `"[object Object]"`.
+
+**Files touched**
+- Added: `src/templates/domain-blocks.js`.
+- Modified: `src/templates/masterplan.js`, `src/templates/productBrief.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- Examples regenerated (intentional drift, see below).
+
+**Tests run**
+- `npm test` → **55/55** pass.
+- `npm run generate:examples` → both example folders rebuilt; **drift was limited to exactly two files in one example**:
+  - `examples/smb-accounting-saas-dashboard/MASTERPLAN.md` — gained 8 lines (the 5-bullet professional-services risks block).
+  - `examples/smb-accounting-saas-dashboard/DOCS/product-brief.md` — gained 8 lines (the 5-bullet professional-services positioning block).
+  - `examples/small-business-website-system/` — **byte-identical** (its domain `small business` is not specialised in this run).
+  - `git diff --stat examples/` → 2 files changed, 16 insertions(+), 0 deletions(-).
+- No `npm run build` or `npm run lint` scripts exist in this project, so they were not run.
+
+**Drift accounting**
+The drift is exactly the expected, narrowly-scoped consequence of specialising the `professional services` domain. The existing test `domain heuristics: existing examples remain stable after expansion` confirms domain values are unchanged for both examples. Worked-example file count remains 12 in both folders (covered by the existing on-disk tests).
+
+**Known limitations**
+- Only two domains specialised. The other 18 (and `general`) still produce the prior generic content. That's by design — see "Quality bar" in the brief — and the next run can extend coverage one domain at a time using the same helper.
+- The specialisation lives in `src/templates/domain-blocks.js`. If a third template ever wants domain depth (say `ARCHITECTURE.md`'s open-questions list), it should add a third small table + helper in the same file rather than a new module.
+- The bullets are static text, not parameterised on `ctx`. They reference the domain category, not the user's specific idea. That's a deliberate trade-off — the alternative is a template-engine-shaped rabbit hole.
+- Tests assert presence of distinctive phrases (e.g. "Greenwashing", "Liability"). A future contributor rewording the bullets must update the assertions in lockstep — acceptable cost for cheap content-level coverage.
+
+**Decisions**
+- **Helper module, not inline duplication.** Two templates need the same conditional logic; one helper module with two render functions keeps the domain decision in one place.
+- **`""` for fallback, not a generic placeholder section.** Avoids any risk of an empty heading or a stub bullet block, and keeps non-target examples byte-identical.
+- **Subsection (`###`) inside an existing numbered section, not a new numbered section.** Adding `## 6. Domain-specific positioning` would have renumbered Open questions, drifting every example regardless of domain. The chosen `###` slot makes the change purely additive.
+- **Load-time key check** instead of a runtime per-call check. The cost is paid once at module init; typos surface immediately, not at the first matching domain.
+- **Tests use distinctive substrings**, not equality on the full block, so editorial tweaks to a single bullet don't flap the suite.
+
+**Next session starts with**
+- **Extend domain depth carefully.** Best candidates: `health & wellness`, `finance`, `food & hospitality` — each has clean, defensible risks and positioning angles that fit the same two templates without redesign. Cadence should stay small: one domain per session, with a regen + drift inspection of the worked examples.
+
+---
+
 ## Run #007 — 2026-04-29 — Context schema extraction (typedef + runtime validator)
 
 **Phase:** Phase 1 — Generation quality (continued)

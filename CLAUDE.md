@@ -43,7 +43,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (47 tests, no external deps)
+│   └── generator.test.js     # node:test suite (55 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
@@ -85,6 +85,7 @@ These are non-negotiable. Don't regress them:
 - `src/context.js` — heuristic only. Don't reach for an LLM. The heuristics are defaults; users sharpen them in `MASTERPLAN.md`. Adding a productType / domain only needs an entry in `PRODUCT_TYPES` / `DOMAIN_KEYWORDS`; `PRODUCT_TYPE_VALUES` and `DOMAIN_VALUES` are derived automatically.
 - `src/schema.js` — the contract for everything downstream of inference. Read its `Context` typedef before writing a new template; never reach into `context.js` for the shape.
 - `src/templates/*.js` — each exports a default function `(ctx: Context) => string`. Keep templates close to 100–250 lines of generated markdown. Longer is fine if substantive; padding is not.
+- `src/templates/domain-blocks.js` — small helper holding domain-conditional content for `MASTERPLAN.md` and `DOCS/product-brief.md`. Keys must be values from `DOMAIN_VALUES` (the load-time check throws on typos). Returns `""` for any unspecialised domain — never an empty heading. To specialise a new domain, add bullets here and run `npm run generate:examples`; drift in `examples/<id>/` is acceptable only if that example's domain matches the key you added.
 - `src/utils/zip.js` — pure function. Validates root name and entry paths against traversal. Don't allow callers to bypass that validation.
 - `server.js` — keep it boring. Validate input at the boundary (`/api/generate`, `/api/generate.zip`), reject anything > 500 chars, never let the slug escape `output/`.
 - `public/` — plain HTML/CSS/JS only. No frameworks, no transpilers.
@@ -115,7 +116,7 @@ For every working session:
 
 A session is complete when:
 
-- [ ] `npm test` passes (currently 47 tests).
+- [ ] `npm test` passes (currently 55 tests).
 - [ ] If templates or `src/examples.js` changed, `npm run generate:examples` was run and the resulting diff is intentional and committed.
 - [ ] `RUN_LOG.md` has a new entry covering changes, files touched, tests run, known limitations, and next recommended run.
 - [ ] No orphan `TODO`/`TBD` placeholders in generated files (the lint test enforces this).
@@ -126,7 +127,7 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Domain-group depth, not breadth.** Now that we have a 21-value domain enum and a runtime-validated context, the next quality lever is reflecting the inferred domain *inside the templates* — e.g. `MASTERPLAN.md` could include a tiny domain-specific risks section when `ctx.domain === "climate & sustainability"`. Use the `Domain` union from `src/schema.js` so a typo at template-write time becomes a TypeScript-aware lint error in editors.
+1. **Domain depth: extend coverage carefully.** Two domains are now specialised (`climate & sustainability`, `professional services`) in two templates. Good next candidates with similar leverage and similar template fit: `health & wellness`, `finance`, `food & hospitality`. Keep the cadence small — one domain at a time, in the existing two templates, with tests and an example regen each time.
 2. **A11y deep-dive.** Beyond the practical pass already done (skip link, focus-visible, aria-current, aria-live, labels), run an automated audit (axe / Lighthouse) against both the local app and the landing page; capture findings as a checklist here.
 3. **Landing page polish.** After the page is online, iterate based on what visitors actually click — maybe add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
 4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
@@ -135,6 +136,7 @@ Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **Domain depth: first cut.** `src/templates/domain-blocks.js` adds domain-conditional sections to `MASTERPLAN.md` (risks) and `DOCS/product-brief.md` (positioning) for `climate & sustainability` and `professional services`. Other domains see no change; drift in worked examples was limited to the professional-services example only. See Run #008.
 - ✓ **Schema extraction for context.** `src/schema.js` now defines the `Context` typedef, the canonical `PRODUCT_TYPE_VALUES` (8) and `DOMAIN_VALUES` (21) lists, and a `validateContext` / `assertContext` pair. `buildContext` calls `assertContext` so no invalid context can ever reach a template. See Run #007.
 - ✓ **Domain heuristics expanded** (10 → 20 groups) + leading-word-boundary regex matcher fixing latent false positives like `"ci" → "civic"` and `"shop" → "workshop"`. See Run #006.
 - ✓ **Public landing page deployed via GitHub Pages.** Static site under `/docs/`, deployed from `main` so `npm start` keeps working. See Run #005.

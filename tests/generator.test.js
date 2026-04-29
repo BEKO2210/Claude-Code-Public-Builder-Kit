@@ -8,6 +8,11 @@ import { buildContext, PRODUCT_TYPE_VALUES, DOMAIN_VALUES } from "../src/context
 import { buildZipBuffer } from "../src/utils/zip.js";
 import { EXAMPLES, findExample, isSafeExampleId } from "../src/examples.js";
 import { validateContext, assertContext } from "../src/schema.js";
+import {
+  domainRisksBlock,
+  domainPositioningBlock,
+  SPECIALISED_DOMAINS
+} from "../src/templates/domain-blocks.js";
 import app from "../server.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -41,6 +46,13 @@ function countCentralDirectoryEntries(buf) {
 async function listMarkdownFiles(dir) {
   const all = await readdir(dir, { recursive: true, withFileTypes: true });
   return all.filter((d) => d.isFile() && d.name.endsWith(".md")).map((d) => d.name);
+}
+
+function fileFromKit(idea, path, opts) {
+  const { files } = generateKit(idea, opts);
+  const file = files.find((f) => f.path === path);
+  if (!file) throw new Error(`File ${path} missing for idea: ${idea}`);
+  return file.content;
 }
 
 test("generates exactly the 12 expected files", () => {
@@ -181,6 +193,92 @@ test("schema: every generated example's context is valid", () => {
     const ctx = buildContext(ex.idea, { now: ex.now });
     const r = validateContext(ctx);
     assert.equal(r.ok, true, `example ${ex.id} produced an invalid context: ${r.errors.join("; ")}`);
+  }
+});
+
+test("domain depth: SPECIALISED_DOMAINS has exactly the two expected entries", () => {
+  assert.deepEqual([...SPECIALISED_DOMAINS].sort(), ["climate & sustainability", "professional services"]);
+});
+
+test("domain depth: climate & sustainability — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A carbon accounting tool for sustainability teams", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(climate & sustainability\)/);
+  assert.match(md, /Greenwashing/);
+  assert.match(md, /methodology/);
+});
+
+test("domain depth: professional services — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A SaaS dashboard for small business accountants", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(professional services\)/);
+  assert.match(md, /Liability/);
+  assert.match(md, /Client-data privacy/);
+});
+
+test("domain depth: climate & sustainability — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A carbon accounting tool for sustainability teams", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(climate & sustainability\)/);
+  assert.match(md, /credible impact/);
+  assert.match(md, /transparent metrics/);
+});
+
+test("domain depth: professional services — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A SaaS dashboard for small business accountants", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(professional services\)/);
+  assert.match(md, /Repeatable processes/);
+  assert.match(md, /Better client communication/);
+});
+
+test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
+  // small business — already a worked example; must not regress.
+  const sbMaster = fileFromKit("A website system for small local businesses", "MASTERPLAN.md", { now: "2026-04-29T00:00:00Z" });
+  const sbBrief = fileFromKit("A website system for small local businesses", "DOCS/product-brief.md", { now: "2026-04-29T00:00:00Z" });
+  assert.doesNotMatch(sbMaster, /Domain-specific risks/);
+  assert.doesNotMatch(sbBrief, /Domain-specific positioning/);
+
+  // food & hospitality, gaming, general — sample three more non-target domains.
+  for (const idea of [
+    "I want to build an app for small restaurants",
+    "A matchmaking server for online multiplayer indie game lobbies",
+    "Just a tool for keeping track of stuff"
+  ]) {
+    const m = fileFromKit(idea, "MASTERPLAN.md");
+    const b = fileFromKit(idea, "DOCS/product-brief.md");
+    assert.doesNotMatch(m, /Domain-specific risks/, `MASTERPLAN.md leaked domain heading for "${idea}"`);
+    assert.doesNotMatch(b, /Domain-specific positioning/, `product-brief.md leaked domain heading for "${idea}"`);
+    // Existing structure is intact.
+    assert.match(m, /## 8\. Risks and mitigations/);
+    assert.match(m, /## 9\. Open questions/);
+    assert.match(b, /## 5\. Tone and voice/);
+    assert.match(b, /## 6\. Open questions/);
+  }
+});
+
+test("domain depth: helpers return empty string for unspecialised domains", () => {
+  for (const ctx of [
+    { domain: "general" },
+    { domain: "food & hospitality" },
+    { domain: "gaming" },
+    { domain: "small business" }
+  ]) {
+    assert.equal(domainRisksBlock(ctx), "");
+    assert.equal(domainPositioningBlock(ctx), "");
+  }
+});
+
+test("no generated file leaks 'undefined' or '[object Object]'", () => {
+  const ideas = [
+    "I want to build an app for small restaurants",
+    "A carbon accounting tool for sustainability teams",
+    "A SaaS dashboard for small business accountants",
+    "A platform for indie game studios",
+    "Just a thing"
+  ];
+  for (const idea of ideas) {
+    const { files } = generateKit(idea);
+    for (const f of files) {
+      assert.ok(!f.content.includes("undefined"), `${f.path} contains 'undefined' for idea "${idea}"`);
+      assert.ok(!f.content.includes("[object Object]"), `${f.path} contains '[object Object]' for idea "${idea}"`);
+    }
   }
 });
 

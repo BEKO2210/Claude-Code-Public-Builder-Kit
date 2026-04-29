@@ -75,6 +75,14 @@ Targets for the first 90 days post-launch:
 | Stack choice locks us in | Low | Medium | Boring, swappable components. ADR required for any lock-in dependency. |
 | Solo-developer burnout | Medium | High | One phase at a time. Each phase has a clear "stop and reassess" gate. |
 
+### Domain-specific risks (professional services)
+
+- Trust and credibility: a single embarrassing output destroys word-of-mouth. Slow rollout and a supervised mode beat a fast generic launch.
+- Client-data privacy: assume PII and privileged information will end up in the system. No third-party logging, conservative retention, clear export + delete on request.
+- Liability and expectation management: the product assists, it does not give legal / financial / tax / strategic advice. Make this boundary explicit in the UI, not buried in the ToS.
+- Boundary between software help and professional judgement: the user is still the licensed expert. Avoid UX patterns that nudge them to rubber-stamp model output.
+- Onboarding for non-technical users: partners / consultants / advisors are domain experts, not power users. First-run flow has to make the daily core action obvious in under three minutes.
+
 ## 9. Open questions
 
 These are the questions we will answer in the first two weeks. Each gets an ADR.
