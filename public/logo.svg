@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="bk-logo-title bk-logo-desc">
+  <title id="bk-logo-title">Claude Code Public Builder Kit</title>
+  <desc id="bk-logo-desc">A five-pointed star with a soft blue gradient, gently pulsing.</desc>
+  <defs>
+    <linearGradient id="bk-star-grad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a4c2ff"/>
+      <stop offset="55%" stop-color="#8ab4ff"/>
+      <stop offset="100%" stop-color="#6c9bff"/>
+    </linearGradient>
+    <radialGradient id="bk-star-glow" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <style><![CDATA[
+      .bk-star { transform-origin: 32px 32px; animation: bk-breathe 4s ease-in-out infinite; }
+      .bk-shine { transform-origin: 32px 32px; animation: bk-shine 4s ease-in-out infinite; }
+      @keyframes bk-breathe {
+        0%, 100% { transform: scale(1); }
+        50%      { transform: scale(1.04); }
+      }
+      @keyframes bk-shine {
+        0%, 100% { opacity: 0.55; }
+        50%      { opacity: 0.95; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .bk-star, .bk-shine { animation: none; }
+      }
+    ]]></style>
+  </defs>
+  <g class="bk-star">
+    <polygon
+      points="32,4 38.47,23.1 58.63,23.34 42.46,35.4 48.45,54.65 32,43 15.55,54.65 21.54,35.4 5.37,23.34 25.53,23.1"
+      fill="url(#bk-star-grad)"
+      stroke="#cdd9ff"
+      stroke-width="0.8"
+      stroke-linejoin="round"
+    />
+    <polygon
+      class="bk-shine"
+      points="32,4 38.47,23.1 58.63,23.34 42.46,35.4 48.45,54.65 32,43 15.55,54.65 21.54,35.4 5.37,23.34 25.53,23.1"
+      fill="url(#bk-star-glow)"
+    />
+  </g>
+</svg>

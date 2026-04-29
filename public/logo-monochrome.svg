@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="bk-logo-mono-title bk-logo-mono-desc" fill="currentColor">
+  <title id="bk-logo-mono-title">Claude Code Public Builder Kit</title>
+  <desc id="bk-logo-mono-desc">A five-pointed star, monochrome.</desc>
+  <polygon
+    points="32,4 38.47,23.1 58.63,23.34 42.46,35.4 48.45,54.65 32,43 15.55,54.65 21.54,35.4 5.37,23.34 25.53,23.1"
+    stroke="currentColor"
+    stroke-width="0.8"
+    stroke-linejoin="round"
+  />
+</svg>
