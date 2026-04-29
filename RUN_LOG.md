@@ -2,6 +2,65 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #009 — 2026-04-29 — Brand identity v2: twelve-pointed compass star
+
+**Phase:** Phase 1 — UX surface
+**Duration:** ~0.3 session
+**Goal going in:** Replace the generic five-point mark with a logo that *means* something: a unique silhouette tied directly to what the kit produces, recognisable at favicon size, and not a Mercedes-grade rip but at least a Mercedes-grade *commitment* — one symbol, one story.
+
+**The story (one sentence)**
+*Twelve rays — one per generated file — anchored by four longer cardinal points: a compass for what to build next.*
+
+**Geometry**
+- 12 outer points spaced at 30°. Four cardinal rays (N / E / S / W) at radius 28; the eight intermediate rays at radius 22. Twelve inner valleys at radius 9, offset 15°.
+- Resulting silhouette: a stylised compass rose / dodecagonal star. Distinct from the generic five-point form, still mathematically clean (24-vertex polygon, no curves).
+- Same `viewBox="0 0 64 64"` so all existing CSS that sized the logo continues to work.
+
+**Why this and not B / C**
+- A (compass star) evolves the existing star without breaking the brand recognition built up over Runs #004–#008.
+- It encodes the product literally — the count of rays equals the count of generated files.
+- It survives the favicon test: the compass-rose silhouette is recognisable at 16 px because the cardinal rays poke past the rest of the perimeter, giving the mark a distinctive irregular-but-symmetric outline. A generic five-point star at 16 px reads as "any star".
+
+**Animation (subtle, three layers)**
+- `bk-breathe` — gentle scale 1 → 1.035 → 1 over 4.8 s, anchored at center.
+- `bk-shine` — radial highlight overlay opacity 0.55 → 0.95 → 0.55, in phase with the breathe.
+- `bk-north` — soft white glow centred just above the top cardinal point, opacity 0.30 → 0.85 → 0.30 over 6.4 s. Slightly longer cycle so it phases in and out of the breathe rather than locking to it. Visually anchors the "north star" reading without being literal.
+- All three respect `@media (prefers-reduced-motion: reduce)`.
+
+**Files touched**
+- Replaced (same path): `public/logo.svg` (1791 B → 2652 B; new geometry + north-glow layer), `public/logo-monochrome.svg` (505 B → 652 B), `public/favicon.svg` (324 B → 460 B). Same paths, same names, so no HTML changes needed.
+- Synced byte-copies: `docs/logo.svg`, `docs/favicon.svg`. Same manual-sync convention as Run #005; a `scripts/sync-docs-assets.js` is still in the polish backlog.
+- Updated: `CLAUDE.md` (new "Recently completed" entry referencing Run #009), `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/index.html`, `public/style.css`, `public/app.js`, `docs/index.html`, `docs/style.css`, `docs/README.md`, `src/**`, `tests/**`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **55/55** pass (logo is static; no test changes needed, but a re-run confirms zero collateral damage).
+- `npm run generate:examples` → both example folders rebuild **byte-identically**; `git status -- examples` is clean.
+- Live smoke on `:5179`:
+  - `/logo.svg` → 200 `image/svg+xml` 2652 B.
+  - `/logo-monochrome.svg` → 200 `image/svg+xml` 652 B.
+  - `/favicon.svg` → 200 `image/svg+xml` 460 B.
+
+**Known limitations**
+- Still no PNG raster fallback (OG cards on Twitter/Slack/LinkedIn don't render SVG `og:image`). Carried forward as the highest-leverage landing-page-polish item.
+- No PNG / ICO export pipeline. If anyone needs the logo for a context that requires raster (favicons for older browsers, app icons), they have to convert via Inkscape / ImageMagick by hand. Not blocking; documented in `docs/README.md`.
+- Asset sync between `/public` and `/docs` is still manual. `scripts/sync-docs-assets.js` remains in the polish backlog.
+- `bk-north` glow uses a `radialGradient` with `cy="0%"`. On rendering engines that interpret percentage gradient stops differently from Chromium / Firefox / Safari (extremely rare), the glow could shift. Acceptable cost; the headline three-engine majority renders correctly.
+
+**Decisions**
+- **Evolution, not reinvention.** Same palette, same animation tempo, same accessibility hooks. Brand recognition is preserved while the silhouette becomes meaningful.
+- **Polygon, not paths with curves.** A 24-vertex polygon is `~2.6 KB` total and renders identically on every SVG implementation. Bezier curves would have looked smoother but added complexity for a marginal aesthetic win at sizes ≥ 32 px and made the favicon noisier at 16 px.
+- **Three subtle animation layers, not one literal compass-needle sweep.** A rotating sweep would have been more on-the-nose but harder to tune to the "professional, not gimmicky" bar. Three layered breathing animations achieve "alive, calm" without dipping into novelty.
+- **No new test for the logo itself.** It's a static asset with no behavioural surface; the existing `npm test` + the live HTTP smoke check + the visual review are enough for v1. If we later add a `scripts/verify-logo.js` that validates SVG well-formedness, that's its own session.
+
+**Next session starts with**
+- Pick from the existing `CLAUDE.md` shortlist. Top remaining items:
+  1. **Domain depth, one more domain.** `health & wellness` → `MASTERPLAN.md` risks (HIPAA-style data handling, crisis-path safety, off-label-use disclaimer) + `DOCS/product-brief.md` positioning (trust, calm tone, escalation path).
+  2. **A11y deep-dive** with axe / Lighthouse against the local app and the landing page.
+  3. **Landing-page polish** — PNG OG image, tiny static hero visual, `scripts/sync-docs-assets.js` to end the manual asset-sync debt from Run #005 / #009.
+
+---
+
 ## Run #008 — 2026-04-29 — Domain depth (first cut): risks + positioning for two domains
 
 **Phase:** Phase 1 — Generation quality (continued)

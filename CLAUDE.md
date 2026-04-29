@@ -136,6 +136,7 @@ Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **Brand identity v2.** Twelve-pointed compass-star logo replaces the generic five-point mark (Run #009). Twelve rays = the twelve generated files; four longer cardinal points = the user's "compass" of next steps. Same blue palette, same `prefers-reduced-motion` handling, plus a soft north-glow that pulses to anchor the "north star" reading.
 - ✓ **Domain depth: first cut.** `src/templates/domain-blocks.js` adds domain-conditional sections to `MASTERPLAN.md` (risks) and `DOCS/product-brief.md` (positioning) for `climate & sustainability` and `professional services`. Other domains see no change; drift in worked examples was limited to the professional-services example only. See Run #008.
 - ✓ **Schema extraction for context.** `src/schema.js` now defines the `Context` typedef, the canonical `PRODUCT_TYPE_VALUES` (8) and `DOMAIN_VALUES` (21) lists, and a `validateContext` / `assertContext` pair. `buildContext` calls `assertContext` so no invalid context can ever reach a template. See Run #007.
 - ✓ **Domain heuristics expanded** (10 → 20 groups) + leading-word-boundary regex matcher fixing latent false positives like `"ci" → "civic"` and `"shop" → "workshop"`. See Run #006.
