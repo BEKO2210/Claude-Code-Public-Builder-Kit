@@ -1,145 +1,119 @@
-# Claude Code Public Builder Kit
+<p align="center">
+  <img src="docs/logo.svg" alt="Builder Kit logo" width="120" />
+</p>
 
-> Turn a one-line project idea into a clean, structured planning foundation: vision, roadmap, acceptance criteria, architecture, and ready-to-use Claude Code prompts.
+<h1 align="center">Builder Kit</h1>
 
-You type one sentence — *"I want to build an app for small restaurants"* — and the kit produces a 12-file Markdown scaffold that's good enough to start building from on day one.
+<p align="center">
+  <strong>From one sentence to a complete project plan in 30 seconds.</strong>
+</p>
 
-🌐 **Public landing page:** [`https://beko2210.github.io/Claude-Code-Public-Builder-Kit/`](https://beko2210.github.io/Claude-Code-Public-Builder-Kit/) (after GitHub Pages is enabled — see [Live landing page](#live-landing-page) below).
+<p align="center">
+  <a href="https://claude-code-public-builder-kit.vercel.app/"><strong>🚀 Launch the tool →</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://beko2210.github.io/Claude-Code-Public-Builder-Kit/">Landing page</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit">Source</a>
+</p>
 
-## What you get
+<p align="center">
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-8ab4ff.svg" />
+  <img alt="Node ≥ 18" src="https://img.shields.io/badge/Node-%E2%89%A5%2018-8ab4ff.svg" />
+  <img alt="Tests: 81/81" src="https://img.shields.io/badge/Tests-81%2F81-6dd6a3.svg" />
+  <img alt="Languages: EN + DE" src="https://img.shields.io/badge/UI-EN%20%2B%20DE-8ab4ff.svg" />
+  <img alt="Build step: none" src="https://img.shields.io/badge/Build%20step-none-6dd6a3.svg" />
+</p>
 
-For any idea you enter, the kit produces:
+---
+
+## What it does
+
+You type one sentence — *"An app for parents of small children"* — and the kit produces **12 ready-to-use planning documents**: vision, roadmap, risks, architecture, marketing brief, and a starter prompt for Claude or ChatGPT.
+
+The output is opinionated, generic where it has to be, and explicit about what's a placeholder. No `TODO`-only stubs (the test suite enforces that).
+
+It's the **planning foundation** you'd otherwise spend a weekend writing — done in under a minute, then sharpened iteratively in a Claude / ChatGPT chat.
+
+## Two ways to use it
+
+### 1. Hosted version (recommended, no install)
+
+[**Launch the tool →**](https://claude-code-public-builder-kit.vercel.app/)
+
+Free, in the browser. No terminal, no `npm`, no Claude account required. The tool guides you through 4 short questions, generates the 12 files, hands you a ZIP and a starter prompt for Claude. UI is available in **English and German** — auto-detected from your browser, switchable in the header.
+
+### 2. Local version (for developers)
+
+```bash
+git clone https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit
+cd Claude-Code-Public-Builder-Kit
+npm install
+npm start
+# open http://localhost:5173
+```
+
+Same tool, your machine. Two runtime dependencies (Express + archiver), no build step, MIT licensed.
+
+Override the port with `PORT=5174 npm start`. Files persist to `output/<slug>/` on disk if you tick the "Save a copy on my computer" checkbox.
+
+## What you get — the 12 files
 
 | File | Purpose |
 | --- | --- |
-| `README.md` | Project entry point with quick start and structure. |
-| `CLAUDE.md` | Operating rules for any Claude Code session in that repo. |
-| `MASTERPLAN.md` | Vision, scope, success metrics — the single source of truth. |
-| `ROADMAP.md` | Five phases from foundation to scale, with exit gates. |
-| `RUN_LOG.md` | Append-only session journal, seeded with Run #001. |
-| `ACCEPTANCE_CRITERIA.md` | Phase-tied checklists of what "done" means. |
+| `MASTERPLAN.md` | Vision, scope, success metrics, **domain-specific risks** — the single source of truth. |
+| `ROADMAP.md` | Five phases from foundation to scale, each with an exit gate. |
 | `ARCHITECTURE.md` | Recommended starting architecture and open questions. |
-| `PROMPTS/initial-prompt.md` | Drop-in first prompt to start Phase 0. |
-| `PROMPTS/run-plan-20-sessions.md` | A 20-session execution plan. |
-| `DOCS/product-brief.md` | Audience, jobs-to-be-done, top user stories. |
+| `ACCEPTANCE_CRITERIA.md` | Phase-tied checklists of what "done" actually means. |
+| `DOCS/product-brief.md` | Audience, jobs-to-be-done, top user stories, **domain-specific positioning**. |
 | `DOCS/market-positioning.md` | Positioning statement and competitive frame. |
-| `DOCS/technical-decisions.md` | Stack candidates and ADR template. |
+| `DOCS/technical-decisions.md` | Stack candidates and an ADR template. |
+| `PROMPTS/initial-prompt.md` | Drop-in first prompt to start your Phase 0 chat. |
+| `PROMPTS/run-plan-20-sessions.md` | A 20-session execution plan from empty repo to product. |
+| `README.md` | Project entry point with quick start and structure. |
+| `CLAUDE.md` | Operating rules for any Claude Code session in your repo. |
+| `RUN_LOG.md` | Append-only session journal, seeded with Run #001. |
 
-The output is opinionated, generic where it has to be, and explicit about what's a placeholder assumption (so you can sharpen it instead of chasing fake confidence).
+The MASTERPLAN and product-brief get **domain-specific depth** for ten domains: climate & sustainability, professional services, health & wellness, finance, food & hospitality, education, logistics & supply chain, retail & e-commerce, creative & media, and real estate. The other domains stay generic but honest.
 
-## Requirements
+## How it works — three steps
 
-- Node.js **>= 18** (uses native ESM and `node:test`).
-- npm (bundled with Node).
+1. **Describe your idea** in plain language (the wizard guides you).
+2. **Get the 12 files** as a ZIP — substantial content, no placeholder text.
+3. **Open Claude** (free at [claude.ai](https://claude.ai)), drop in `MASTERPLAN.md`, paste the pre-filled starter prompt. Claude walks you through Phase 1 / Step 1 in plain language, one question at a time.
 
-No other system dependencies. No build step.
+> The wizard is the **entry door** — Claude is where you sharpen the plan into a real project. Each chat session iterates on a piece of the masterplan; over time the plan stops being a generated stub and becomes the spec your project actually runs on.
 
-## Hosted version (no install)
+## Worked examples
 
-The same generator runs in the browser at the deployed URL — no terminal, no `npm`. Tip an idea, click **Generate**, download the ZIP. Filesystem persistence is automatically disabled in hosted mode (no writable disk on serverless); everything else behaves identically to the local app.
+Two pre-generated kits live in [`examples/`](./examples/) so you can browse exactly what the generator produces without running anything:
 
-The hosted version is deployed via [Vercel](https://vercel.com): Import the repo, no build settings to change, deploy. `vercel.json` ships in the repo and points all requests at `api/index.js`, which re-exports the same Express app `npm start` uses locally — so the hosted and local code paths never drift.
+- [`small-business-website-system/`](./examples/small-business-website-system/) — *"A website system for small local businesses"*
+- [`smb-accounting-saas-dashboard/`](./examples/smb-accounting-saas-dashboard/) — *"A SaaS dashboard for small business accountants"*
 
-## Install (local, optional)
+CI fails if regeneration produces a non-empty git diff — example drift cannot land unnoticed.
 
-```bash
-git clone <this-repo>
-cd Claude-Code-Public-Builder-Kit
-npm install
-```
+## API
 
-## Run the web UI
-
-```bash
-npm start
-# or, with auto-restart on file changes:
-npm run dev
-```
-
-Then open <http://localhost:5173>. Enter an idea, click **Generate kit**, and:
-
-- All 12 files render in the right pane with one-click copy.
-- Files are also written to `output/<slug>/` on disk (toggleable in the UI).
-
-Override the port with `PORT=5174 npm start`.
-
-## Download as ZIP
-
-After generating a kit in the UI, click **Download ZIP** to save the whole bundle as a single archive. The button reuses the idea you typed and shows a loading state while the server builds the archive.
-
-You can also call the ZIP endpoint directly:
-
-```bash
-curl -s -X POST http://localhost:5173/api/generate.zip \
-  -H 'Content-Type: application/json' \
-  -d '{"idea":"A SaaS dashboard for small business accountants"}' \
-  -o kit.zip
-unzip -l kit.zip
-```
-
-The archive contains all 12 generated files nested under a single root folder named after the project slug.
-
-## Example gallery
-
-The UI shows an **Example gallery** beneath the input form. Each card lists the example title, the original idea, a short description, and the file count. Three actions:
-
-- **Generate now** — one-click end-to-end: the example idea is mirrored into the input field and the kit is generated immediately, then the page scrolls to the freshly-rendered result. Best for first-time visitors who want to see the round-trip.
-- **Preview example** — loads all 12 pre-built files into the same viewer the generate flow uses, with an "Example" badge so you know it isn't your own kit. Faster than generating from scratch.
-- **Use this idea** — drops the example idea into the input field without generating, so you can edit it first and then click **Generate kit**.
-
-The examples are served from a registry in `src/examples.js`, which is also the source of truth for `scripts/build-example.js` and the test suite — there is no duplicated list.
-
-## API endpoints
+The local app and the hosted Vercel deployment expose the same endpoints:
 
 | Method | Path | Description |
 | --- | --- | --- |
-| `GET`  | `/api/health` | Liveness check. Returns `{ "ok": true }`. |
-| `GET`  | `/api/examples` | Lists registered examples with metadata + file paths (no content). |
-| `GET`  | `/api/examples/:id` | Returns the full kit (12 files with content) for one example. `400` on unsafe ids, `404` on unknown ids. |
-| `POST` | `/api/preview` | Returns just the inferred `Context` for an idea — no files. Cheap, designed for live "what does this look like?" previews as the user types. |
-| `POST` | `/api/generate` | Generate a kit from an idea and return JSON. Optionally writes to `output/<slug>/`. |
-| `POST` | `/api/generate.zip` | Generate a kit and return a ZIP attachment. |
-
-### `POST /api/generate`
+| `GET`  | `/api/health` | Liveness check. Returns `{ "ok": true, "hosted": bool }`. |
+| `GET`  | `/api/examples` | Lists registered examples with metadata + file paths. |
+| `GET`  | `/api/examples/:id` | Returns the full kit for one example. |
+| `POST` | `/api/preview` | Returns just the inferred context — for live preview UI. |
+| `POST` | `/api/generate` | Generate a kit, return JSON. |
+| `POST` | `/api/generate.zip` | Generate a kit, return a ZIP. |
 
 ```bash
-curl -s -X POST http://localhost:5173/api/generate \
+# Hit the hosted API directly
+curl -s -X POST https://claude-code-public-builder-kit.vercel.app/api/generate.zip \
   -H 'Content-Type: application/json' \
-  -d '{"idea":"I want to build an app for small restaurants"}' \
-  | jq '.files[].path'
+  -d '{"idea":"A SaaS dashboard for small business accountants"}' \
+  -o kit.zip
 ```
 
-Request body:
-
-```json
-{
-  "idea":    "string (required, <= 500 chars)",
-  "persist": "boolean (optional, default true) — also write to output/<slug>/"
-}
-```
-
-Response:
-
-```json
-{
-  "context":  { "projectName": "...", "slug": "...", "productType": "...", "audience": "...", "domain": "...", "generatedAt": "..." },
-  "files":    [ { "path": "README.md", "content": "..." }, ... ],
-  "writtenTo": "/abs/path/to/output/<slug>"
-}
-```
-
-### `POST /api/generate.zip`
-
-Same request body as `/api/generate` (`idea` field; `persist` is ignored — nothing is written to disk). The response is a `application/zip` attachment containing all 12 files under `<slug>/`.
-
-### `GET /api/examples` and `GET /api/examples/:id`
-
-```bash
-curl -s http://localhost:5173/api/examples | jq '.examples | map({id, title, fileCount})'
-curl -s http://localhost:5173/api/examples/small-business-website-system | jq '.context'
-```
-
-`:id` must match `^[a-z0-9][a-z0-9-]*$`; anything else returns `400`. Unknown ids return `404`. Examples are generated in-memory from the registry on each request, so they always match the on-disk worked examples (which CI also enforces).
+Rate limit on `/api/generate` and `/api/generate.zip`: 30 requests / IP / minute. Best-effort on serverless because each function instance has its own counter.
 
 ## Use the generator from Node
 
@@ -151,138 +125,99 @@ const { context, files } = generateKit("A platform for indie game studios");
 await writeKit(files, `./output/${context.slug}`);
 ```
 
-## Worked examples
-
-Two pre-generated kits live in `examples/` so you can browse exactly what the generator produces without running anything:
-
-- `examples/small-business-website-system/` — *"A website system for small local businesses"*
-- `examples/smb-accounting-saas-dashboard/` — *"A SaaS dashboard for small business accountants"* (showcases acronym preservation and inferred domain `professional services`)
-
-Regenerate both from scratch:
-
-```bash
-npm run generate:examples
-# alias kept for backward compatibility:
-npm run generate:example
-```
-
-Both scripts call the same builder. Each example uses a fixed `generatedAt` timestamp so the output is byte-stable, and CI fails if regeneration produces a non-empty git diff.
-
 ## Tests
 
 ```bash
-npm test
+npm test                    # 81 tests, no external dependencies
+npm run audit:a11y          # axe-core + WCAG-AA contrast on both HTML pages
+npm run sync:assets:check   # verify /docs and /public brand assets are mirrored
+npm run generate:examples   # regenerate the worked-example folders
 ```
 
-71 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), parametric detection of all 10 newly-added domain groups, and accessibility (axe-core via jsdom on both HTML pages + deterministic WCAG-AA contrast).
+The CI pipeline runs all of these on every push and pull request.
 
-For verbose accessibility output:
+## Tech stack
 
-```bash
-npm run audit:a11y
-```
-
-## Live landing page
-
-A static landing page lives in [`docs/`](./docs/) and is published via **GitHub Pages**. It re-uses the same logo and palette as the local UI and links out to the worked examples on GitHub.
-
-### Enabling GitHub Pages (one-time, repo owner only)
-
-1. Open the repository on github.com.
-2. **Settings → Pages**.
-3. **Source:** *Deploy from a branch*.
-4. **Branch:** `main` and **Folder:** `/docs`.
-5. Save. The site appears at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` within a minute.
-
-The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`.
-
-### Keeping brand assets in sync
-
-The logo + favicon live canonically in `/public`. To mirror into `/docs`:
-
-```bash
-npm run sync:assets        # copy logo + monochrome + favicon
-npm run sync:assets:check  # exit 1 if anything would change (CI uses this)
-```
-
-CI runs the check on every push/PR, so an unsynced asset fails the pipeline.
-
-### Rebuilding the social card
-
-`docs/og-card.png` (1200×630) is the rasterised Open Graph image used in link unfurls. To regenerate after editing `docs/og-source.svg`:
-
-```bash
-npm run build:og
-```
-
-## Continuous integration
-
-`.github/workflows/ci.yml` runs on every push and pull request. It:
-
-1. Installs dependencies (`npm ci` if a lockfile is present, else `npm install`).
-2. Runs `npm test`.
-3. Runs `npm run generate:examples` and fails if any example file changed — making example drift impossible to merge unnoticed.
+- **Express** + **archiver** — the only two runtime dependencies.
+- **Vanilla HTML / CSS / JS** in `public/` — no build step, no framework.
+- **Vercel** for the hosted version, **GitHub Pages** for the landing page.
+- **Client-side i18n** (~330 lines of vanilla JS) — auto-detect + manual switcher, English and German.
 
 ## Project structure
 
 ```
 .
-├── .github/workflows/ci.yml  # GitHub Actions: tests + example reproducibility
-├── server.js                 # Express: /api/health, /api/generate, /api/generate.zip,
-│                             #          /api/examples, /api/examples/:id, /api/preview.
-│                             #          Exports the app; only listens when run as CLI.
-├── api/index.js              # Vercel Serverless entry — re-exports the same Express app.
-├── vercel.json               # Vercel config — catch-all rewrite to /api.
-├── package.json
-├── LICENSE                   # MIT
-├── docs/                     # Public landing page, deployed via GitHub Pages
-│   ├── index.html
+├── api/index.js              # Vercel Serverless entry — re-exports the Express app.
+├── vercel.json               # Catch-all rewrite to /api.
+├── server.js                 # Express app: API + static. Exports the app; only listens as CLI.
+├── public/                   # The local web app
+│   ├── index.html            # Wizard + direct form + result panel + gallery
 │   ├── style.css
-│   ├── logo.svg
-│   ├── favicon.svg
-│   ├── .nojekyll
-│   └── README.md             # How to enable Pages and keep assets in sync
-├── public/                   # Vanilla HTML/CSS/JS frontend (the local app)
-│   ├── index.html            # Form + Example gallery + file viewer
-│   ├── style.css
-│   ├── app.js                # Generate / Generate now / Preview / Use this idea / Copy / Download ZIP
-│   ├── logo.svg              # Animated star (used by the local app header)
+│   ├── app.js                # Wizard, generate flow, gallery cards, copy/download/share
+│   ├── i18n.js               # Client-side translations (EN + DE)
+│   ├── logo.svg              # Animated logo
 │   ├── logo-monochrome.svg
 │   └── favicon.svg
+├── docs/                     # GitHub Pages landing page
+│   ├── index.html            # Hero + how-it-works + example output + what-you-get
+│   ├── style.css
+│   ├── i18n.js               # Landing-page i18n
+│   ├── impressum.html        # Imprint (German law, §5 TMG)
+│   ├── datenschutz.html      # Privacy notice (GDPR Art. 13)
+│   ├── og-source.svg         # OG-card source
+│   ├── og-card.png           # Rasterised OG card (committed)
+│   └── logo.svg, logo-monochrome.svg, favicon.svg
 ├── src/
-│   ├── index.js              # generateKit(idea) — orchestrates all 12 templates
-│   ├── context.js            # Heuristic inference: idea -> {projectName, slug, …}
+│   ├── index.js              # generateKit(idea) — orchestrates the 12 templates
+│   ├── context.js            # Heuristic inference: idea → {projectName, slug, productType, audience, domain, …}
 │   ├── schema.js             # Context typedef + validateContext / assertContext
-│   ├── examples.js           # Registry of worked examples (single source of truth)
-│   ├── templates/            # One file per generated document (12 of them)
+│   ├── examples.js           # Worked-example registry (single source of truth)
+│   ├── templates/            # 12 templates, one per generated file, plus domain-blocks
 │   └── utils/                # slug, file writer, zip builder
 ├── scripts/
-│   └── build-example.js      # Regenerates every entry in examples/ deterministically
-├── examples/
-│   ├── small-business-website-system/   # Pre-generated worked example (12 files)
-│   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
-├── tests/
-│   └── generator.test.js     # node:test suite (71 tests)
-└── output/                   # Runtime-generated kits land here (git-ignored)
+│   ├── build-example.js      # Regenerates examples/ deterministically
+│   ├── sync-docs-assets.js   # Mirrors brand assets into /docs
+│   ├── build-og.js           # Renders the OG-card PNG
+│   └── a11y-audit.js         # axe-core + WCAG-AA contrast audit
+├── examples/                 # Pre-generated worked examples (regenerable)
+├── tests/                    # node:test suite (81 tests)
+└── output/                   # Runtime-generated kits (git-ignored)
 ```
 
 ## Design choices
 
-- **Boring stack on purpose.** Express + vanilla frontend means the surface area you have to read to understand this project is tiny.
+- **Boring stack on purpose.** The surface area you have to read to understand this project is small.
 - **No build step.** ESM straight off disk in both Node and the browser.
-- **Templates are functions.** Each generated document is a `(ctx) => string` in `src/templates/`. To add a thirteenth file, add a template and one row to `FILE_PLAN` in `src/index.js`.
-- **Honest assumptions.** Every generated doc is upfront about what's a guess and how to sharpen it. There are no `TODO`-only stubs.
-- **Two runtime dependencies.** Express (HTTP) and archiver (ZIP). Both are widely deployed and easy to audit.
+- **Templates are functions.** Each generated document is a `(ctx) => string` in `src/templates/`.
+- **Honest assumptions.** Every generated doc is upfront about what's a guess and how to sharpen it.
+- **Local-first guarantee.** `npm install && npm start` works without a Vercel account, an LLM key, or any cloud service.
+- **i18n without a build step.** ~330 lines of vanilla JavaScript handle EN + DE, auto-detect, manual switcher, localStorage persistence.
 
-## How to extend
+## Contributing
 
-| Add… | Where |
-| --- | --- |
-| A new generated doc | New file in `src/templates/`, append to `FILE_PLAN` in `src/index.js`. |
-| A new domain heuristic | `DOMAIN_KEYWORDS` in `src/context.js`. |
-| A new product type | `PRODUCT_TYPES` in `src/context.js`. |
-| A new worked example | Append to `EXAMPLES` in `src/examples.js`, run `npm run generate:examples`, commit the new folder. |
+Pull requests welcome. Before submitting:
+
+```bash
+npm test                    # must be green
+npm run generate:examples   # if you touched a template — commit the diff
+npm run audit:a11y          # must show 0 violations
+```
+
+Each commit gets one reason. The kit's own `RUN_LOG.md` (root file, separate from generated kits) journals every working session — that's how this codebase is maintained.
+
+## Legal
+
+- 📄 **[Impressum](https://beko2210.github.io/Claude-Code-Public-Builder-Kit/impressum.html)** (TMG §5)
+- 🔒 **[Datenschutz](https://beko2210.github.io/Claude-Code-Public-Builder-Kit/datenschutz.html)** (DSGVO Art. 13)
+
+The hosted tool processes only the idea you type, in-memory, for the duration of the request. No tracking, no analytics, no third-party scripts. localStorage is used **only** for your language preference.
 
 ## License
 
-MIT.
+[MIT](./LICENSE) — generated docs are yours, edit them freely. The kit itself is open source: fork it, modify it, ship a fork with your own templates.
+
+---
+
+<p align="center">
+  Built by <a href="mailto:belkis.aslani@gmail.com">Belkis Aslani</a> · <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit">github.com/BEKO2210</a>
+</p>

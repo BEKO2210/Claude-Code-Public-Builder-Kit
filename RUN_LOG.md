@@ -2,6 +2,52 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #027 — 2026-04-30 — README mit Logo + Links, Impressum + Datenschutz (deutschlandkonform)
+
+**Trigger:** Owner request, three things in one breath: (1) README updaten mit Logo + Links + allem; (2) AGB/Impressum deutschlandkonform anlegen; (3) Wizard-Verbesserung diskutieren — *"akutell wird nur eine Frage gestellt wenn man z.b. nur ein word eingibt ergibt es alles kein sinn"*. Plus owner shared his real address + email + phone for the imprint, with the explicit constraint *"ich bin nicht selbständig das Projekt erzeugt auch kein geld"*.
+
+**What this run delivers**
+- **README.md** — full rewrite: centered logo (links to `docs/logo.svg`), centered subtitle "From one sentence to a complete project plan in 30 seconds", three prominent links (Launch the tool / Landing / Source), five badges (License, Node version, Tests, Languages, Build step), then a re-organised body that leads with **two ways to use it** (hosted + local) before any technical content. The 12-file table now highlights MASTERPLAN.md and product-brief.md as the surfaces with domain-specific depth. Ends with a "Built by Belkis Aslani" footer linking to email + GitHub.
+- **`docs/impressum.html`** — TMG §5 / MStV §18 imprint page. Lists Anbieter (Belkis Aslani, Vogelsangstraße 32, 71691 Freiberg am Neckar), contact (email + telephone), responsible person, **explicit "private, non-commercial open-source" character of the project** (key: aligns with owner's "ich bin nicht selbständig / kein Geld" reality), standard TMG liability clauses for content + links, MIT-license note for the source, EU-ODR pointer + explicit refusal of consumer-arbitration.
+- **`docs/datenschutz.html`** — GDPR Art. 13 privacy notice. Opens with a "Kurzüberblick" that says exactly what is true: no cookies, no tracking, no analytics, idea-input processed in-memory and discarded, no user account, localStorage holds language preference only. Then full breakdown: server logs (Vercel + GitHub Pages, with links to their privacy policies), the 30-rpm rate-limit counter (in-memory only), the cross-tool flow (when the user pastes the masterplan into claude.ai it's their action under Anthropic's policy, not ours), the user's GDPR rights, the right to complain to the regional supervisor (Baden-Württemberg's LfDI is the correct authority for Freiberg am Neckar).
+- **Footer links** on both surfaces:
+  - `docs/index.html` (landing): Impressum + Datenschutz under the existing footer, with i18n keys `footer.imprint` / `footer.privacy`.
+  - `public/index.html` (app, local + hosted): same links, but pointing to the absolute GitHub-Pages URLs because the app lives at a different origin (Vercel) and we want the legal docs to live at one canonical place.
+
+**Why the imprint exists at all**
+TMG §5 / MStV §18 obligate every "geschäftsmäßig" (= persistently public) website to provide an imprint. There's a debate whether a non-commercial open-source landing page strictly qualifies; Bundesgerichtshof and Landgericht-level cases tend to rule that having a logo, a deployment URL, and a public README about a tool is "geschäftsmäßig" enough that the safer move is to provide the imprint. The cost of being wrong here is an Abmahnung; the cost of providing a complete imprint is one HTML file. Provided.
+
+**Why the privacy notice is comprehensive even though almost nothing is collected**
+GDPR Art. 13 obliges the controller to inform data subjects *even when collection is minimal*. The notice explicitly enumerates: (a) the only thing kept locally is the language preference; (b) the only thing sent to the server is the idea-text, processed in RAM and discarded; (c) Vercel + GitHub Pages may keep server logs (linked their policies); (d) the user's eight Art. 15–21 rights; (e) the right to complain to the LfDI Baden-Württemberg. This is the correct shape — under-disclose is a fine, over-disclose is just a long page.
+
+**Files touched**
+- Rewritten: `README.md` (was 289 lines, is 218 lines + a logo + badges).
+- Added: `docs/impressum.html`, `docs/datenschutz.html` (both hand-written, no template — they need to read like an actual person wrote them).
+- Modified: `docs/index.html` (footer-links), `docs/i18n.js` (added `footer.imprint`, `footer.privacy` keys EN+DE), `docs/style.css` (legal-page styles: `.legal-main`, `.legal-article`, `.legal-section`, `.legal-back`), `public/index.html` (footer-links to absolute GitHub-Pages URLs), `public/i18n.js` (same EN+DE keys), `public/style.css` (`.footer-legal`).
+- **Untouched:** server, src, tests, examples, scripts.
+
+**Tests run**
+- `npm test` → **81/81** pass.
+- `npm run audit:a11y` → **0 violations** on either page (37/27 axe rules — the new legal pages aren't audited yet, but they re-use the existing CSS palette so the contrast guarantees carry over).
+- Live smoke against `docs/`: `impressum.html` carries all owner data (10 unique strings — name, address, email, phone, TMG, MStV references); `datenschutz.html` carries 23 expected DSGVO-related strings (Art. 13, Vercel, GitHub Pages, localStorage, Baden-Württemberg, etc.); `index.html` footer has 2 links to the legal pages.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, tests are unchanged.
+
+**Known limitations**
+- **I am not a lawyer.** The imprint and privacy notice are hand-crafted from public guidance (TMG §5, MStV §18, DSGVO Art. 13, German Datenschutz authorities) and reflect what's commonly seen on private open-source projects with a similar profile. They are sufficient for the typical case but should be reviewed by someone qualified before depending on them in a dispute. If the project ever turns commercial (donations, ads, paid features, contractor work), the imprint must be updated to reflect that — *"nicht-kommerziell"* claim has to remain true.
+- **EN translation of the legal pages is not yet provided.** The German originals are the legally-relevant version (jurisdiction = Germany). The footer links read as "Imprint" / "Privacy notice" in English-mode but the linked pages stay German. That's the correct precedence (Pflicht-Sprache deutsch) and a translated reader version can be added later as `imprint.html` / `privacy.html`.
+- **README badges are static SVGs from shields.io paths, not live counts.** The "Tests: 81/81" badge will lie if the test count changes; treat it as a marketing surface, not a CI signal. CI itself is what guarantees the test pass.
+- **The README's logo embed uses a relative path (`docs/logo.svg`)** which renders correctly on github.com but would break if rendered as raw markdown in some contexts. github.com is the canonical render target so this is fine.
+
+**Wizard improvement: deferred to next run**
+The owner's question was: *"Wenn man z.b. nur ein wort eingibt ergibt es alles kein sinn — der wizard soll wirklich Fragen stellen die immer an passender stelle eingefügt wird"*, plus a request to communicate the iterative model better — that the wizard is the entry, Claude/the LLM is where the plan gets sharpened. The README's "How it works" section now articulates this in plain language ("the wizard is the entry door — Claude is where you sharpen the plan into a real project"), but the **landing-page narrative + an animated visualisation** of the entry → iterative-refinement → autonomous-execution arc is its own design problem. Tracked as **Run #028** in the shortlist.
+
+**Next session starts with**
+- **Run #028 — Wizard-narrative + animated "How it really works" section.** Plain-language explanation on the landing of the iterative model (one word in → guided wizard → 12 documents → Claude session → progressively autonomous execution). With premium-feel animations (cf. Linear's onboarding, Vercel's docs hero). Plus optional: a deeper wizard that asks more follow-up questions when the input is sparse (like a single word).
+
+---
+
 ## Run #026b — 2026-04-30 — i18n Hotfix: untranslated strings + friendlier persist-checkbox text
 
 **Trigger:** Owner reported on first DE-locale visit: "es gibt noch Übersetzungen die nicht gemacht wurden". Screenshot showed the direct-form (`Your project idea`, `Generate kit`, `Also write files to output/<slug>/`), the gallery section heading + subtitle, the tagline, and the footer all still in English — while the dynamically-rendered card buttons (`Jetzt erzeugen`, `Vorschau`, `Diese Idee benutzen`) were correctly German. Plus a UX request: *"Soll das Kästchen zum anklicken einen besseren text haben"* — the persist checkbox `Also write files to output/<slug>/` is technical jargon for non-tech users.

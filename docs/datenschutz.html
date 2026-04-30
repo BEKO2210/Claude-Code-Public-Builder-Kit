@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Datenschutzerklärung — Builder Kit</title>
+    <meta name="description" content="Datenschutzerklärung nach Art. 13 DSGVO für das Builder Kit Projekt." />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Zum Hauptinhalt springen</a>
+
+    <header class="site-header">
+      <div class="container header-row">
+        <a class="brand" href="./index.html" aria-label="Builder Kit — Startseite">
+          <img class="brand-logo" src="./logo.svg" alt="" aria-hidden="true" width="40" height="40" />
+          <span class="brand-name">Builder Kit</span>
+        </a>
+        <nav class="primary-nav" aria-label="Primary">
+          <a href="./index.html">Startseite</a>
+          <a href="./impressum.html">Impressum</a>
+          <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="legal-main" tabindex="-1">
+      <div class="container narrow">
+        <article class="legal-article">
+          <header class="legal-head">
+            <p class="kicker">Rechtliches</p>
+            <h1>Datenschutzerklärung</h1>
+            <p class="muted">Informationen zur Verarbeitung personenbezogener Daten nach Art. 13 DSGVO.</p>
+          </header>
+
+          <section class="legal-section">
+            <h2>Kurzüberblick</h2>
+            <p>
+              Das Builder Kit verarbeitet <strong>so wenig personenbezogene Daten wie technisch möglich</strong>:
+            </p>
+            <ul>
+              <li>Es gibt <strong>keine Cookies</strong>, kein Tracking, keine Analytics-Tools, keine Werbe-Pixel und keine Social-Media-Plugins.</li>
+              <li>Die von Ihnen eingegebene Projektidee wird <strong>im Arbeitsspeicher</strong> verarbeitet, um daraus die 12 Markdown-Dateien zu erzeugen, und <strong>danach verworfen</strong>.</li>
+              <li>Es gibt <strong>kein Nutzerkonto</strong> und keine Anmeldung.</li>
+              <li>Im Browser wird ausschließlich <strong>die gewählte Sprache</strong> in <code>localStorage</code> gespeichert (kein Tracking, niemals an einen Server übertragen).</li>
+              <li>Die zugrundeliegenden Hosting-Dienste (Vercel, GitHub Pages) verarbeiten zur Bereitstellung der Seite technisch notwendige Daten wie IP-Adressen — Details unten.</li>
+            </ul>
+          </section>
+
+          <section class="legal-section">
+            <h2>1. Verantwortlicher</h2>
+            <address>
+              Belkis Aslani<br />
+              Vogelsangstraße 32<br />
+              71691 Freiberg am Neckar<br />
+              Deutschland<br />
+              E-Mail: <a href="mailto:belkis.aslani@gmail.com">belkis.aslani@gmail.com</a><br />
+              Telefon: <a href="tel:+4917681462526">+49 176 81462526</a>
+            </address>
+          </section>
+
+          <section class="legal-section">
+            <h2>2. Welche Daten werden erhoben?</h2>
+
+            <h3>2.1 Eingabe der Projektidee</h3>
+            <p>
+              Wenn Sie eine Projektidee eingeben (im Wizard oder im direkten Eingabefeld) und auf
+              „Kit erzeugen" klicken, wird der Text per HTTPS an den Server des Tools auf
+              <a href="https://vercel.app" rel="noopener">vercel.app</a> übertragen, dort
+              <strong>im Arbeitsspeicher</strong> verarbeitet, und das Ergebnis sofort als JSON
+              oder ZIP zurückgesendet. Die eingegebene Idee wird <strong>nicht in einer Datenbank
+              gespeichert</strong>, nicht protokolliert und nicht an Dritte weitergegeben.
+            </p>
+            <p>
+              Bitte geben Sie keine personenbezogenen Daten oder vertraulichen Informationen
+              in das Eingabefeld ein. Eine Idee wie „Eine App für Eltern kleiner Kinder" enthält
+              keine personenbezogenen Daten und ist unproblematisch.
+            </p>
+
+            <h3>2.2 Server-Logs</h3>
+            <p>
+              Der Hosting-Anbieter Vercel kann beim Aufruf der Seite und der API-Endpunkte
+              automatisch technische Daten in Server-Logs erfassen, insbesondere:
+            </p>
+            <ul>
+              <li>IP-Adresse (in der Regel anonymisiert)</li>
+              <li>Datum und Uhrzeit der Anfrage</li>
+              <li>aufgerufene URL</li>
+              <li>HTTP-Statuscode</li>
+              <li>User-Agent (Browser-Kennung)</li>
+            </ul>
+            <p>
+              Diese Daten werden ausschließlich zur Bereitstellung des Dienstes, zur
+              Aufrechterhaltung der Sicherheit (z.B. Erkennung von Missbrauch) und zur
+              Fehleranalyse verarbeitet. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO
+              (berechtigtes Interesse an einem stabilen, sicheren Dienst). Die Speicherdauer
+              richtet sich nach den Vorgaben von Vercel.
+            </p>
+            <p>
+              Datenschutzerklärung von Vercel:
+              <a href="https://vercel.com/legal/privacy-policy" rel="noopener">vercel.com/legal/privacy-policy</a>
+            </p>
+
+            <h3>2.3 Rate Limiting</h3>
+            <p>
+              Um Missbrauch zu verhindern, hält das Tool im Arbeitsspeicher der jeweiligen
+              Server-Instanz einen Zähler pro IP-Adresse vor (max. 30 Anfragen pro Minute).
+              Dieser Zähler wird nach Ablauf des Zeitfensters verworfen. Es findet keine
+              dauerhafte Speicherung statt.
+            </p>
+
+            <h3>2.4 Landingpage (GitHub Pages)</h3>
+            <p>
+              Die Startseite unter
+              <a href="https://beko2210.github.io/Claude-Code-Public-Builder-Kit/" rel="noopener">
+                beko2210.github.io/Claude-Code-Public-Builder-Kit</a>
+              wird über GitHub Pages bereitgestellt (Anbieter: GitHub Inc., USA).
+              GitHub kann beim Aufruf technisch notwendige Daten wie IP-Adresse und Browser-Kennung
+              verarbeiten.
+            </p>
+            <p>
+              Datenschutzerklärung von GitHub:
+              <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">
+                docs.github.com/en/site-policy/privacy-policies</a>
+            </p>
+
+            <h3>2.5 Browser-Speicher (localStorage)</h3>
+            <p>
+              Im lokalen Browser-Speicher (<code>localStorage</code>) wird ausschließlich
+              die von Ihnen gewählte Sprache (<code>en</code> oder <code>de</code>)
+              hinterlegt, damit Sie nach erneutem Aufruf der Seite weiterhin in Ihrer
+              bevorzugten Sprache lesen können. Diese Information verlässt Ihren Browser
+              nicht, wird nicht an einen Server übertragen und kann von Ihnen jederzeit
+              über die Browser-Einstellungen gelöscht werden.
+            </p>
+            <p>
+              Es werden <strong>keine Cookies</strong> gesetzt.
+            </p>
+          </section>
+
+          <section class="legal-section">
+            <h2>3. Weitergabe an Dritte</h2>
+            <p>
+              Eine Weitergabe Ihrer Daten an Dritte zu Werbezwecken oder zum Aufbau von
+              Profilen findet nicht statt. Eine Weitergabe an Dritte erfolgt nur in den
+              folgenden Fällen:
+            </p>
+            <ul>
+              <li>An den Hosting-Anbieter (Vercel, GitHub) im technisch notwendigen Umfang
+                  zur Bereitstellung der Seite (siehe oben).</li>
+              <li>Wenn Sie selbst <strong>aktiv</strong> auf einen Link klicken, der zu einer
+                  externen Seite führt (z.B. zu <a href="https://claude.ai" rel="noopener">claude.ai</a>
+                  oder zum GitHub-Repository) — dann gelten die Datenschutzbestimmungen des
+                  jeweiligen Anbieters.</li>
+              <li>Wenn ich gesetzlich dazu verpflichtet werde (z.B. bei behördlicher Anfrage).</li>
+            </ul>
+          </section>
+
+          <section class="legal-section">
+            <h2>4. Verwendung des erzeugten Kits in Claude oder ChatGPT</h2>
+            <p>
+              Das Builder Kit erzeugt eine ZIP-Datei mit 12 Markdown-Dokumenten und einen
+              Starter-Prompt. Wenn Sie diese Datei und den Prompt in einen externen
+              KI-Dienst wie <a href="https://claude.ai" rel="noopener">claude.ai</a> oder
+              <a href="https://chat.openai.com" rel="noopener">chat.openai.com</a> hochladen
+              bzw. einfügen, geschieht das auf <strong>Ihre eigene Initiative</strong> und
+              unterliegt der Datenschutzerklärung des jeweiligen Dienstes. Das Builder Kit
+              ist an dieser Übertragung nicht beteiligt.
+            </p>
+          </section>
+
+          <section class="legal-section">
+            <h2>5. Ihre Rechte als betroffene Person</h2>
+            <p>
+              Sie haben jederzeit das Recht auf:
+            </p>
+            <ul>
+              <li><strong>Auskunft</strong> über die zu Ihrer Person gespeicherten Daten (Art. 15 DSGVO).</li>
+              <li><strong>Berichtigung</strong> unrichtiger Daten (Art. 16 DSGVO).</li>
+              <li><strong>Löschung</strong> Ihrer Daten (Art. 17 DSGVO).</li>
+              <li><strong>Einschränkung der Verarbeitung</strong> (Art. 18 DSGVO).</li>
+              <li><strong>Datenübertragbarkeit</strong> (Art. 20 DSGVO).</li>
+              <li><strong>Widerspruch</strong> gegen die Verarbeitung (Art. 21 DSGVO).</li>
+            </ul>
+            <p>
+              Da seitens dieses Projekts <strong>keine personenbezogenen Daten gespeichert
+              werden</strong>, können diese Rechte gegenüber dem Verantwortlichen nur
+              abstrakt geltend gemacht werden — es gibt schlicht nichts zu löschen, zu
+              berichtigen oder herauszugeben. Für die Server-Logs des Hosting-Anbieters
+              wenden Sie sich bitte direkt an Vercel bzw. GitHub.
+            </p>
+            <p>
+              Sie haben außerdem das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu
+              beschweren. Zuständig ist in Baden-Württemberg:
+            </p>
+            <address>
+              Der Landesbeauftragte für den Datenschutz und die Informationsfreiheit Baden-Württemberg<br />
+              Königstraße 10a<br />
+              70173 Stuttgart<br />
+              Deutschland<br />
+              <a href="https://www.baden-wuerttemberg.datenschutz.de/" rel="noopener">www.baden-wuerttemberg.datenschutz.de</a>
+            </address>
+          </section>
+
+          <section class="legal-section">
+            <h2>6. SSL/TLS-Verschlüsselung</h2>
+            <p>
+              Diese Seite nutzt aus Gründen der Sicherheit und zum Schutz der Übertragung
+              vertraulicher Inhalte eine SSL/TLS-Verschlüsselung. Eine verschlüsselte
+              Verbindung erkennen Sie daran, dass die Adresszeile des Browsers von „http://"
+              auf „https://" wechselt und am Schloss-Symbol in Ihrer Browserzeile.
+            </p>
+          </section>
+
+          <section class="legal-section">
+            <h2>7. Änderungen dieser Erklärung</h2>
+            <p>
+              Diese Datenschutzerklärung wird bei Änderungen am Tool oder an der Rechtslage
+              aktualisiert. Die jeweils aktuelle Fassung finden Sie immer unter dieser URL.
+              Stand: <strong>30. April 2026</strong>.
+            </p>
+          </section>
+
+          <p class="legal-back">
+            <a href="./index.html">← Zurück zur Startseite</a>
+          </p>
+        </article>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <p>
+          MIT-lizenziert ·
+          <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">Quellcode auf GitHub</a> ·
+          <a href="./impressum.html">Impressum</a> ·
+          <a href="./datenschutz.html">Datenschutz</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -117,6 +117,8 @@ const STRINGS = {
     "result.meta": "{type} · for {audience} · in {domain} · slug: {slug}",
 
     "footer.text.html": "MIT licensed. Generated docs are yours — edit them freely. See <code>CLAUDE.md</code> for how to drive subsequent Claude Code sessions inside a generated kit.",
+    "footer.imprint": "Imprint",
+    "footer.privacy": "Privacy notice",
 
     "status.empty": "Enter an idea first.",
     "status.generating": "Generating your kit…",
@@ -245,6 +247,8 @@ const STRINGS = {
     "result.meta": "{type} · für {audience} · im Bereich {domain} · Slug: {slug}",
 
     "footer.text.html": "MIT-lizenziert. Die erzeugten Dokumente gehören dir — ändere sie nach Belieben. <code>CLAUDE.md</code> erklärt, wie du folgende Claude-Code-Sessions in einem erzeugten Kit steuerst.",
+    "footer.imprint": "Impressum",
+    "footer.privacy": "Datenschutz",
 
     "status.empty": "Bitte zuerst eine Idee eingeben.",
     "status.generating": "Erzeuge dein Kit…",

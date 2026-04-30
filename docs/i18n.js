@@ -63,6 +63,8 @@
 
       "footer.line1.html": "MIT licensed · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit\" rel=\"noopener\">Source on GitHub</a> · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE\" rel=\"noopener\">LICENSE</a>",
       "footer.line2.html": "Static site published from <code>/docs</code> via GitHub Pages. No tracking. No JavaScript required.",
+      "footer.imprint": "Imprint",
+      "footer.privacy": "Privacy notice",
 
       "skip-link": "Skip to main content",
       "lang.aria": "Language"
@@ -124,6 +126,8 @@
 
       "footer.line1.html": "MIT-lizenziert · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit\" rel=\"noopener\">Quellcode auf GitHub</a> · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE\" rel=\"noopener\">LIZENZ</a>",
       "footer.line2.html": "Statische Seite via GitHub Pages aus <code>/docs</code> veröffentlicht. Kein Tracking. Kein JavaScript nötig.",
+      "footer.imprint": "Impressum",
+      "footer.privacy": "Datenschutz",
 
       "skip-link": "Zum Hauptinhalt springen",
       "lang.aria": "Sprache"

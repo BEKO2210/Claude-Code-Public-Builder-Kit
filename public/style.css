@@ -377,6 +377,16 @@ button.primary:hover {
   color: var(--muted); font-size: 14px;
 }
 .site-footer code { font-family: var(--mono); }
+.footer-legal {
+  margin-top: 12px;
+  font-size: 13px;
+}
+.footer-legal a {
+  color: var(--accent);
+  text-decoration: none;
+  margin: 0 4px;
+}
+.footer-legal a:hover { color: var(--accent-press); text-decoration: underline; }
 
 /* ---------- Mobile (≤ 540px): comfortable touch UI ---------- */
 
