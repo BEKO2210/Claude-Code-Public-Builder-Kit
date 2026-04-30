@@ -31,10 +31,23 @@ No npm dependency or build step is required.
 
 ## Updating the logo
 
-If you change `/public/logo.svg` or `/public/favicon.svg`, copy them into this folder so the landing page stays consistent with the local app:
+The logo lives in `/public` (the canonical home). To mirror it here:
 
 ```bash
-cp public/logo.svg public/favicon.svg docs/
+npm run sync:assets       # copies public/{logo,logo-monochrome,favicon}.svg → docs/
+npm run sync:assets:check # CI mode — exit 1 if any pair would change
 ```
 
-A future run could automate this with a small `scripts/sync-docs-assets.js`, but for now the assets change rarely enough that manual sync is fine.
+CI runs `sync:assets:check` on every push and PR, so unsynced changes fail the pipeline rather than landing silently.
+
+## Rebuilding the social card
+
+`docs/og-card.png` (1200×630) is what Twitter, Slack, LinkedIn, Discord, and Facebook show when someone shares the landing page. Most of them still don't reliably render SVG `og:image`, hence the rasterise step.
+
+To regenerate from `docs/og-source.svg`:
+
+```bash
+npm run build:og
+```
+
+The script uses `@resvg/resvg-js` (a WASM-only dev-dependency, no native binaries) and writes the PNG back to `docs/og-card.png`. Re-run only when the source SVG, the brand colours, or the headline copy changes.

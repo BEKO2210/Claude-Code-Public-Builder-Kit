@@ -17,9 +17,11 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 ├── server.js                 # Express app: /api/health, /api/generate, /api/generate.zip,
 │                             #              /api/examples, /api/examples/:id
 ├── docs/                     # Public landing page (GitHub Pages source)
-│   ├── index.html            # Hero, 12-file overview, quick start, examples, footer
-│   ├── style.css             # Same dark palette as the local app, no JS
-│   ├── logo.svg, favicon.svg # Copies of /public assets — sync manually if changed
+│   ├── index.html            # Hero (with logo + aurora), 12-file overview, quick start, examples, footer
+│   ├── style.css             # Same dark palette as the local app, CSS-only animations
+│   ├── logo.svg, logo-monochrome.svg, favicon.svg  # Mirrored from /public via npm run sync:assets
+│   ├── og-source.svg         # 1200×630 source for the social-card PNG
+│   ├── og-card.png           # Rasterised social card (committed; rebuild via npm run build:og)
 │   ├── .nojekyll             # Disable Jekyll preprocessing on Pages
 │   └── README.md             # How to enable Pages + asset-sync notes
 ├── public/                   # Vanilla HTML/CSS/JS — the local app, no framework, no build
@@ -38,7 +40,10 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │       ├── write.js          # writeKit(files, dir)
 │       └── zip.js            # buildZipBuffer(files, rootName) using archiver
 ├── scripts/
-│   └── build-example.js      # Iterates EXAMPLES from src/examples.js → writes examples/<id>/
+│   ├── build-example.js      # Iterates EXAMPLES from src/examples.js → writes examples/<id>/
+│   ├── sync-docs-assets.js   # Mirror logo + favicon from /public into /docs (npm run sync:assets)
+│   ├── build-og.js           # Render docs/og-source.svg → docs/og-card.png (npm run build:og)
+│   └── a11y-audit.js         # Verbose axe-core + WCAG-AA contrast audit (npm run audit:a11y)
 ├── examples/
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
@@ -48,6 +53,8 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 ```
 
 Runtime dependencies: **express** (HTTP), **archiver** (ZIP). Nothing else.
+
+DevDependencies: **axe-core** + **jsdom** (a11y test), **@resvg/resvg-js** (PNG render of the OG card). All audit-only / build-only. The runtime promise (two deps) is unchanged.
 
 ### Example registry as source of truth
 
@@ -91,6 +98,8 @@ These are non-negotiable. Don't regress them:
 - `public/` — plain HTML/CSS/JS only. No frameworks, no transpilers.
 - `tests/generator.test.js` — `node:test`. Adding a new template means updating `EXPECTED_FILES` and the file-count assertions.
 - `tests/a11y.test.js` — `node:test` with axe-core via jsdom for the static HTML, plus a deterministic WCAG-AA contrast pass for the rule axe can't evaluate without real layout. Run interactively with `npm run audit:a11y` for verbose output.
+- `scripts/sync-docs-assets.js` — `npm run sync:assets` mirrors `public/{logo,logo-monochrome,favicon}.svg` to `docs/`. CI runs `npm run sync:assets:check` so any future drift fails the pipeline. Add `assets` to this script's list when introducing a new mirrored asset.
+- `scripts/build-og.js` — `npm run build:og` rasterises `docs/og-source.svg` to `docs/og-card.png` (1200×630) via `@resvg/resvg-js`. Re-run only when the brand or the headline copy in the source SVG changes; the PNG is committed so GitHub Pages can serve it directly.
 
 ## Run protocol
 
@@ -128,15 +137,16 @@ A session is complete when:
 
 Pick one of the following, in priority order:
 
-1. **Landing page polish.** Add a tiny static screenshot/illustration for the hero, an OG image (PNG, since most platforms don't render SVG OG images), and a `scripts/sync-docs-assets.js` so logo updates auto-mirror into `docs/`.
-2. **One-click "Generate now" on gallery cards.** Currently two-step (Use this idea → Generate). A third card action would make first-time-visitor flow one click. Small, high-value.
-3. **Domain depth: keep extending one at a time.** Four domains are now specialised (`climate & sustainability`, `professional services`, `health & wellness`, `finance`). Next candidate: **`food & hospitality`** (seasonality, margins, shift patterns / front-of-house staff turnover). Same mechanism, same two templates.
+1. **One-click "Generate now" on gallery cards.** Currently two-step (Use this idea → Generate). A third card action would make first-time-visitor flow one click. Small, high-value.
+2. **Domain depth: fifth domain (`food & hospitality`).** Same mechanism as Runs #008 / #010 / #013. Risks: seasonality, margin pressure, shift / front-of-house turnover, allergen + food-safety compliance, peak-hour reliability. Positioning: simple-on-shift first, no-laptop-needed, owner-operator audience.
+3. **Public landing page actually live.** GitHub Pages still has to be enabled by the repo owner (Settings → Pages → Source: main / /docs). Until then the OG card and the new hero polish are local-only. One-time owner action.
 4. **Optional file-tree filter.** Inline filter input above `#file-list` to narrow large examples — only worthwhile once examples grow beyond 12 files.
 
 Whichever you pick, file an entry in `RUN_LOG.md` first.
 
 ### Recently completed
 
+- ✓ **Brand identity v3 + landing-page polish.** Logo redesigned from the 12-point compass star to a **12-petal compass bloom** — twelve leaf-shaped petals (one per generated file), four cardinal petals slightly extended (the user's compass), a luminous core (the original idea), three layered animations (rotating ripple wave around the petals, heartbeat on the core, breathing aura). Landing-page hero gained a two-column layout with the new logo at 280 px on the right and a CSS-only aurora effect (three slow-drifting blurred blobs) behind the headline. New `scripts/sync-docs-assets.js` (`npm run sync:assets`, with a `--check` mode wired into CI) ends the manual mirroring debt from Runs #005 / #009. New `scripts/build-og.js` rasterises `docs/og-source.svg` → `docs/og-card.png` (1200×630, 207 KB) via `@resvg/resvg-js`; `og:image` and `twitter:image` meta tags are now wired in `docs/index.html`. See Run #014.
 - ✓ **Domain depth: fourth domain (`finance`).** Same mechanism as Run #008 / #010. Risks cover regulatory drift across GDPR / MiFID II / PSD2 / DORA / SOX / GLBA / BSA + equivalents, KYC/AML obligations, model risk on predictive components, audit-trail-as-feature, and conservative-defaults-over-impressive-automation. Positioning is auditable-by-default, read-only-first defaults, clean separation between informational and advisory output, compliance-aware finance teams as the audience, and reliability as the marketing message. **Zero drift in worked examples** (neither is finance). See Run #013.
 - ✓ **A11y deep-dive: axe-core via jsdom + manual contrast pass.** Both pages (`public/index.html`, `docs/index.html`) report **zero axe violations** across 37 / 25 WCAG 2.0/2.1 A+AA + best-practice rules. Three rules are reported as `incomplete` (`color-contrast`, `landmark-one-main`, `page-has-heading-one`) because jsdom can't compute pixel-level layout — the latter two are confirmed manually (both pages ship a `<main>` and an `<h1>`); the first is covered by a deterministic 11-pair WCAG-AA contrast test in `tests/a11y.test.js`. Lowest contrast pair is **5.15:1** (muted text on panel-2), well above the 4.5:1 AA bar. Audit reproducible via `npm run audit:a11y`. See Run #012.
 - ✓ **User-value upgrade: live inference preview + smarter audience parsing.** New `POST /api/preview` (cheap, context-only). UI shows a live "Detected: …" line under the textarea as you type (debounced, with stale-response protection). Audience extraction gained four fallback patterns (`built/made/designed/tailored for`, `that helps X`, `to help X`, `aimed at X`) — additive, so existing `for X` matches keep precedence and the worked examples stay byte-stable. See Run #011.

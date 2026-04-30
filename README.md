@@ -187,7 +187,26 @@ A static landing page lives in [`docs/`](./docs/) and is published via **GitHub 
 4. **Branch:** `main` and **Folder:** `/docs`.
 5. Save. The site appears at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` within a minute.
 
-The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`. See [`docs/README.md`](./docs/README.md) for editing notes and how to keep the logo assets in sync.
+The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`.
+
+### Keeping brand assets in sync
+
+The logo + favicon live canonically in `/public`. To mirror into `/docs`:
+
+```bash
+npm run sync:assets        # copy logo + monochrome + favicon
+npm run sync:assets:check  # exit 1 if anything would change (CI uses this)
+```
+
+CI runs the check on every push/PR, so an unsynced asset fails the pipeline.
+
+### Rebuilding the social card
+
+`docs/og-card.png` (1200×630) is the rasterised Open Graph image used in link unfurls. To regenerate after editing `docs/og-source.svg`:
+
+```bash
+npm run build:og
+```
 
 ## Continuous integration
 

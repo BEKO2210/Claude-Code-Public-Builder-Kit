@@ -2,6 +2,98 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #014 — 2026-04-30 — Brand identity v3 + landing-page polish (PNG OG, hero, asset sync)
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~1.5 sessions
+**Goal going in:** Push the brand from "good enough" to "actually distinctive". The previous 12-pointed compass star (Run #009) was clean but read as a generic star at small sizes. Replace it with a mark that has its own silhouette, ship a proper PNG OG card so link unfurls work everywhere, dress the landing-page hero so the brand reads on first glance, and end the manual asset-sync debt that's been carried since Run #005.
+
+**The new mark — twelve-petal compass bloom**
+
+A radial pattern of 12 leaf-shaped petals around a luminous core:
+
+- Twelve petals total — one per generated Markdown file. The count is the meaning.
+- Four petals on the cardinal directions (N / E / S / W) extended to outer radius 28 (vs. 22 for the eight intermediate petals). Same "compass of orientation" reading as v2 but with more visual rhythm — the long/short alternation creates a directional anchor without being literal about it.
+- Cardinal petals get a slightly lighter gradient (`#c8d8ff → #a4c2ff → #7aa8ff`) than the intermediate petals (`#a4c2ff → #8ab4ff → #5e8eff`) so they read as the structural anchors, not as outliers.
+- Tiny radial-gradient core (`#ffffff → #cdd9ff → #8ab4ff`) sits at the geometric centre; it's the "original idea" the bloom is structured around.
+- A soft radial aura behind the petals adds depth without busy-ness.
+- Three layered CSS animations, each with its own cycle so they phase against each other instead of locking into a single beat:
+  - `bk-ripple` (4.8 s) — every petal rises briefly (opacity 0.78 → 1, scale 1 → 1.025) then falls. The 12 petals are staggered 0.4 s each so the rise travels around the bloom as a clean clockwise wave.
+  - `bk-heartbeat` (4.8 s) — the core pulses in scale (1 → 1.18) and opacity (0.85 → 1).
+  - `bk-aura-breathe` (6.4 s) — the aura swells and subsides; longer cycle so it phases against the ripple instead of locking.
+  - All three honour `@media (prefers-reduced-motion: reduce)`.
+
+The whole mark is a 24-vertex geometric shape with bezier-curved petal outlines — distinct from a star, distinct from a snowflake, distinct from a flower. Most importantly: **distinct at 16 px**. The four cardinal extensions push past the rest of the silhouette so even the favicon reads as "that thing", not "any star".
+
+**Landing-page hero polish**
+
+- Two-column hero grid: copy on the left, the new logo at 280 px on the right. Below 820 px the columns stack and the logo moves above the copy.
+- The hero gets an "aurora" effect — three soft, blurred radial blobs (filter: blur(90px), opacity 0.4–0.55) behind the content. Each drifts on its own slow cycle (22 s / 28 s / 26 s) so the background feels alive but never distracting. Pure CSS, zero JavaScript, zero new dependencies, respects `prefers-reduced-motion`.
+- The hero logo carries the same animated SVG used in the local app, so the brand reads identically across the local UI and the landing page.
+
+**Social card (PNG)**
+
+- New `docs/og-source.svg` — 1200×630, dark gradient background, two-blob aurora, the new mark scaled 6.5× on the left, and a typeset right column with eyebrow tag, three-line headline (last line in accent), tagline, and brand line.
+- New `scripts/build-og.js` — uses `@resvg/resvg-js` (WASM, no native binary) to rasterise the source SVG to `docs/og-card.png` (1200×630, ~207 KB). Wired up as `npm run build:og`.
+- The PNG is committed to the repo so GitHub Pages serves it with no build step.
+- `docs/index.html` gains `og:image`, `og:image:width`, `og:image:height`, `twitter:card`, `twitter:image`, `twitter:title`, `twitter:description` meta tags pointing at `./og-card.png`.
+
+**Asset-sync automation**
+
+- New `scripts/sync-docs-assets.js` — mirrors `public/{logo,logo-monochrome,favicon}.svg` to `docs/`. Exposes two npm scripts:
+  - `sync:assets` — copy and report.
+  - `sync:assets:check` — exit 1 if any pair would change.
+- CI workflow gains a `Verify brand assets in /docs match /public` step running the check, so any future unsynced edit fails the pipeline rather than landing silently.
+
+**Files touched**
+
+- Added: `scripts/sync-docs-assets.js`, `scripts/build-og.js`, `docs/og-source.svg`, `docs/og-card.png`, `docs/logo-monochrome.svg`.
+- Replaced (same paths): `public/logo.svg`, `public/logo-monochrome.svg`, `public/favicon.svg`, `docs/logo.svg`, `docs/favicon.svg`.
+- Modified: `docs/index.html`, `docs/style.css`, `docs/README.md`, `package.json`, `package-lock.json`, `.github/workflows/ci.yml`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/index.html`, `public/style.css`, `public/app.js`, `src/**`, `tests/**`, `examples/**`, `scripts/build-example.js`, `scripts/a11y-audit.js`. Generator behaviour unchanged.
+
+**Tests run**
+
+- `npm test` → **69/69** pass (no test changes — the logo work is static).
+- `npm run audit:a11y` → 0 violations on either page (37 / 25 rules), all 13 contrast pairs pass WCAG AA, lowest still 5.15:1.
+- `npm run sync:assets` → mirrored three SVGs into `/docs`.
+- `npm run sync:assets:check` → "in sync."
+- `npm run build:og` → wrote `docs/og-card.png` (206.5 KB, 211431 bytes). Visual review of the rendered PNG: bloom centred, headline bold, eyebrow tag legible, all copy crisp.
+- `npm run generate:examples` → both example folders rebuild byte-identically.
+- Live smoke on a static server against `docs/`:
+  - `/` 200 / 10839 B with `og:image`, `og:image:width/height`, `twitter:card`, `twitter:image` meta tags present.
+  - `/style.css` 200 / 8186 B.
+  - `/logo.svg` 200 / 5707 B.
+  - `/favicon.svg` 200 / 1592 B.
+  - `/og-card.png` 200 / 211431 B.
+
+**Drift accounting**
+
+None in `examples/`. The only "drift" is intentional and committed: brand assets in `public/` and `docs/` were replaced in lockstep, the new monochrome SVG was added to `docs/` (it didn't exist there before), and the OG card was generated for the first time.
+
+**Known limitations**
+
+- The OG card depends on whichever sans-serif font `resvg` picks up from the build machine. We pass `defaultFontFamily: "DejaVu Sans"` (present on Linux CI runners) and `loadSystemFonts: true`. Re-renders on a machine without that family will fall back to whatever is available; the headline shape may shift by a few pixels. Acceptable for a build artefact that's checked in.
+- The hero aurora uses `filter: blur(90px)` which is GPU-cheap on modern browsers but can be heavy on low-end Android. If we ever see complaints we can drop one of the three blobs or reduce the blur radius.
+- The logo's twelve `<g class="bk-petal">` elements depend on `:nth-child(N)` selectors for the per-petal animation delay. If anyone reorders the SVG by hand, the wave direction changes; comments in the file flag this.
+- `@resvg/resvg-js` is WASM-only, but it does have a native build step via prebuilds. On unusual platforms (Alpine, FreeBSD) it may need a fallback. Not blocking — the PNG only needs to be regenerated rarely.
+- The animated logo is loaded via `<img>` in `docs/index.html`; the embedded `<style>` inside the SVG runs in modern browsers but won't run in IE11 (irrelevant) or in some older email-client renderers (also irrelevant for a landing page).
+
+**Decisions**
+
+- **12-petal bloom over 12-point star.** The radial wave reads as deliberate and calm; the cardinal extension preserves the "compass" reading without leaning on the star cliché. Chunky asterisk-style options (Anthropic-like) felt close-to-imitation; the bloom is genuinely the kit's own shape.
+- **PNG OG card committed to git.** Re-rendering on every push is noise; landing pages share rarely. The PNG sits next to the source SVG in `docs/`, regenerable in one command.
+- **`@resvg/resvg-js`, not `sharp` or `puppeteer`.** Pure-JS WASM, ~5 MB on disk vs. 50 MB+ for sharp; no system Cairo/Pango required. Build is deterministic across the contributors we expect.
+- **CSS-only aurora.** Adding a JS-driven canvas effect would have been more dynamic but would break the "no JavaScript required" line in the landing-page footer. Three blurred blobs with stagger-cycled keyframes give the same impression at zero runtime cost.
+- **Sync script is its own tool, not a `prepublish` hook.** Explicit is better than magic — `npm run sync:assets` is a verb the author types when they touch the brand assets, and CI guards the rest.
+- **Dev dependencies only.** `@resvg/resvg-js` joins `axe-core` + `jsdom` as audit/build-only tools. The runtime promise (express + archiver, nothing else) is unchanged.
+
+**Next session starts with**
+
+- The reordered `CLAUDE.md` shortlist. Top is now **one-click "Generate now" on gallery cards** (small, high-value onboarding win), then **`food & hospitality`** as the fifth specialised domain. The landing page is in good shape; the remaining piece on it is purely owner-side (enable GitHub Pages in the repo settings).
+
+---
+
 ## Run #013 — 2026-04-29 — Domain depth: fourth domain (`finance`)
 
 **Phase:** Phase 1 — Generation quality (continued)
