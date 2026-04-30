@@ -2,6 +2,52 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #020 — 2026-04-30 — Domain depth: ninth domain (`creative & media`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `creative & media` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018 / #019. Picked creative & media over `real estate` because the AI-content-provenance regulatory surface (EU AI Act GPAI obligations from August 2025, full rollout from August 2026; California AB 2655 / SB 942 + 9+ other US state laws; C2PA / Content Credentials standard) is moving fast enough that builder-kit users are likely to bump into it directly within the lifetime of a generated kit. Neither worked example is creative & media, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"creative & media"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): rights / licensing / royalty traceability as a load-bearing surface (chain of authorship, licence terms — Creative Commons variants, work-for-hire, exclusive vs. non-exclusive, geographic + duration restrictions; emit DDEX / CWR for music from day one — those are the standards used by ASCAP / BMI / SACEM / GEMA / PRS); AI-generated content disclosure as a regulated surface (EU AI Act, California AB 2655 / SB 942, 9+ US state laws, C2PA / Content Credentials standard with Adobe / Microsoft / BBC / NYT / OpenAI as backers); takedown + notice-and-action as a contractual obligation (DMCA safe-harbour 24–48h response, EU DSA enforceable for all platforms since 17 February 2024 with notice-and-action / transparency / appeal mandates); contributor-vs-platform trust as fragile (Spotify / YouTube / Substack payout-shift cycles cost goodwill, document the formula, give 60+ days' notice on changes that lower earnings, ship a creator-facing changelog); copyright + moral-rights jurisdictional patchwork (term, fair-use vs. fair-dealing, moral rights with different transferability rules, public-domain calculation — per-jurisdiction handling, never silently apply US fair use to European work).
+  - **Positioning** (5 bullets): creator-first not platform-first (visible payout split, no rev-share gotchas, working export-and-leave path, creator-controlled audience-list ownership — "lock-in dressed as network effects" reads as a red flag); provenance as a feature not as compliance (C2PA-style "verifiable origin" lands as a positive signal, not a back-office obligation); audience as independent creators / small studios / 1–50-contributor creator-economy operators (Universal / Sony / Warner in music, Adobe / Avid in production, YouTube / Spotify / TikTok at distribution as the incumbents); workflow-over-hype with publish-ready in a single coherent flow (uploading + editing + captioning + tagging + distributing + reporting in one path, creators measure tools by hours-saved-per-asset); quantify in creator units (minutes saved per asset, royalty-split accuracy %, time-to-publish, sync deals closed, pitch-to-acceptance ratio, audience-retention curves, payout latency, disputed-revenue %).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, `README.md`.
+
+**Tests run**
+- `npm test` → **79/79** pass (77 → 79, +2 creative tests; SPECIALISED_DOMAINS test now expects nine entries).
+- **No prior tests had to be adjusted this run** (third consecutive run with this property — Runs #018 / #019 / #020). Non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is creative & media.
+- Verified that the existing `"A platform for indie game studios"` and `"A platform for indie studios"` test ideas (used in the schema-validation, no-undefined-leak, and determinism tests) still pass after specialisation. Both ideas land on `creative & media` (the `studio` keyword wins over `game` because of iteration order in `DOMAIN_KEYWORDS`), so their generated MASTERPLAN.md and DOCS/product-brief.md now include the new domain headings — but the affected tests only check schema validity, no-`undefined`-leak, and byte-identical determinism, none of which the new content disturbs.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-creative domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A licensing platform for independent music creators"`): productType `platform`, audience `independent music creators`, domain `creative & media`. Confirmed `### Domain-specific risks (creative & media)` heading present + C2PA + Digital Services Act + DDEX bullets render; `### Domain-specific positioning (creative & media)` heading present + Creator-first + "Provenance as a feature" bullets render.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Nine of 21 domain values are now specialised (~43% coverage). Crossing 50% with the next session.
+- Creative-keyword detection (`artist`, `designer`, `photographer`, `studio`, `music`, `podcast`) covers the obvious surfaces but misses adjacent ones — `creator`, `producer`, `filmmaker`, `videographer`, `writer`, `author`, `journalist`, `editor`, `record label`, `imprint`, `publisher`, `independent`, `media`, `content`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`. Notable: a generic `"creator"` idea won't currently land here.
+- The `studio` keyword catches both `production studio` (creative & media) and `game studio` (which one might argue should be gaming). Today, `studio` wins because of iteration order. The intent is right: `"A platform for indie game studios"` is a creative-economy product more than a game-of-the-year tournament platform, and the bullets we just added apply to it directly. But this is worth flagging — a future "third-pass keyword tuning" run might split `game studio` away.
+- Risk bullets cite specific named regulations and standards with effective dates (EU AI Act GPAI obligations from August 2025; full rollout from August 2026; EU DSA enforceable since 17 February 2024; California AB 2655 / SB 942). Names age — they're correct as of Apr 2026 but state-by-state AI-disclosure laws are accreting fast in the US, and the C2PA backer list is growing. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- Positioning explicitly names the major-label / studio / distribution incumbents (Universal / Sony / Warner; Adobe / Avid; YouTube / Spotify / TikTok). All durable enough as references to outlast the typical kit lifetime.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `creator` / `producer` / `filmmaker` / `videographer` / `writer` / `journalist` / `editor` / `media` / `content` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019.)
+- **Test idea uses `music` and `creators` for unambiguity**: "A licensing platform for independent music creators" — matches creative & media via `music`, productType is `platform`, audience parses cleanly to `independent music creators`. Doesn't accidentally hit any earlier-iterated domain.
+- **No prior tests adjusted this run** — third consecutive run with this property. The existing indie-studio test ideas continue to work despite now landing on a specialised domain, because the affected tests don't assert on file content semantics, only on schema, leak-detection, and determinism.
+- **C2PA emphasised over individual provenance vendors.** Adobe Content Credentials, Truepic, etc. are concrete implementations; C2PA is the open standard they all interoperate on. Naming the standard is more durable than naming the vendors.
+- **Creative & media picked over `real estate`.** Both have substantive depth. Creative & media won on (a) regulatory-surface velocity (AI-content disclosure laws are expanding faster than fair-housing rules are evolving), (b) wider relevance to the kit's likely user base (more people building creator-economy / podcast / royalty / asset-management tools than MLS-IDX integrations), and (c) the C2PA / DSA / DMCA combination giving the bullets unusual concreteness for a "creative" domain that often gets vague risk text. Real estate moves to top of the next-session shortlist along with `non-profit & community` and `government & civic`.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`real estate`** (fair-housing under FHA + EU equivalents, MLS / IDX integration patchwork, dual-agent disclosure, jurisdictional patchwork on rental + tenancy + listing accuracy + agency licensing, anti-money-laundering on high-value transactions) or **`non-profit & community`** (501(c)(3) / charity-commission compliance, donor-data privacy, restricted-fund accounting, mission-vs-platform trust, low-budget operational reality). Public landing page is still waiting on a one-time owner action.
+
+---
+
 ## Run #019 — 2026-04-30 — Domain depth: eighth domain (`retail & e-commerce`)
 
 **Phase:** Phase 1 — Generation quality (continued)

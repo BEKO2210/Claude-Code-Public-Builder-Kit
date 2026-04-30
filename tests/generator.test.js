@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the eight expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the nine expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "retail & e-commerce"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "retail & e-commerce"]
   );
 });
 
@@ -325,6 +325,22 @@ test("domain depth: retail & e-commerce — DOCS/product-brief.md has the positi
   assert.match(md, /Conversion-first/);
   assert.match(md, /checkout-first on mobile/);
   assert.match(md, /Trust signals/);
+});
+
+test("domain depth: creative & media — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A licensing platform for independent music creators", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(creative & media\)/);
+  assert.match(md, /Rights, licensing/);
+  assert.match(md, /C2PA/);
+  assert.match(md, /Digital Services Act/);
+});
+
+test("domain depth: creative & media — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A licensing platform for independent music creators", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(creative & media\)/);
+  assert.match(md, /Creator-first/);
+  assert.match(md, /Provenance as a feature/);
+  assert.match(md, /Workflow over hype/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
