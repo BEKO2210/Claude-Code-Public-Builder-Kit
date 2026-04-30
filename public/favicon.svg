@@ -1,17 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Builder Kit">
-  <g fill="#8ab4ff">
-    <g transform="translate(32 32) rotate(0)"><path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(30)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(60)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(90)"><path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(120)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(150)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(180)"><path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(210)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(240)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(270)"><path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(300)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-    <g transform="translate(32 32) rotate(330)"><path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z"/></g>
-  </g>
-  <circle cx="32" cy="32" r="3" fill="#cdd9ff"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Builder Kit">
+  <!-- Simplified favicon: front sheet + one back sheet hint, single accent colour for max readability at 16px. -->
+  <rect x="9" y="6" width="16" height="22" rx="2.5" fill="#7aa8ff" opacity="0.55" transform="rotate(8 17 28)"/>
+  <rect x="7" y="5" width="16" height="22" rx="2.5" fill="#a4c2ff" stroke="#5e8eff" stroke-width="0.6"/>
+  <rect x="10" y="9"  width="10" height="2"   rx="1"   fill="#5e8eff"/>
+  <rect x="10" y="14" width="9"  height="1.4" rx="0.7" fill="#5e8eff" opacity="0.65"/>
+  <rect x="10" y="18" width="10" height="1.4" rx="0.7" fill="#5e8eff" opacity="0.65"/>
+  <rect x="10" y="22" width="8"  height="1.4" rx="0.7" fill="#5e8eff" opacity="0.55"/>
 </svg>

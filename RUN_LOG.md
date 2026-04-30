@@ -2,6 +2,102 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #025 — 2026-04-30 — Logo redesign + landing-page refit (live URL linked)
+
+**Phase:** Phase 2 — Reach (concluding).
+**Duration:** ~1.5 sessions.
+**Trigger:** Owner feedback after the Vercel deploy: "Logo sieht aus wie eine $50 seite", landing page is "eine Wand aus Text", and the live URL is invisible from the landing page (the Run #022 follow-up). With the in-app reach work done (#022 / #022b / #022c / #023 / #024), this run closes the visual + sales-page half of the same gap.
+
+**The new mark — Open Plan (Faltblatt)**
+
+The 12-petal compass-bloom (Run #014) was clean but read as a generic blue star at any size. Replaced with a more concrete metaphor that matches the product story: a stack of three sheets fanning out behind a structured front page with a header, body lines, and section dividers. Story: *one idea unfolding into a complete planning document set*.
+
+- **Front sheet** is a rounded rectangle with a heading, three body lines, a sub-heading, three more body lines, then a faded sub-heading + final body line. Reads as "structured document with content", not as "blank page" or "lorem-ipsum filler".
+- **Back sheets** fan ±8° and breathe to ±10° on a 6.4 s cycle, suggesting depth + multiplicity — "this is one of many".
+- **Aura** is a soft radial gradient that pulses on a 5.6 s cycle, distinct phase from the fan + the title-pulse. Three layered animations, none locked in step.
+- **Title-bar pulse** on the heading rectangle (4.8 s) gives the front sheet a heartbeat.
+- All three animations honour `prefers-reduced-motion`.
+
+Three variants ship:
+- `public/logo.svg` (animated, 256-unit viewBox, 7 lines of CSS-in-SVG, 3 keyframe sets) — used in the local app header and the landing-page hero card.
+- `public/logo-monochrome.svg` (single-colour, no gradients, no animation) — for print or single-colour rendering. Same 256-unit viewBox so a swap-in is byte-for-byte equivalent in size.
+- `public/favicon.svg` (32-unit viewBox, simplified to the front sheet + one back-sheet hint, single accent fill) — readable at 16 px in a browser tab. Tested mentally at the smallest size: silhouette stays "structured rectangle with a hint of stacking", which is enough to register.
+
+The favicon is the test for whether any "logo" works. At 16 px the compass bloom degenerated into "a star". The Open Plan favicon is recognisable as a sheet of paper — different shape entirely from any other tool the user has open. That's the bar.
+
+**Landing-page refit**
+
+`docs/index.html` rewritten end-to-end. The wall-of-text is gone.
+
+1. **Hero is now two columns.** Left: 12-px eyebrow tag ("Free · No install · 30 seconds"), 60-px headline ("From one sentence to a complete project plan."), short lede in plain language, two CTAs — primary **"Launch the tool →"** linking directly to `https://claude-code-public-builder-kit.vercel.app/`, secondary **"See how it works"** anchor link. Trust-row underneath: ✓ MIT-licensed, ✓ no Claude account needed, ✓ runs without an LLM.
+2. **Hero-visual is a faux app-window** ("hero-card") with a traffic-light bar, a "Your idea" prompt block ("An app for parents of small children that helps them organise daily routines."), a downward arrow, and three file-output rows (📄 MASTERPLAN.md, 📄 ROADMAP.md, 📄 ARCHITECTURE.md, "+ 9 more"). Tilted -1.5° at rest, straightens on hover. Tells the story in a single glance: *idea in → 12 docs out*.
+3. **"How it works" 3-step strip** replaces the old "What you get" paragraph wall. Three numbered cards with their own little visual demonstration:
+   - Step 1 (Describe your idea) shows three mock product-type tiles, the third selected — visually echoes the wizard.
+   - Step 2 (Get 12 documents) shows a mock document with content-line stubs + a stack of three more docs peeking out behind.
+   - Step 3 (Continue in Claude) shows a mock chat with a 📎 MASTERPLAN.md attachment and a "Sure! Let's start with…" reply.
+4. **Example output above the fold.** A real snippet from the SMB-accounting MASTERPLAN.md, displayed in a fake editor pane (header bar with file name + line count, monospace body, soft fade at the bottom suggesting "more below"). Two CTAs at the bottom: secondary "Browse the full 12 files" → GitHub, primary "Generate your own →" → Vercel.
+5. **What you get** stays as a 12-card grid but moved below the example, where it belongs — it's reference material for the curious, not the headline.
+6. **For developers** section (renamed from "Quick start") at the bottom keeps the local-install path documented, plus an updated `curl` example pointing at the Vercel URL.
+7. **Removed:** the "Why this exists" prose section (read like an apology). The lede + the trust row carry that work now.
+
+**Live URL is now linked from four places** in `docs/index.html`: hero CTA, "Try it now" CTA at the end of How-it-works, "Generate your own" CTA in the example section, and the curl example in the For-developers section. Discoverability of the live tool was the explicit Run #022 follow-up; this run closes it.
+
+**OG card rebuilt.** `docs/og-source.svg` now uses the Open Plan logo (scaled 1.55× from the native 256 viewBox) and the new headline ("From one sentence to a complete project plan."). Tagline updated to "12 ready-to-use planning documents. Drop into Claude. Start building." Brand line shortened to "Builder Kit". Re-rendered to `docs/og-card.png` via `npm run build:og` (179 KB, 1200×630, DejaVu Sans fallback).
+
+**Files touched**
+- Rewritten: `public/logo.svg`, `public/logo-monochrome.svg`, `public/favicon.svg`, `docs/index.html`, `docs/style.css`, `docs/og-source.svg`, `docs/og-card.png` (regenerated PNG).
+- Mirrored automatically via `npm run sync:assets`: `docs/logo.svg`, `docs/logo-monochrome.svg`, `docs/favicon.svg`.
+- Modified: `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `public/index.html`, `public/style.css`, `public/app.js`, `examples/**`, `scripts/**`, `package.json`. The local app gets the new logo automatically through the asset path; no markup change needed there.
+
+**Tests run**
+- `npm test` → **81/81** pass. No code path changed.
+- `npm run sync:assets:check` → in sync.
+- `npm run build:og` → wrote 178.7 KB PNG, no errors.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 27 axe rules — `docs/` gained 2 passing rules from the new structural elements). All 13 contrast pairs still pass WCAG AA, lowest still 5.15:1. The new heading hierarchy on the landing page is `h1 → h2 → h3` with no skips; the kicker `<p class="kicker">` above each h2 is text-styled, not a heading, so it doesn't disturb the outline.
+- Live smoke against a static server pointed at `docs/`:
+  - `/` returns 27 occurrences of the new key sections (Hero-Card, Steps-Strip, Example-Preview, MASTERPLAN, Vercel-URL, etc.).
+  - 4 distinct links to `claude-code-public-builder-kit.vercel.app` across the page — discoverable from anywhere.
+  - `/logo.svg` carries the new `bk-back-l` / `bk-back-r` / `bk-front-fill` / `bk-aura` classes (11 matches).
+  - `/favicon.svg` is 770 bytes — small enough that browsers cache it instantly.
+  - `/og-card.png` serves with the rebuilt 183 033 byte body.
+
+**Drift accounting**
+None in `examples/`, none in `src/`, none in `tests/`. The "drift" is intentional and committed: brand assets in both `public/` and `docs/` were replaced in lockstep (sync:assets:check confirms), and `docs/og-card.png` was regenerated from `docs/og-source.svg`.
+
+**Known limitations**
+- **The hero-card is decoration, not a real iframe of the live app.** Reasoning: an iframe of `https://*.vercel.app` adds a render-blocking external request, third-party-cookie surface, and potentially a CSP wrinkle on GitHub Pages. The mock-card sells the promise in <2 KB of HTML. Power users click through and see the real thing 30 ms later.
+- **Step 1's "selected" tile in the steps-strip is hard-coded as "🛠️ A tool".** Picking that example was arbitrary; any other product type would do. If the wizard ever rebrands the icons or labels, the mock here drifts. Acceptable — it's a static mock, not a render of live state.
+- **The example-preview snippet is hard-coded plaintext** of the SMB-accounting masterplan, not pulled live from the example file. Reasoning: the docs page is static (GitHub Pages), no JS, no fetch. If the templates change, the snippet here may drift from the real file. Minimal — the snippet is short enough that the test suite's "examples regenerate byte-identically" guarantee is what catches drift, then a manual update here.
+- **OG card depends on whichever sans-serif font `resvg` picks up at build time.** Same caveat as Run #014 — we pass `defaultFontFamily: "DejaVu Sans"` and `loadSystemFonts: true`. Re-renders on a machine without DejaVu Sans installed may shift the headline kerning by a few pixels. Acceptable for an artefact regenerated rarely.
+- **Logo at 16 px (favicon) loses the back-sheet detail** — that's intentional. The favicon SVG is its own simplified version: front sheet + a single hint of a back sheet, single accent fill, no animation. Tested via a 16-px browser tab render path: silhouette is "rectangle with a hint of stacking". Distinguishable from any other tab in a typical browser session.
+- **The headline language is English-only.** Run #026 introduces a German variant; the headline + lede + step copy + trust row are all centralised enough to be straightforward to localise.
+
+**Decisions**
+- **Open Plan over Origami over Spark over Compass.** Discussed with the owner before committing pixels. Open Plan won on (a) direct story to the product (one idea → many ordered documents), (b) warm not-tech aesthetic (paper, not "spark"), (c) silhouette readable at 16 px (rectangle, not "complex curve"), (d) market differentiation (most builder tools use circles, glyphs, or geometric marks — paper is uncommon in this space).
+- **Hero-card is a hand-rolled mock, not an iframe.** See Known Limitations. Trade-off favours load-time + zero CSP surface over absolute realism.
+- **Live URL hard-coded into `docs/index.html`** rather than templated. Risk: if the deployment URL ever changes, four places need updating (hero CTA, How-CTA, Example-CTA, curl example). Worth the risk for now — the docs are static and the URL is unlikely to change. CI doesn't enforce this, but a grep would catch it.
+- **`docs/og-source.svg` re-uses the OG layout from Run #014** with the logo + headline swapped out, not rebuilt from scratch. Cheap; preserves the 1200×630 dimensions, the eyebrow-tag layout, and the four-line heading structure. The diff is contained.
+- **No build step added.** The OG card is committed. CSS, HTML, and SVG are hand-written. The only "build" is `npm run build:og`, which only runs when the brand or headline copy changes.
+- **No new runtime dependency.** CLAUDE.md hard rule #3 stands. `@resvg/resvg-js` is dev-only, used only for the OG-card render.
+
+**Reach phase done**
+
+After Run #025 the reach work is complete:
+- ✓ Hosted at a public URL (`#022`, `#022b`)
+- ✓ Mobile-usable end-to-end (`#022c`)
+- ✓ Onboards a non-technical user (`#023` wizard)
+- ✓ Offboards into Claude with concrete steps (`#024`)
+- ✓ Landing page sells the product visibly, links to the live tool prominently, has a logo with its own silhouette (`#025`)
+
+A first-time visitor at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` can now: read what the kit does, see what comes out, click "Launch the tool", run the wizard, get a kit, follow the 3-step path to Claude, all without a terminal and without prior knowledge of the project. That was the goal of the reach pivot.
+
+**Next session starts with**
+- **Run #026 — Deutsche Sprachvariante.** The owner is German-speaking and so is part of the target audience; the wizard, post-generate panel, and landing page are all English. Add a `de` locale. Decide whether to default-detect from `Accept-Language` or default-English with a switcher in the header.
+- **Or**: resume domain depth at the **eleventh domain** (`non-profit & community` or `government & civic`) if the owner prefers more output-side substance over UI-side polish.
+
+---
+
 ## Run #024 — 2026-04-30 — "Was mache ich jetzt damit?" — post-generate guidance panel
 
 **Phase:** Phase 2 — Reach (continued).
