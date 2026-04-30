@@ -339,6 +339,7 @@ copyPromptBtn?.addEventListener("click", async () => {
   }
 });
 
+
 downloadZipBtn.addEventListener("click", async () => {
   if (!lastIdea) return;
   const originalLabel = downloadZipBtn.textContent;

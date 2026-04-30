@@ -100,19 +100,36 @@ const STRINGS = {
     "direct.submit": "Generate kit",
 
     "result.use.heading": "Use your kit in 3 steps",
-    "result.use.subtitle": "No terminal, no install. You only need a free claude.ai account.",
+    "result.use.subtitle": "Built for Claude Code — in your browser via GitHub, or in your terminal. No regular chat — Claude Code can actually read and edit the files in your kit.",
     "result.step1.title": "Download your kit",
     "result.step1.body": "A ZIP file with 12 markdown documents — your project plan, ready to share.",
     "result.step1.btn": "Download ZIP",
-    "result.step2.title": "Open Claude",
-    "result.step2.body": "Free, no install. Sign in with email or Google.",
-    "result.step2.aside": "(ChatGPT works too — same steps.)",
-    "result.step2.btn": "Open claude.ai",
-    "result.step3.title": "Attach MASTERPLAN.md and paste this prompt",
-    "result.step3.body.html": "In Claude, click the paperclip <span class=\"ico-clip\" aria-hidden=\"true\">📎</span> below the chat, attach <code>MASTERPLAN.md</code> from the ZIP, then paste this:",
+    "result.step2.title": "Upload to GitHub (free)",
+    "result.step2.body": "Claude Code in the browser works with a GitHub repo. Takes about 3 minutes the first time. Already have GitHub? Skip step 2a.",
+    "result.step2.substeps-toggle": "Show step-by-step (for first-time GitHub users)",
+    "result.step2.s1": "<strong>2a.</strong> Go to <a href=\"https://github.com/signup\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/signup</a> and create a free account (just email + password).",
+    "result.step2.s2": "<strong>2b.</strong> Click the <strong>+</strong> top-right → <strong>New repository</strong>. Pick any name (e.g. <code>my-kit</code>), choose <strong>Public</strong>, leave the rest as default, click <strong>Create repository</strong>.",
+    "result.step2.s3": "<strong>2c.</strong> On the new empty repo page, click the link <strong>uploading an existing file</strong>.",
+    "result.step2.s4": "<strong>2d.</strong> Open the ZIP you downloaded in step 1. Drag <em>all the files</em> from inside the ZIP onto the GitHub upload page.",
+    "result.step2.s5": "<strong>2e.</strong> Scroll down, click the green <strong>Commit changes</strong> button. Your kit is online.",
+    "result.step2.btn": "Open GitHub: New repository",
+    "result.step3.title": "Open Claude Code with your repo",
+    "result.step3.body.html": "Open Claude Code in your browser, connect the GitHub repository you just created — Claude Code will load all 12 files automatically. Then paste this prompt:",
+    "result.step3.btn": "Open Claude Code",
     "result.step3.copy": "Copy prompt",
     "result.step3.copied": "Copied!",
     "result.step3.copy-failed": "Copy failed",
+
+    "alt.summary": "Prefer the terminal? (for developers)",
+    "alt.hint": "Skip GitHub entirely and run Claude Code locally on your computer.",
+    "alt.terminal.title": "Claude Code in your terminal",
+    "alt.terminal.body": "If you have Node.js installed and are comfortable in a shell, this is the most direct way — Claude Code reads every file in the folder and can edit them directly, without any GitHub upload.",
+    "alt.terminal.s1": "Unzip the kit somewhere on your computer.",
+    "alt.terminal.s2": "Open a terminal and <code>cd</code> into the unzipped folder.",
+    "alt.terminal.s3": "Run:",
+    "alt.terminal.s3hint": "First run installs Claude Code; subsequent runs are instant. Sign in once with your Claude account.",
+    "alt.terminal.s4": "Once Claude Code starts, type:",
+    "alt.terminal.s4cmd": "Read MASTERPLAN.md and CLAUDE.md, then walk me through Phase 1 / Step 1.",
 
     "files.summary": "Browse the 12 files (optional)",
     "files.summary-hint": "Open the ZIP for the real thing — this is just a peek.",
@@ -162,7 +179,7 @@ const STRINGS = {
     "label.detected.value": "{type} · for {audience} · in {domain}",
 
     "lang.switcher.aria": "Language",
-    "prompt.starter": "I just created a project plan for \"{name}\". Please read the attached MASTERPLAN.md, summarise it back to me in your own words, then walk me through Phase 1 — Step 1 in plain language. Ask me one question at a time if you need more from me before we start."
+    "prompt.starter": "Read MASTERPLAN.md and CLAUDE.md from this kit. The project is \"{name}\". Summarise the plan back to me in your own words, then walk me through Phase 1 — Step 1 of the roadmap in plain language. Ask me one question at a time if you need more from me before we start coding."
   },
 
   de: {
@@ -250,19 +267,36 @@ const STRINGS = {
     "direct.submit": "Kit erzeugen",
 
     "result.use.heading": "Dein Kit in 3 Schritten nutzen",
-    "result.use.subtitle": "Kein Terminal, keine Installation. Du brauchst nur einen kostenlosen claude.ai-Account.",
+    "result.use.subtitle": "Gemacht für Claude Code — im Browser über GitHub oder im Terminal. Kein normaler Chat — Claude Code kann die Dateien deines Kits wirklich lesen und bearbeiten.",
     "result.step1.title": "Lade dein Kit herunter",
     "result.step1.body": "Eine ZIP-Datei mit 12 Markdown-Dokumenten — dein Projektplan, fertig zum Teilen.",
     "result.step1.btn": "ZIP herunterladen",
-    "result.step2.title": "Öffne Claude",
-    "result.step2.body": "Kostenlos, keine Installation. Mit E-Mail oder Google anmelden.",
-    "result.step2.aside": "(ChatGPT funktioniert genauso — gleiche Schritte.)",
-    "result.step2.btn": "claude.ai öffnen",
-    "result.step3.title": "MASTERPLAN.md anhängen und diesen Text einfügen",
-    "result.step3.body.html": "In Claude unten links auf das Büroklammer-Symbol <span class=\"ico-clip\" aria-hidden=\"true\">📎</span> klicken, <code>MASTERPLAN.md</code> aus dem ZIP auswählen, dann diesen Text einfügen:",
+    "result.step2.title": "Auf GitHub hochladen (kostenlos)",
+    "result.step2.body": "Claude Code im Browser arbeitet mit einem GitHub-Repo. Beim ersten Mal dauert das etwa 3 Minuten. Hast du schon GitHub? Dann überspring 2a.",
+    "result.step2.substeps-toggle": "Schritt-für-Schritt anzeigen (für GitHub-Anfänger)",
+    "result.step2.s1": "<strong>2a.</strong> Geh auf <a href=\"https://github.com/signup\" target=\"_blank\" rel=\"noopener noreferrer\">github.com/signup</a> und erstell dir einen kostenlosen Account (nur E-Mail + Passwort).",
+    "result.step2.s2": "<strong>2b.</strong> Oben rechts auf das <strong>+</strong> klicken → <strong>New repository</strong>. Beliebigen Namen vergeben (z.B. <code>mein-kit</code>), <strong>Public</strong> auswählen, Rest auf Standard lassen, <strong>Create repository</strong> klicken.",
+    "result.step2.s3": "<strong>2c.</strong> Auf der leeren Repo-Seite den Link <strong>uploading an existing file</strong> anklicken.",
+    "result.step2.s4": "<strong>2d.</strong> Die ZIP aus Schritt 1 öffnen. <em>Alle Dateien</em> aus der ZIP auf die GitHub-Upload-Seite ziehen.",
+    "result.step2.s5": "<strong>2e.</strong> Nach unten scrollen, auf den grünen Button <strong>Commit changes</strong> klicken. Dein Kit ist online.",
+    "result.step2.btn": "GitHub öffnen: Neues Repository",
+    "result.step3.title": "Claude Code mit deinem Repo öffnen",
+    "result.step3.body.html": "Öffne Claude Code in deinem Browser, verbinde das eben erstellte GitHub-Repository — Claude Code lädt alle 12 Dateien automatisch. Dann diesen Text einfügen:",
+    "result.step3.btn": "Claude Code öffnen",
     "result.step3.copy": "Text kopieren",
     "result.step3.copied": "Kopiert!",
     "result.step3.copy-failed": "Kopieren fehlgeschlagen",
+
+    "alt.summary": "Lieber das Terminal? (für Entwickler)",
+    "alt.hint": "GitHub komplett überspringen und Claude Code lokal auf deinem Rechner laufen lassen.",
+    "alt.terminal.title": "Claude Code im Terminal",
+    "alt.terminal.body": "Wenn du Node.js installiert hast und dich mit einer Shell auskennst, ist das der direkteste Weg — Claude Code liest jede Datei im Ordner und kann sie direkt bearbeiten, ganz ohne GitHub-Upload.",
+    "alt.terminal.s1": "Kit irgendwo auf deinen Rechner entpacken.",
+    "alt.terminal.s2": "Terminal öffnen und mit <code>cd</code> in den entpackten Ordner wechseln.",
+    "alt.terminal.s3": "Ausführen:",
+    "alt.terminal.s3hint": "Beim ersten Mal wird Claude Code installiert; folgende Aufrufe sind sofort. Einmal mit deinem Claude-Account anmelden.",
+    "alt.terminal.s4": "Sobald Claude Code läuft, eingeben:",
+    "alt.terminal.s4cmd": "Lies MASTERPLAN.md und CLAUDE.md und führ mich dann durch Phase 1 / Schritt 1.",
 
     "files.summary": "Die 12 Dateien durchblättern (optional)",
     "files.summary-hint": "Für den echten Inhalt das ZIP öffnen — hier ist nur ein Vorgeschmack.",
@@ -312,7 +346,7 @@ const STRINGS = {
     "label.detected.value": "{type} · für {audience} · im Bereich {domain}",
 
     "lang.switcher.aria": "Sprache",
-    "prompt.starter": "Ich habe gerade einen Projektplan für \"{name}\" erstellt. Bitte lies die angehängte MASTERPLAN.md, fasse sie in deinen eigenen Worten zusammen, und führe mich dann Schritt für Schritt durch Phase 1 — Schritt 1 in einfacher Sprache. Stell mir bitte eine Frage nach der anderen, falls du noch Informationen von mir brauchst, bevor wir starten."
+    "prompt.starter": "Lies MASTERPLAN.md und CLAUDE.md aus diesem Kit. Das Projekt heißt \"{name}\". Fasse den Plan in eigenen Worten zusammen und führ mich dann in einfacher Sprache durch Phase 1 — Schritt 1 der Roadmap. Stell mir bitte eine Frage nach der anderen, falls du noch Informationen von mir brauchst, bevor wir mit dem Coden anfangen."
   }
 };
 
