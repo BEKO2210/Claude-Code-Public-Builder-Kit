@@ -2,6 +2,49 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #018 — 2026-04-30 — Domain depth: seventh domain (`logistics & supply chain`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `logistics & supply chain` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017. Picked logistics because it was already top of the shortlist after Run #017 promoted it from runner-up to lead. Neither worked example is logistics, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"logistics & supply chain"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): driver UX constrained by law and physics (UK Highway Code, German StVO §23, US distracted-driving laws + FMCSA mobile-phone rules for CDL drivers — voice-first or motion-locked interaction is non-negotiable on driver-facing surfaces); hardware failure modes are not just software bugs (ELDs, GPS, temperature sensors, scanners, dash cams, refrigeration controllers — every reading carries a freshness/confidence stamp, every offline gap has a documented recovery path, every sensor failure has a designed degradation state); telematics privacy as a real surface (driver location is GDPR personal data, ELD audit trail under FMCSA 49 CFR 395 is both regulatory ammunition and privacy surface, drivers/unions have pushed back in court on GPS surveillance); HOS / DOT / ELD regulatory bedrock (FMCSA 49 CFR 395 in the US, EU 561/2006 + EC 165/2014 tachograph rules in Europe — auto-dispatching into an HOS violation is a fineable offence + license risk); peak-season reliability as the operational test (Q4 retail, back-to-school, harvest, summer tourism — capacity 2–3× overnight, capacity-test against 3× peak before peak).
+  - **Positioning** (5 bullets): operations-first not flashy-dashboard (next decision in under three seconds, leave fleet-wide analytics for the after-hours management surface — shift workers have no time for "data storytelling"); mobile-first for the field, desktop-first for the office (drivers + warehouse on phones / tablets / handheld scanners with gloves on, dispatchers + planners + ops managers at workstations — two surfaces, two design briefs); audience as small-and-mid carriers, 3PLs, and shipper ops teams (10–500 vehicles or 1–20 sites — Oracle / SAP / Manhattan are the incumbents at the enterprise tier, win on speed-to-onboard + workflow-slice depth + support response time); reliability and offline-first as the brand (trucks lose signal, scanners drop BT, warehouses have RF dead zones — optimistic UI with deterministic sync, conflict resolution on reconnect, queued actions surviving a force-quit, sold as a marketing surface); quantify in the operator's units (minutes per stop, dock-to-stock, perfect-order rate, cost per mile, OTIF, pick-rate per hour, dwell time — fleet managers already keep that spreadsheet).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, README.md (no domain list to update there).
+
+**Tests run**
+- `npm test` → **75/75** pass (73 → 75, +2 logistics tests; SPECIALISED_DOMAINS test now expects seven entries instead of six).
+- **No prior tests had to be adjusted this run.** The non-target domains test already used `gaming` / `real estate` / `general` (after Run #017's swap), and the helpers-return-empty test already used `general` / `real estate` / `gaming` / `small business`. None of those is logistics, so no swap was needed — the cleanest specialisation diff so far.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-logistics domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A dispatch app for trucking fleet managers"`): productType `app`, audience `trucking fleet managers`, domain `logistics & supply chain`. Confirmed `### Domain-specific risks (logistics & supply chain)` heading present, FMCSA + ELD bullets render, `### Domain-specific positioning (logistics & supply chain)` heading present, "Operations-first" bullet renders.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Seven of 21 domain values are now specialised (~33% coverage). Cadence holds at one domain per session.
+- Logistics-keyword detection (`logistics`, `shipping`, `freight`, `warehouse`, `fleet`, `dispatch`, `courier`, `supply chain`, `last-mile`) covers the obvious surfaces but misses adjacent ones — `trucking`, `carrier`, `3PL`, `cold chain`, `parcel`, `delivery` (currently lands on the "small business" / no-keyword path), `route` / `routing`, `manifest`, `OTR` (over-the-road). Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations (FMCSA 49 CFR 395, EU 561/2006, EC 165/2014, UK Highway Code, German StVO §23, CCPA / CPRA / CO / CT / VA) and concrete enterprise incumbents (Oracle, SAP, Manhattan). Names age — they're correct as of Apr 2026 but will need a refresh if any incumbent is acquired or rebranded. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- The risks bullet on hardware mentions specific peripherals (ELDs, GPS, temperature sensors, scanners, dash cams, refrigeration controllers). The list is illustrative, not exhaustive — voice-controlled forklifts, RFID readers, AGVs, and weight scales aren't named. That's by design; the intent is "hardware is untrusted, give every reading a freshness stamp" rather than "here is the canonical hardware list".
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **No keyword-list expansion in this run.** Adding `trucking` / `carrier` / `3PL` / `cold chain` / `parcel` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 and #017.)
+- **Test idea uses `dispatch` and `fleet` for unambiguity**: "A dispatch app for trucking fleet managers" — matches logistics via `dispatch` and `fleet`, audience parses cleanly to `trucking fleet managers`, doesn't accidentally hit any earlier-iterated domain.
+- **No prior tests adjusted this run** (the cleanest specialisation diff yet). After Run #017's two swaps, the non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is logistics.
+- **Positioning explicitly names the enterprise incumbents.** Oracle, SAP, and Manhattan are concrete competitors a logistics product team will encounter in deals. Naming them is more useful to the reader than a vague "the established platforms" — and they're durable enough as references that the bullets won't read stale within the typical lifetime of a generated kit.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`retail & e-commerce`** (PCI DSS / 3-D Secure / SCA, peak-season + flash-sale reliability, return-fraud surface, marketplace-vs-merchant trust split) or **`creative & media`** (rights / licensing / royalty traceability, contributor-vs-platform trust, AI-generated content disclosure, takedown response). Public landing page is still waiting on a one-time owner action.
+
+---
+
 ## Run #017 — 2026-04-30 — Domain depth: sixth domain (`education`)
 
 **Phase:** Phase 1 — Generation quality (continued)

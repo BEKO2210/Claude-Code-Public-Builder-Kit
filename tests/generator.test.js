@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the six expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the seven expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "education", "finance", "food & hospitality", "health & wellness", "professional services"]
+    ["climate & sustainability", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services"]
   );
 });
 
@@ -293,6 +293,22 @@ test("domain depth: education — DOCS/product-brief.md has the positioning subs
   assert.match(md, /Tutor, not replacement/);
   assert.match(md, /Inclusive by default/);
   assert.match(md, /Procurement-ready/);
+});
+
+test("domain depth: logistics & supply chain — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A dispatch app for trucking fleet managers", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(logistics & supply chain\)/);
+  assert.match(md, /Driver UX/);
+  assert.match(md, /Telematics privacy/);
+  assert.match(md, /Hours-of-Service/);
+});
+
+test("domain depth: logistics & supply chain — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A dispatch app for trucking fleet managers", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(logistics & supply chain\)/);
+  assert.match(md, /Operations-first/);
+  assert.match(md, /Mobile-first for the field/);
+  assert.match(md, /Reliability and offline-first/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
