@@ -99,6 +99,18 @@ const STRINGS = {
     "direct.persist": "Save a copy on my computer",
     "direct.submit": "Generate kit",
 
+    "stat.files": "files",
+    "stat.sections": "sections",
+    "stat.words": "words",
+    "stat.seconds": "seconds",
+    "preview.hint": "First 30 lines — open the ZIP for the full plan.",
+
+    "share.label": "Share your kit:",
+    "share.copy-link": "Copy link",
+    "share.copied": "Copied!",
+    "share.copy-failed": "Copy failed",
+    "share.tweet": "Just generated a complete project plan for {name} in 30 seconds with Builder Kit. 12 markdown docs, ready for Claude Code:",
+
     "result.use.heading": "Use your kit in 3 steps",
     "result.use.subtitle": "Built for Claude Code — in your browser via GitHub, or in your terminal. No regular chat — Claude Code can actually read and edit the files in your kit.",
     "result.step1.title": "Download your kit",
@@ -159,7 +171,7 @@ const STRINGS = {
 
     "status.empty": "Enter an idea first.",
     "status.generating": "Generating your kit…",
-    "status.generated": "Generated {n} files. Scroll the file list to explore, or download as ZIP.",
+    "status.generated": "Generated {n} files. Follow the 3 steps below to use your kit.",
     "status.loading-example": "Loading example…",
     "status.loaded-example": "Loaded example: {title}.",
     "status.idea-loaded": "Idea loaded into the form. Click Generate kit to continue.",
@@ -266,6 +278,18 @@ const STRINGS = {
     "direct.persist": "Eine Kopie auf meinem Computer speichern",
     "direct.submit": "Kit erzeugen",
 
+    "stat.files": "Dateien",
+    "stat.sections": "Abschnitte",
+    "stat.words": "Wörter",
+    "stat.seconds": "Sekunden",
+    "preview.hint": "Erste 30 Zeilen — die ZIP enthält den ganzen Plan.",
+
+    "share.label": "Kit teilen:",
+    "share.copy-link": "Link kopieren",
+    "share.copied": "Kopiert!",
+    "share.copy-failed": "Kopieren fehlgeschlagen",
+    "share.tweet": "Habe gerade einen kompletten Projektplan für {name} in 30 Sekunden mit Builder Kit erstellt. 12 Markdown-Dokumente, ready für Claude Code:",
+
     "result.use.heading": "Dein Kit in 3 Schritten nutzen",
     "result.use.subtitle": "Gemacht für Claude Code — im Browser über GitHub oder im Terminal. Kein normaler Chat — Claude Code kann die Dateien deines Kits wirklich lesen und bearbeiten.",
     "result.step1.title": "Lade dein Kit herunter",
@@ -326,7 +350,7 @@ const STRINGS = {
 
     "status.empty": "Bitte zuerst eine Idee eingeben.",
     "status.generating": "Erzeuge dein Kit…",
-    "status.generated": "{n} Dateien erzeugt. Scrolle durch die Liste oder lade als ZIP herunter.",
+    "status.generated": "{n} Dateien erzeugt. Folge den 3 Schritten unten, um dein Kit zu nutzen.",
     "status.loading-example": "Lade Beispiel…",
     "status.loaded-example": "Beispiel geladen: {title}.",
     "status.idea-loaded": "Idee in das Feld geladen. Auf Kit erzeugen klicken, um fortzufahren.",

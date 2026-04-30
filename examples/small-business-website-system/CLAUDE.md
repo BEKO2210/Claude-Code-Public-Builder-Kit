@@ -58,3 +58,7 @@ Before ending a session, confirm:
 - [ ] `ACCEPTANCE_CRITERIA.md` reflects what's actually true today.
 - [ ] No staged-but-uncommitted changes you don't intend to keep.
 - [ ] Next session has a clear starting point written down.
+
+---
+
+*This planning kit was generated from a one-line idea by [Builder Kit](https://claude-code-public-builder-kit.vercel.app/) — free, open source, MIT-licensed. To regenerate or build a kit for a different idea, visit the URL above.*

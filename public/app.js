@@ -20,12 +20,94 @@ const galleryEl = document.getElementById("example-cards");
 const previewLineEl = document.getElementById("preview-line");
 const kitPromptEl = document.getElementById("kit-prompt-text");
 const copyPromptBtn = document.getElementById("copy-prompt");
+const statFilesEl = document.getElementById("stat-files");
+const statSectionsEl = document.getElementById("stat-sections");
+const statWordsEl = document.getElementById("stat-words");
+const statTimeEl = document.getElementById("stat-time");
+const previewBodyEl = document.getElementById("result-preview-body");
+const shareTwitterEl = document.getElementById("share-twitter");
+const shareLinkedinEl = document.getElementById("share-linkedin");
+const shareWhatsappEl = document.getElementById("share-whatsapp");
+const shareCopyEl = document.getElementById("share-copy");
 
 let currentFiles = [];
 let activeIndex = -1;
 let lastIdea = "";
 let lastSlug = "";
 let resultSource = null; // "generate" | "example" | null
+
+// --- Stats helpers ---
+
+// Compute headline numbers for the post-generate stats card.
+// Sections counts H2-style ## headings across all files (the way each
+// generated doc is actually structured); H3+ are not counted because
+// they're sub-sections of those.
+function computeKitStats(files, durationMs) {
+  let sections = 0;
+  let words = 0;
+  for (const f of files) {
+    const c = f.content || "";
+    sections += (c.match(/^##\s+/gm) || []).length;
+    // Word count: split on whitespace, filter empties. Cheap; close enough.
+    words += c.trim() ? c.trim().split(/\s+/).length : 0;
+  }
+  return {
+    files: files.length,
+    sections,
+    words,
+    seconds: durationMs != null ? Math.max(0.1, durationMs / 1000) : null
+  };
+}
+
+function formatWords(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+
+function formatSeconds(s) {
+  if (s == null) return "—";
+  return s < 10 ? s.toFixed(1) : Math.round(s).toString();
+}
+
+// Build a stateless shareable URL that re-runs the wizard with the
+// given idea pre-filled. The receiver lands on the app, the idea is
+// auto-loaded into the direct form, the wizard skips itself, and a
+// fresh kit is generated. Whole loop is browser-side; no DB, no
+// per-user persistence.
+function buildShareURL(idea) {
+  const base = (typeof window !== "undefined" && window.location)
+    ? `${window.location.origin}${window.location.pathname}`
+    : "";
+  return `${base}?idea=${encodeURIComponent(idea)}`;
+}
+
+function updateShareLinks(idea, projectName) {
+  const url = buildShareURL(idea);
+  const text = t("share.tweet", { name: projectName || idea });
+  if (shareTwitterEl) {
+    shareTwitterEl.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+  }
+  if (shareLinkedinEl) {
+    // LinkedIn intent only uses URL; the text is added by the user.
+    shareLinkedinEl.href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  }
+  if (shareWhatsappEl) {
+    shareWhatsappEl.href = `https://wa.me/?text=${encodeURIComponent(text + " " + url)}`;
+  }
+  if (shareCopyEl) {
+    // Cache the URL on the button itself for the click handler.
+    shareCopyEl.dataset.shareUrl = url;
+  }
+}
+
+// Categorise a file path into a colour-coded group for the file-list.
+function fileCategory(path) {
+  if (/^MASTERPLAN\.md$|^ROADMAP\.md$|^ACCEPTANCE_CRITERIA\.md$/.test(path)) return "strategy";
+  if (/^ARCHITECTURE\.md$|^CLAUDE\.md$|technical-decisions/.test(path)) return "tech";
+  if (/product-brief|market-positioning/.test(path)) return "brief";
+  if (/^PROMPTS\//.test(path)) return "prompts";
+  return "meta";
+}
 
 function setStatus(message, kind = "") {
   // kind: "" (info) | "error" | "busy" | "success"
@@ -70,6 +152,7 @@ function renderFileList() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = file.path;
+    btn.setAttribute("data-cat", fileCategory(file.path));
     if (i === activeIndex) {
       btn.classList.add("active");
       btn.setAttribute("aria-current", "true");
@@ -95,7 +178,7 @@ function buildStarterPrompt(title) {
   return t("prompt.starter", { name });
 }
 
-function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError }) {
+function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError, durationMs }) {
   currentFiles = files;
   activeIndex = 0;
   lastIdea = idea;
@@ -113,6 +196,25 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   }
   if (kitPromptEl) kitPromptEl.textContent = buildStarterPrompt(title);
   setSourceBadge(source === "example" ? t("label.example-badge") : "");
+
+  // Stats card — concrete numbers the user can quote when sharing.
+  const stats = computeKitStats(files, durationMs);
+  if (statFilesEl) statFilesEl.textContent = String(stats.files);
+  if (statSectionsEl) statSectionsEl.textContent = String(stats.sections);
+  if (statWordsEl) statWordsEl.textContent = formatWords(stats.words);
+  if (statTimeEl) statTimeEl.textContent = formatSeconds(stats.seconds);
+
+  // Live MASTERPLAN.md preview — first 30 lines, with CSS fade-mask.
+  const masterplan = files.find((f) => f.path === "MASTERPLAN.md");
+  if (previewBodyEl) {
+    previewBodyEl.textContent = masterplan
+      ? masterplan.content.split("\n").slice(0, 30).join("\n")
+      : "";
+  }
+
+  // Share buttons — generate fresh href values for the four outlets.
+  updateShareLinks(idea, title);
+
   resultEl.hidden = false;
   hideSkeleton();
   renderFileList();
@@ -204,6 +306,7 @@ async function previewExample(id, triggerBtn) {
   }
   setStatus(t("status.loading-example"), "busy");
   showSkeleton({ scrollIntoView: true });
+  const t0 = performance.now();
   try {
     const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
     const data = await res.json();
@@ -215,7 +318,8 @@ async function previewExample(id, triggerBtn) {
       slug: data.context.slug,
       idea: data.idea,
       source: "example",
-      writtenToPath: null
+      writtenToPath: null,
+      durationMs: performance.now() - t0
     });
     setStatus(t("status.loaded-example", { title: data.title }));
   } catch (err) {
@@ -241,12 +345,14 @@ function useIdea(idea) {
 
 async function runGenerate(idea, { scrollToResult = false, persist = false } = {}) {
   showSkeleton({ scrollIntoView: scrollToResult });
+  const t0 = performance.now();
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idea, persist })
   });
   const data = await res.json();
+  const durationMs = performance.now() - t0;
   if (!res.ok) {
     throw new Error(data.error || t("status.generation-failed"));
   }
@@ -258,7 +364,8 @@ async function runGenerate(idea, { scrollToResult = false, persist = false } = {
     idea,
     source: "generate",
     writtenToPath: data.writtenTo,
-    persistError: data.persistError
+    persistError: data.persistError,
+    durationMs
   });
   return data;
 }
@@ -324,6 +431,22 @@ copyBtn.addEventListener("click", async () => {
   } catch {
     copyBtn.textContent = t("file-view.copy-failed");
     setTimeout(() => { copyBtn.textContent = t("file-view.copy"); }, 1500);
+  }
+});
+
+// Copy the full shareable URL of the current kit to the clipboard.
+shareCopyEl?.addEventListener("click", async () => {
+  const url = shareCopyEl.dataset.shareUrl || "";
+  if (!url) return;
+  const labelEl = shareCopyEl.querySelector("span");
+  if (!labelEl) return;
+  try {
+    await navigator.clipboard.writeText(url);
+    labelEl.textContent = t("share.copied");
+    setTimeout(() => { labelEl.textContent = t("share.copy-link"); }, 1500);
+  } catch {
+    labelEl.textContent = t("share.copy-failed");
+    setTimeout(() => { labelEl.textContent = t("share.copy-link"); }, 1500);
   }
 });
 
@@ -516,6 +639,43 @@ const productPhrases = {
 
 const wizardState = { step: 1, productType: null, otherText: "", audience: "", benefit: "" };
 
+// localStorage save/restore — survives accidental reloads.
+const WIZARD_STORAGE_KEY = "bk-wizard-state";
+function saveWizardState() {
+  try {
+    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
+      productType: wizardState.productType,
+      otherText: wizardState.otherText,
+      audience: wizardState.audience,
+      benefit: wizardState.benefit
+      // step is NOT saved — every reload starts at step 1, but the user
+      // sees their previous answers pre-filled and can advance fast.
+    }));
+  } catch { /* localStorage full or disabled — non-fatal */ }
+}
+function restoreWizardState() {
+  try {
+    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (typeof saved.productType === "string") wizardState.productType = saved.productType;
+    if (typeof saved.otherText === "string") wizardState.otherText = saved.otherText;
+    if (typeof saved.audience === "string") wizardState.audience = saved.audience;
+    if (typeof saved.benefit === "string") wizardState.benefit = saved.benefit;
+    // Reflect into the DOM
+    if (wizardState.productType) {
+      const tile = wizardSection.querySelector(`.wz-option[data-product-type="${wizardState.productType}"]`);
+      if (tile) tile.setAttribute("aria-checked", "true");
+      if (wizardState.productType === "other" && wzOtherWrap) {
+        wzOtherWrap.hidden = false;
+        if (wzOtherInput) wzOtherInput.value = wizardState.otherText;
+      }
+    }
+    if (wzAudienceInput) wzAudienceInput.value = wizardState.audience;
+    if (wzBenefitInput) wzBenefitInput.value = wizardState.benefit;
+  } catch { /* corrupted JSON — start fresh */ }
+}
+
 function composeWizardIdea() {
   let opener;
   if (wizardState.productType === "other") {
@@ -547,6 +707,10 @@ function isWizardStepValid(step) {
   return false;
 }
 
+// Direction tracking for slide-transitions; set by gotoWizardStep before
+// the panel switches. Initial render uses no direction (no animation).
+let wizardLastStep = 0;
+
 function renderWizard() {
   wzSteps.forEach((li) => {
     const n = Number(li.dataset.step);
@@ -555,9 +719,30 @@ function renderWizard() {
     if (n === wizardState.step) li.setAttribute("aria-current", "step");
     else li.removeAttribute("aria-current");
   });
+  // Progress-bar fill: 0% before step 1 starts to count, 100% at step 4.
+  // Step 1 = 0%, Step 2 = 33%, Step 3 = 67%, Step 4 = 100%.
+  const stepCount = wzSteps.length || 4;
+  const progress = stepCount <= 1 ? 100 : ((wizardState.step - 1) / (stepCount - 1)) * 100;
+  const stepsList = wizardSection?.querySelector(".wizard-steps");
+  if (stepsList) stepsList.style.setProperty("--progress", String(progress));
+
+  // Direction-aware panel transition class.
+  const direction = wizardLastStep === 0
+    ? null
+    : wizardState.step > wizardLastStep ? "panel-enter-forward" : "panel-enter-back";
+
   wzPanels.forEach((p) => {
-    p.hidden = Number(p.dataset.step) !== wizardState.step;
+    const isActive = Number(p.dataset.step) === wizardState.step;
+    p.hidden = !isActive;
+    // Reset both transition classes, then apply the new one if active.
+    p.classList.remove("panel-enter-forward", "panel-enter-back");
+    if (isActive && direction) {
+      // Force reflow so the animation restarts.
+      void p.offsetWidth;
+      p.classList.add(direction);
+    }
   });
+  wizardLastStep = wizardState.step;
   wzBack.disabled = wizardState.step === 1;
   if (wizardState.step === 4) {
     wzNext.hidden = true;
@@ -598,6 +783,7 @@ if (wizardSection) {
       wizardSection.querySelectorAll(".wz-option").forEach((b) => {
         b.setAttribute("aria-checked", b === btn ? "true" : "false");
       });
+      saveWizardState();
       // "Something else" expands a free-input field instead of advancing.
       if (wizardState.productType === "other") {
         if (wzOtherWrap) wzOtherWrap.hidden = false;
@@ -617,6 +803,7 @@ if (wizardSection) {
   wzOtherInput?.addEventListener("input", () => {
     wizardState.otherText = wzOtherInput.value;
     wzNext.disabled = !isWizardStepValid(1);
+    saveWizardState();
   });
   wzOtherInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && isWizardStepValid(1)) {
@@ -629,6 +816,7 @@ if (wizardSection) {
     wizardState.audience = wzAudienceInput.value;
     wzNext.disabled = !isWizardStepValid(wizardState.step);
     if (wzNudgeAudience) wzNudgeAudience.hidden = !isSparseInput(wzAudienceInput.value);
+    saveWizardState();
   });
   wizardSection.querySelectorAll("[data-fill-audience]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -636,6 +824,7 @@ if (wizardSection) {
       wizardState.audience = wzAudienceInput.value;
       wzNext.disabled = false;
       if (wzNudgeAudience) wzNudgeAudience.hidden = true;
+      saveWizardState();
       wzAudienceInput.focus();
     });
   });
@@ -643,12 +832,14 @@ if (wizardSection) {
   wzBenefitInput.addEventListener("input", () => {
     wizardState.benefit = wzBenefitInput.value;
     if (wzNudgeBenefit) wzNudgeBenefit.hidden = !isSparseInput(wzBenefitInput.value);
+    saveWizardState();
   });
   wizardSection.querySelectorAll("[data-fill-benefit]").forEach((btn) => {
     btn.addEventListener("click", () => {
       wzBenefitInput.value = btn.dataset.fillBenefit;
       wizardState.benefit = wzBenefitInput.value;
       if (wzNudgeBenefit) wzNudgeBenefit.hidden = true;
+      saveWizardState();
       wzBenefitInput.focus();
     });
   });
@@ -727,7 +918,36 @@ function refreshWizardPreview() {
 applyTranslations();
 detectHostedMode();
 loadExamples();
-if (wizardSection) renderWizard();
+if (wizardSection) {
+  restoreWizardState();
+  renderWizard();
+  // After restore, refresh the "Next" enabled-state for whatever step
+  // the wizard happens to be on (always step 1 on reload), so a
+  // returning user can continue without re-clicking their tile.
+  if (wzNext) wzNext.disabled = !isWizardStepValid(wizardState.step);
+}
+
+// Deep-link reader: a shared `?idea=...` URL skips the wizard, drops
+// the idea into the direct form, and auto-runs the generate flow.
+// This is the receiving half of the share-button loop.
+(function handleDeepLinkIdea() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const idea = params.get("idea");
+    if (!idea) return;
+    const trimmed = idea.trim();
+    if (!trimmed || trimmed.length > 500) return;
+    // Switch from wizard to direct form for clarity.
+    if (wizardSection) wizardSection.hidden = true;
+    if (generatorSection) generatorSection.hidden = false;
+    if (ideaInput) {
+      ideaInput.value = trimmed;
+      ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    // Wait a tick so the DOM is settled, then submit.
+    setTimeout(() => form?.requestSubmit?.(), 50);
+  } catch { /* malformed URL — ignore */ }
+})();
 
 // Re-translate dynamic content when the user switches language.
 onLocaleChange(() => {

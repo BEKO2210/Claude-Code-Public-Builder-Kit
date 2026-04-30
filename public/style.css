@@ -415,6 +415,136 @@ button.primary:hover {
   .example-card .card-actions button { min-height: 44px; padding: 10px 14px; flex: 1 1 auto; }
 }
 
+/* ---------- Result stats card (post-generate "47 sections, 6842 words") ---------- */
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(138, 180, 255, 0.04), transparent);
+}
+@media (max-width: 540px) { .result-stats { grid-template-columns: repeat(2, 1fr); } }
+
+.result-stat {
+  display: flex; flex-direction: column; align-items: flex-start;
+  padding: 6px 4px;
+}
+.result-stat-value {
+  font-family: var(--mono);
+  font-size: clamp(20px, 3.5vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.result-stat-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ---------- Result preview (first 30 lines of MASTERPLAN.md) ---------- */
+
+.result-preview {
+  margin: 0;
+  border-bottom: 1px solid var(--border);
+}
+.result-preview-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 22px;
+  background: var(--panel);
+  gap: 12px; flex-wrap: wrap;
+}
+.result-preview-tag {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono); font-size: 12px; font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px; border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+.result-preview-hint { font-size: 12px; }
+.result-preview-body {
+  position: relative;
+  margin: 0;
+  padding: 18px 22px 32px;
+  background: var(--panel-2);
+  font-family: var(--mono); font-size: 13px;
+  line-height: 1.65;
+  color: var(--text);
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 320px;
+  overflow: hidden;
+  /* fade-out at the bottom edge */
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+          mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+}
+.result-preview-body:empty {
+  /* When no preview yet (e.g. example panel mid-load) hide the fade-out
+     so the empty box doesn't look weird. */
+  display: none;
+}
+
+/* ---------- File-list color-coding by category ---------- */
+
+.file-list button[data-cat="strategy"] { border-left: 3px solid #8ab4ff; }
+.file-list button[data-cat="tech"]     { border-left: 3px solid #6dd6a3; }
+.file-list button[data-cat="brief"]    { border-left: 3px solid #c89dff; }
+.file-list button[data-cat="prompts"]  { border-left: 3px solid #ffb066; }
+.file-list button[data-cat="meta"]     { border-left: 3px solid #6f7891; }
+.file-list button {
+  border-left: 3px solid transparent;
+  padding-left: 9px; /* 12 - 3 */
+}
+
+/* ---------- Share row (post-generate viral loop) ---------- */
+
+.result-share {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 22px;
+  background: linear-gradient(180deg, transparent, rgba(138, 180, 255, 0.04));
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 720px) {
+  .result-share { flex-direction: row; align-items: center; }
+}
+.result-share-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.result-share-buttons {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  cursor: pointer; min-height: 36px;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.share-btn:hover {
+  background: var(--panel-3);
+  border-color: var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.share-btn:active { transform: translateY(0); }
+.share-btn svg { flex-shrink: 0; }
+.share-btn-copy { font-family: inherit; }
+
 /* ---------- Use-your-kit panel ---------- */
 
 .use-your-kit {
@@ -703,12 +833,42 @@ button.primary:hover {
 }
 .wizard-top .muted { font-size: 15px; max-width: 600px; margin-bottom: 18px; }
 
-/* Step indicator */
+/* Step indicator with progress-fill bar between items */
 .wizard-steps {
   list-style: none; padding: 0; margin: 0;
   display: flex; gap: 8px; flex-wrap: wrap;
   counter-reset: step;
+  position: relative;
 }
+/* Progress-bar background line connecting all 4 step pills */
+.wizard-steps::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 12px; right: 12px;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+  z-index: 0;
+  border-radius: 2px;
+}
+/* Progress-bar fill — width set inline via --progress CSS var (0..100) */
+.wizard-steps::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 12px;
+  height: 2px;
+  width: calc(var(--progress, 0) * 1%);
+  max-width: calc(100% - 24px);
+  background: linear-gradient(90deg, var(--accent), var(--accent-press));
+  transform: translateY(-50%);
+  border-radius: 2px;
+  transition: width 380ms cubic-bezier(0.2, 0.6, 0.2, 1);
+  z-index: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard-steps::after { transition: none; }
+}
+.wizard-steps li { position: relative; z-index: 1; }
 .wizard-steps li {
   flex: 1 1 100px; min-width: 80px;
   display: flex; align-items: center; gap: 10px;
@@ -742,12 +902,31 @@ button.primary:hover {
 .wizard-steps li.done .step-num { background: var(--accent-soft); }
 .wizard-steps .step-label { white-space: nowrap; }
 
-/* Step panels */
-.wizard-panels { min-height: 280px; }
+/* Step panels — directional slide-in animation when switching steps.
+   .panel-enter-forward / .panel-enter-back classes are toggled in JS
+   by gotoWizardStep() based on whether the user clicked Next or Back. */
+.wizard-panels { min-height: 280px; position: relative; overflow: hidden; }
 .wizard-panel {
   border: 0; padding: 0; margin: 0;
   display: flex; flex-direction: column; gap: 12px;
-  animation: revealIn 220ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.wizard-panel.panel-enter-forward {
+  animation: panel-slide-in-right 320ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.wizard-panel.panel-enter-back {
+  animation: panel-slide-in-left 320ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+@keyframes panel-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes panel-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard-panel.panel-enter-forward,
+  .wizard-panel.panel-enter-back { animation: none; }
 }
 .wizard-question {
   margin: 0;

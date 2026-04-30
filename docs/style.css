@@ -247,6 +247,155 @@ main:focus { outline: none; }
   font-size: 14px; line-height: 1.5;
   color: var(--text);
 }
+.hero-card-bar-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+}
+
+/* Typewriter loop — 4 ideas, each ~4s, total 16s. Each phrase "types"
+   in, holds, then is replaced by the next phrase (no gradual delete —
+   instant swap, simulates a typing user backspacing fast).
+   Letter-by-letter typing is achieved with width:0→100% on a fixed-
+   width inline-block. */
+.hero-typewriter {
+  position: relative;
+  display: inline-block;
+  vertical-align: top;
+  min-height: 1.5em;
+}
+.hero-tw-word {
+  display: inline-block;
+  overflow: hidden;
+  white-space: nowrap;
+  vertical-align: top;
+  width: 0;
+  position: absolute;
+  top: 0; left: 0;
+  opacity: 0;
+}
+.hero-tw-1 { animation: hero-tw-1 16s steps(1, end) infinite; }
+.hero-tw-2 { animation: hero-tw-2 16s steps(1, end) infinite; }
+.hero-tw-3 { animation: hero-tw-3 16s steps(1, end) infinite; }
+.hero-tw-4 { animation: hero-tw-4 16s steps(1, end) infinite; }
+
+/* Each phrase: visible 0–25%, types 0–10%, holds 10–25%, then hidden */
+@keyframes hero-tw-1 {
+  0%   { opacity: 1; width: 0; }
+  10%  { opacity: 1; width: 100%; animation-timing-function: linear; }
+  25%  { opacity: 1; width: 100%; }
+  25.01%, 100% { opacity: 0; width: 0; }
+}
+@keyframes hero-tw-2 {
+  0%, 25% { opacity: 0; width: 0; }
+  25.01%  { opacity: 1; width: 0; }
+  35%     { opacity: 1; width: 100%; animation-timing-function: linear; }
+  50%     { opacity: 1; width: 100%; }
+  50.01%, 100% { opacity: 0; width: 0; }
+}
+@keyframes hero-tw-3 {
+  0%, 50% { opacity: 0; width: 0; }
+  50.01%  { opacity: 1; width: 0; }
+  60%     { opacity: 1; width: 100%; animation-timing-function: linear; }
+  75%     { opacity: 1; width: 100%; }
+  75.01%, 100% { opacity: 0; width: 0; }
+}
+@keyframes hero-tw-4 {
+  0%, 75% { opacity: 0; width: 0; }
+  75.01%  { opacity: 1; width: 0; }
+  85%     { opacity: 1; width: 100%; animation-timing-function: linear; }
+  100%    { opacity: 1; width: 100%; }
+}
+
+/* Type-cursor blinks always */
+.hero-tw-cursor {
+  display: inline-block;
+  width: 2px; height: 18px;
+  background: var(--accent);
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: hero-tw-blink 1s steps(2) infinite;
+}
+@keyframes hero-tw-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Output rows: each pops in just AFTER its phrase finishes typing,
+   stays for the rest of the phrase's hold, then cleared in next cycle.
+   Cycle is 16s; the output row should be visible during 12.5%–25%
+   (= during phrase 1's hold), 37.5%–50% (phrase 2), etc.
+   But we want them to appear sequentially, not all at once.
+   So: row 1 appears at 12% (right after typing finishes), row 2 at 14%,
+   row 3 at 16%, row 4 at 18% — staggered by 2% (= 320ms each).
+   Then they all disappear at 25%, when the phrase swaps. */
+.hero-out-1 { animation: hero-out-row 16s ease-out infinite; animation-delay: 0s; }
+.hero-out-2 { animation: hero-out-row 16s ease-out infinite; animation-delay: 0s; }
+.hero-out-3 { animation: hero-out-row 16s ease-out infinite; animation-delay: 0s; }
+.hero-out-more { animation: hero-out-row 16s ease-out infinite; animation-delay: 0s; }
+
+/* Each row staggered: easier with 4 distinct keyframes */
+.hero-out-1 { animation-name: hero-out-1; }
+.hero-out-2 { animation-name: hero-out-2; }
+.hero-out-3 { animation-name: hero-out-3; }
+.hero-out-more { animation-name: hero-out-more; }
+
+/* For each phrase i (i=1..4), rows fade in during 4 consecutive 320ms
+   windows starting right after the phrase finishes typing, then stay
+   visible until the phrase ends, then fade out. */
+@keyframes hero-out-1 {
+  0%, 11%   { opacity: 0; transform: translateY(6px); }
+  13%, 24%  { opacity: 1; transform: translateY(0); }
+  25%, 36%  { opacity: 0; transform: translateY(6px); }
+  38%, 49%  { opacity: 1; transform: translateY(0); }
+  50%, 61%  { opacity: 0; transform: translateY(6px); }
+  63%, 74%  { opacity: 1; transform: translateY(0); }
+  75%, 86%  { opacity: 0; transform: translateY(6px); }
+  88%, 100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-out-2 {
+  0%, 13%   { opacity: 0; transform: translateY(6px); }
+  15%, 24%  { opacity: 1; transform: translateY(0); }
+  25%, 38%  { opacity: 0; transform: translateY(6px); }
+  40%, 49%  { opacity: 1; transform: translateY(0); }
+  50%, 63%  { opacity: 0; transform: translateY(6px); }
+  65%, 74%  { opacity: 1; transform: translateY(0); }
+  75%, 88%  { opacity: 0; transform: translateY(6px); }
+  90%, 100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-out-3 {
+  0%, 15%   { opacity: 0; transform: translateY(6px); }
+  17%, 24%  { opacity: 1; transform: translateY(0); }
+  25%, 40%  { opacity: 0; transform: translateY(6px); }
+  42%, 49%  { opacity: 1; transform: translateY(0); }
+  50%, 65%  { opacity: 0; transform: translateY(6px); }
+  67%, 74%  { opacity: 1; transform: translateY(0); }
+  75%, 90%  { opacity: 0; transform: translateY(6px); }
+  92%, 100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes hero-out-more {
+  0%, 17%   { opacity: 0; transform: translateY(6px); }
+  19%, 24%  { opacity: 1; transform: translateY(0); }
+  25%, 42%  { opacity: 0; transform: translateY(6px); }
+  44%, 49%  { opacity: 1; transform: translateY(0); }
+  50%, 67%  { opacity: 0; transform: translateY(6px); }
+  69%, 74%  { opacity: 1; transform: translateY(0); }
+  75%, 92%  { opacity: 0; transform: translateY(6px); }
+  94%, 100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-tw-1, .hero-tw-2, .hero-tw-3, .hero-tw-4 { animation: none; }
+  .hero-tw-1 { opacity: 1; width: 100%; position: static; }
+  .hero-tw-2, .hero-tw-3, .hero-tw-4 { display: none; }
+  .hero-tw-cursor { animation: none; }
+  .hero-out-1, .hero-out-2, .hero-out-3, .hero-out-more {
+    animation: none; opacity: 1; transform: none;
+  }
+}
+
 .hero-arrow {
   text-align: center;
   font-size: 20px; color: var(--accent);
@@ -742,6 +891,50 @@ main:focus { outline: none; }
   display: flex; flex-direction: column; align-items: center;
   margin-top: 8px;
 }
+
+/* ─────────── Try-these-ideas cards (one-click deep-links) ─────────── */
+
+.try-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+@media (max-width: 900px) { .try-cards { grid-template-columns: 1fr; } }
+
+.try-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  display: flex; flex-direction: column; gap: 14px;
+  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+.try-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: var(--shadow-md);
+}
+.try-card-quote {
+  margin: 0;
+  font-size: clamp(17px, 2.4vw, 20px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  font-style: italic;
+}
+.try-card-desc {
+  margin: 0; flex: 1;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.try-card-desc code {
+  background: var(--panel-2);
+  padding: 1px 6px; border-radius: 4px;
+  font-size: 0.92em;
+}
+.try-card-cta { align-self: flex-start; }
 
 /* Reduced motion — show all animation states immediately, no transitions */
 @media (prefers-reduced-motion: reduce) {
