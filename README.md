@@ -167,7 +167,13 @@ Both scripts call the same builder. Each example uses a fixed `generatedAt` time
 npm test
 ```
 
-64 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), and parametric detection of all 10 newly-added domain groups (logistics, government, climate, agriculture, travel, gaming, non-profit, manufacturing, HR, events).
+69 tests covering: file count, file size floors, no leaked placeholder lines, context inference, deterministic output, ZIP buffer construction, ZIP path-traversal rejection, the live `/api/generate.zip` endpoint, on-disk integrity of both worked examples, registry id/safety/disk consistency, full coverage of `/api/examples` and `/api/examples/:id` (200, 400, 404), parametric detection of all 10 newly-added domain groups, and accessibility (axe-core via jsdom on both HTML pages + deterministic WCAG-AA contrast).
+
+For verbose accessibility output:
+
+```bash
+npm run audit:a11y
+```
 
 ## Live landing page
 
@@ -181,7 +187,26 @@ A static landing page lives in [`docs/`](./docs/) and is published via **GitHub 
 4. **Branch:** `main` and **Folder:** `/docs`.
 5. Save. The site appears at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` within a minute.
 
-The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`. See [`docs/README.md`](./docs/README.md) for editing notes and how to keep the logo assets in sync.
+The local Express app continues to serve `/public` and is **not** affected by anything in `/docs`.
+
+### Keeping brand assets in sync
+
+The logo + favicon live canonically in `/public`. To mirror into `/docs`:
+
+```bash
+npm run sync:assets        # copy logo + monochrome + favicon
+npm run sync:assets:check  # exit 1 if anything would change (CI uses this)
+```
+
+CI runs the check on every push/PR, so an unsynced asset fails the pipeline.
+
+### Rebuilding the social card
+
+`docs/og-card.png` (1200×630) is the rasterised Open Graph image used in link unfurls. To regenerate after editing `docs/og-source.svg`:
+
+```bash
+npm run build:og
+```
 
 ## Continuous integration
 
@@ -227,7 +252,7 @@ The local Express app continues to serve `/public` and is **not** affected by an
 │   ├── small-business-website-system/   # Pre-generated worked example (12 files)
 │   └── smb-accounting-saas-dashboard/   # Pre-generated worked example (12 files)
 ├── tests/
-│   └── generator.test.js     # node:test suite (64 tests)
+│   └── generator.test.js     # node:test suite (69 tests)
 └── output/                   # Runtime-generated kits land here (git-ignored)
 ```
 

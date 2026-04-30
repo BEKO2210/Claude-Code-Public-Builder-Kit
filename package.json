@@ -12,11 +12,20 @@
     "dev": "node --watch server.js",
     "test": "node --test tests/*.test.js",
     "generate:example": "node scripts/build-example.js",
-    "generate:examples": "node scripts/build-example.js"
+    "generate:examples": "node scripts/build-example.js",
+    "audit:a11y": "node scripts/a11y-audit.js",
+    "sync:assets": "node scripts/sync-docs-assets.js",
+    "sync:assets:check": "node scripts/sync-docs-assets.js --check",
+    "build:og": "node scripts/build-og.js"
   },
   "dependencies": {
     "archiver": "^7.0.1",
     "express": "^4.19.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "axe-core": "^4.11.4",
+    "jsdom": "^29.1.0"
+  }
 }

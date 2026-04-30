@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the three expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the four expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "health & wellness", "professional services"]
+    ["climate & sustainability", "finance", "health & wellness", "professional services"]
   );
 });
 
@@ -245,6 +245,22 @@ test("domain depth: health & wellness — DOCS/product-brief.md has the position
   assert.match(md, /Calm tone/);
   assert.match(md, /Escalation path/);
   assert.match(md, /Evidence-backed/);
+});
+
+test("domain depth: finance — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A payment reconciliation tool for finance teams", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(finance\)/);
+  assert.match(md, /Regulatory drift/);
+  assert.match(md, /KYC/);
+  assert.match(md, /Audit trail/);
+});
+
+test("domain depth: finance — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A payment reconciliation tool for finance teams", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(finance\)/);
+  assert.match(md, /Auditable by default/);
+  assert.match(md, /Conservative defaults/);
+  assert.match(md, /Reliability/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {

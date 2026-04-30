@@ -38,3 +38,6 @@ jobs:
             git --no-pager diff -- examples
             exit 1
           fi
+
+      - name: Verify brand assets in /docs match /public
+        run: npm run sync:assets:check

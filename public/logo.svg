@@ -1,54 +1,111 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="bk-logo-title bk-logo-desc">
   <title id="bk-logo-title">Claude Code Public Builder Kit</title>
-  <desc id="bk-logo-desc">A twelve-pointed compass star: twelve rays — one per generated file — with four longer cardinal points marking the directions of orientation.</desc>
+  <desc id="bk-logo-desc">A twelve-petal compass bloom: twelve leaf-shaped petals — one per generated file — with four longer cardinal petals as the user's compass of orientation. A small core at the centre represents the original idea.</desc>
+
   <defs>
-    <linearGradient id="bk-grad" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="bk-petal" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%"  stop-color="#a4c2ff"/>
       <stop offset="55%" stop-color="#8ab4ff"/>
-      <stop offset="100%" stop-color="#6c9bff"/>
+      <stop offset="100%" stop-color="#5e8eff"/>
     </linearGradient>
-    <radialGradient id="bk-glow" cx="50%" cy="40%" r="55%">
-      <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.32"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    <linearGradient id="bk-petal-cardinal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#c8d8ff"/>
+      <stop offset="55%" stop-color="#a4c2ff"/>
+      <stop offset="100%" stop-color="#7aa8ff"/>
+    </linearGradient>
+    <radialGradient id="bk-aura" cx="50%" cy="50%" r="60%">
+      <stop offset="0%"   stop-color="#8ab4ff" stop-opacity="0.18"/>
+      <stop offset="65%"  stop-color="#8ab4ff" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#8ab4ff" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="bk-northglow" cx="50%" cy="0%" r="55%">
-      <stop offset="0%"  stop-color="#ffffff" stop-opacity="0.85"/>
-      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    <radialGradient id="bk-core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="60%"  stop-color="#cdd9ff"/>
+      <stop offset="100%" stop-color="#8ab4ff"/>
     </radialGradient>
+
     <style><![CDATA[
-      .bk-star  { transform-origin: 32px 32px; animation: bk-breathe 4.8s ease-in-out infinite; }
-      .bk-shine { transform-origin: 32px 32px; animation: bk-shine   4.8s ease-in-out infinite; }
-      .bk-north { transform-origin: 32px 32px; animation: bk-north   6.4s ease-in-out infinite; }
-      @keyframes bk-breathe {
-        0%, 100% { transform: scale(1); }
-        50%      { transform: scale(1.035); }
+      .bk-aura { transform-origin: 32px 32px; animation: bk-aura-breathe 6.4s ease-in-out infinite; }
+      .bk-core { transform-origin: 32px 32px; animation: bk-heartbeat 4.8s ease-in-out infinite; }
+      .bk-petal { transform-origin: 32px 32px; animation: bk-ripple 4.8s ease-in-out infinite; opacity: 0.78; }
+      .bk-petal.cardinal { opacity: 0.92; }
+
+      /* 12 petals around the bloom; stagger each by 4.8s / 12 = 0.4s so the
+         wave reads as a clean, calm ripple travelling clockwise. */
+      .bk-petal:nth-child(1)  { animation-delay:  0.0s; }
+      .bk-petal:nth-child(2)  { animation-delay:  0.4s; }
+      .bk-petal:nth-child(3)  { animation-delay:  0.8s; }
+      .bk-petal:nth-child(4)  { animation-delay:  1.2s; }
+      .bk-petal:nth-child(5)  { animation-delay:  1.6s; }
+      .bk-petal:nth-child(6)  { animation-delay:  2.0s; }
+      .bk-petal:nth-child(7)  { animation-delay:  2.4s; }
+      .bk-petal:nth-child(8)  { animation-delay:  2.8s; }
+      .bk-petal:nth-child(9)  { animation-delay:  3.2s; }
+      .bk-petal:nth-child(10) { animation-delay:  3.6s; }
+      .bk-petal:nth-child(11) { animation-delay:  4.0s; }
+      .bk-petal:nth-child(12) { animation-delay:  4.4s; }
+
+      @keyframes bk-ripple {
+        0%, 70%, 100% { opacity: 0.78; transform: scale(1); }
+        35%, 45%      { opacity: 1;    transform: scale(1.025); }
       }
-      @keyframes bk-shine {
-        0%, 100% { opacity: 0.55; }
-        50%      { opacity: 0.95; }
+      @keyframes bk-heartbeat {
+        0%, 100% { transform: scale(1);    opacity: 0.85; }
+        50%      { transform: scale(1.18); opacity: 1;    }
       }
-      @keyframes bk-north {
-        0%, 100% { opacity: 0.30; }
-        50%      { opacity: 0.85; }
+      @keyframes bk-aura-breathe {
+        0%, 100% { transform: scale(1);    opacity: 0.9; }
+        50%      { transform: scale(1.06); opacity: 1;   }
       }
       @media (prefers-reduced-motion: reduce) {
-        .bk-star, .bk-shine, .bk-north { animation: none; }
+        .bk-aura, .bk-core, .bk-petal { animation: none; }
+        .bk-petal { opacity: 0.85; }
+        .bk-petal.cardinal { opacity: 1; }
       }
     ]]></style>
   </defs>
-  <g class="bk-star">
-    <polygon
-      points="32,4 34.33,23.31 43,12.95 38.36,25.64 51.05,21 40.69,29.67 60,32 40.69,34.33 51.05,43 38.36,38.36 43,51.05 34.33,40.69 32,60 29.67,40.69 21,51.05 25.64,38.36 12.95,43 23.31,34.33 4,32 23.31,29.67 12.95,21 25.64,25.64 21,12.95 29.67,23.31"
-      fill="url(#bk-grad)"
-      stroke="#cdd9ff"
-      stroke-width="0.75"
-      stroke-linejoin="round"
-    />
-    <polygon
-      class="bk-shine"
-      points="32,4 34.33,23.31 43,12.95 38.36,25.64 51.05,21 40.69,29.67 60,32 40.69,34.33 51.05,43 38.36,38.36 43,51.05 34.33,40.69 32,60 29.67,40.69 21,51.05 25.64,38.36 12.95,43 23.31,34.33 4,32 23.31,29.67 12.95,21 25.64,25.64 21,12.95 29.67,23.31"
-      fill="url(#bk-glow)"
-    />
-    <circle class="bk-north" cx="32" cy="9" r="6" fill="url(#bk-northglow)"/>
+
+  <circle class="bk-aura" cx="32" cy="32" r="30" fill="url(#bk-aura)"/>
+
+  <g>
+    <!-- 12 petals, indices 1..12. Cardinals at 0°, 90°, 180°, 270° (1, 4, 7, 10) -->
+    <g class="bk-petal cardinal" transform="translate(32 32) rotate(0)">
+      <path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z" fill="url(#bk-petal-cardinal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(30)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(60)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal cardinal" transform="translate(32 32) rotate(90)">
+      <path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z" fill="url(#bk-petal-cardinal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(120)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(150)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal cardinal" transform="translate(32 32) rotate(180)">
+      <path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z" fill="url(#bk-petal-cardinal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(210)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(240)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal cardinal" transform="translate(32 32) rotate(270)">
+      <path d="M 0,-4 C 3,-13 3.5,-21 0,-28 C -3.5,-21 -3,-13 0,-4 Z" fill="url(#bk-petal-cardinal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(300)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
+    <g class="bk-petal" transform="translate(32 32) rotate(330)">
+      <path d="M 0,-4 C 2.5,-10 3,-16 0,-22 C -3,-16 -2.5,-10 0,-4 Z" fill="url(#bk-petal)"/>
+    </g>
   </g>
+
+  <circle class="bk-core" cx="32" cy="32" r="3" fill="url(#bk-core)"/>
 </svg>
