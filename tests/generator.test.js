@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the twelve expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the thirteen expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "government & civic", "health & wellness", "logistics & supply chain", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "government & civic", "health & wellness", "logistics & supply chain", "manufacturing", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -389,6 +389,22 @@ test("domain depth: government & civic — DOCS/product-brief.md has the positio
   assert.match(md, /Citizens-first, not agency-first/);
   assert.match(md, /Compliance-as-default/);
   assert.match(md, /Audit trail and one-click export/);
+});
+
+test("domain depth: manufacturing — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A factory floor monitoring system for manufacturing teams", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(manufacturing\)/);
+  assert.match(md, /OT\/IT boundary/);
+  assert.match(md, /Machinery Directive/);
+  assert.match(md, /NIS2/);
+});
+
+test("domain depth: manufacturing — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A factory floor monitoring system for manufacturing teams", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(manufacturing\)/);
+  assert.match(md, /Brownfield-first/);
+  assert.match(md, /Operations-first/);
+  assert.match(md, /Air-gap-tolerant/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
