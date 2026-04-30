@@ -11,10 +11,25 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5173;
 const OUTPUT_DIR = resolve(__dirname, "output");
 
-// `process.env.VERCEL` is "1" on every Vercel runtime (build + serverless).
-// We use it to disable filesystem-persist (no writable disk on serverless)
-// and to surface a "hosted" flag for the UI if it ever needs to differ.
-const IS_HOSTED = process.env.VERCEL === "1";
+// Detect a hosted / read-only filesystem environment. We check several
+// signals because Vercel has been inconsistent across runtimes about which
+// of these is set at module-load time:
+//   - process.env.VERCEL          → "1" on Vercel
+//   - process.env.VERCEL_ENV      → "production" | "preview" | "development"
+//   - process.env.VERCEL_URL      → the deployment URL
+//   - process.env.NOW_REGION      → legacy now/zeit
+//   - __dirname starts with /var/task → Vercel's read-only function root
+//   - process.env.AWS_LAMBDA_FUNCTION_NAME → underlying Lambda env
+// Any one of these flips us into hosted mode. Adding a sniff here is
+// cheaper than a 500 from a failed mkdir on a read-only FS.
+const IS_HOSTED = !!(
+  process.env.VERCEL ||
+  process.env.VERCEL_ENV ||
+  process.env.VERCEL_URL ||
+  process.env.NOW_REGION ||
+  process.env.AWS_LAMBDA_FUNCTION_NAME ||
+  __dirname.startsWith("/var/task")
+);
 
 // In-memory rate limiter for the heavy endpoints (`/api/generate`,
 // `/api/generate.zip`). Each Vercel function instance has its own Map;
@@ -72,16 +87,27 @@ app.post("/api/generate", rateLimit, async (req, res) => {
   try {
     const { context, files } = generateKit(idea);
     let writtenTo = null;
+    let persistError = null;
     if (persist) {
       const target = join(OUTPUT_DIR, context.slug);
       // Defence-in-depth: never let the slug escape OUTPUT_DIR.
       if (!normalize(target).startsWith(normalize(OUTPUT_DIR))) {
         return res.status(400).json({ error: "Invalid project slug." });
       }
-      await writeKit(files, target);
-      writtenTo = target;
+      try {
+        await writeKit(files, target);
+        writtenTo = target;
+      } catch (err) {
+        // Read-only filesystem (e.g. a hosted environment our IS_HOSTED
+        // sniff didn't recognise) is not a generation failure. Fall back
+        // to "no persist", let the user keep the in-memory result, and
+        // surface the cause so the UI can show a friendly note.
+        persistError = err.code === "EROFS" || err.code === "ENOENT"
+          ? "filesystem is read-only on this deployment; ZIP download still works"
+          : err.message || "Could not write files to disk";
+      }
     }
-    res.json({ context, files, writtenTo, hosted: IS_HOSTED });
+    res.json({ context, files, writtenTo, persistError, hosted: IS_HOSTED });
   } catch (err) {
     res.status(500).json({ error: err.message || "Generation failed." });
   }

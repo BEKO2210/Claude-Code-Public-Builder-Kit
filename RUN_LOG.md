@@ -2,6 +2,44 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #022b — 2026-04-30 — Hotfix: ENOENT on Vercel persist write
+
+**Phase:** Phase 2 — Reach (continued from #022).
+**Duration:** ~10 minutes.
+**Trigger:** Owner deployed Run #022 to Vercel and hit `ENOENT: no such file or directory, mkdir '/var/task/output'` on the very first generate. Root cause: the persist checkbox in the local app ships **checked by default**, the user kept it checked, and the request reached the server with `persist: true`. The IS_HOSTED sniff (`process.env.VERCEL === "1"`) didn't trip on this particular Vercel runtime, so the server happily called `writeKit()` against the read-only `/var/task` filesystem and 500'd.
+
+**What changed**
+- `server.js` — three fixes, in defence-in-depth order:
+  1. **Broader hosted-mode sniff.** Checks `process.env.VERCEL`, `process.env.VERCEL_ENV`, `process.env.VERCEL_URL`, `process.env.NOW_REGION`, `process.env.AWS_LAMBDA_FUNCTION_NAME`, *and* whether `__dirname.startsWith("/var/task")`. Any one trips hosted mode. The path-based sniff is the one that catches Vercel runtimes where the documented env vars are unexpectedly missing.
+  2. **`writeKit()` is wrapped in try/catch.** If the broader sniff *still* misses (some future serverless platform we haven't seen), the request no longer 500s. Instead `writtenTo` stays `null` and a new `persistError` field surfaces a friendly note ("filesystem is read-only on this deployment; ZIP download still works"). The generated files are returned successfully — the user keeps the result.
+  3. **`EROFS` and `ENOENT` mapped to a friendly message**, anything else surfaces `err.message`.
+- `public/app.js`:
+  - On boot, fetches `/api/health` and if `hosted: true`, **unchecks and hides the entire persist-checkbox row**. Hosted users no longer see a confusing "write to disk" toggle that has no effect.
+  - `renderResult` now accepts `persistError` and shows it in the same slot where `Written to: …` would have appeared, so the user has a one-line explanation if persistence fell back.
+
+**Files touched**
+- Modified: `server.js`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** everything else.
+
+**Tests run**
+- `npm test` → **81/81** pass. No test changes — the new `persistError` field is additive and the existing tests don't assert on response keys they don't care about.
+- Hosted-mode simulation locally with `VERCEL=1 node server.js`:
+  - `/api/health` → `{"ok":true,"hosted":true}`. ✓
+  - `POST /api/generate` with `persist: true` → `hosted:true`, `writtenTo:null`, `persistError:null`, 12 files. **No 500.** ✓
+- Local mode (no env) preserved: `hosted:false`, persist works as before.
+
+**Drift accounting**
+None. Templates, examples, and the CLAUDE.md / README architecture sections from Run #022 still describe the system correctly — only the hosted detection got more paranoid.
+
+**Owner action**
+None. Pushing this branch triggers Vercel's auto-redeploy; ~30 seconds after push, the production URL serves the hotfix. The hosted-detection improvements take effect on the first cold start.
+
+**Lessons**
+- "Always assume the env-var sniff misses" — defence in depth (sniff + try/catch + UI hide) is cheaper than relying on any one signal. The combination would have caught the Vercel ENOENT even if every single sniff had failed.
+- Default-`checked` persist was a local-first artefact that became a footgun on hosted. Run #023's wizard should re-examine which defaults make sense per environment.
+
+---
+
 ## Run #022 — 2026-04-30 — Hosted Web-Version (Vercel) — kein npm install mehr nötig
 
 **Phase:** Phase 2 — Reach. Closing the "non-technical user" gap that the local-only architecture was leaving open.
