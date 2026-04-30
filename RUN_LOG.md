@@ -2,6 +2,102 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #034 — 2026-04-30 — Domain depth: twelfth domain (`government & civic`)
+
+**Trigger:** Owner: *"Domain-Tiefe weiter"* — keep the cadence after non-profit & community landed cleanly. Government & civic was the natural follow-up: regulatorically dense (FOIA, ADA Title II, election separation, FedRAMP / IT-Grundschutz / C5), unique procurement constraints (publish-or-lose pricing, no-lock-in clauses), and totally separate accessibility regime from private sector.
+
+**What changed**
+
+- Added `"government & civic"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): public-records / FOIA exposure as the default not the exception (US FOIA, German IFG, UK Freedom of Information Act 2000, Canadian Access-to-Information — audit-trail-complete + one-click data-export shape the architecture, plus the FOIA-vs-right-to-be-forgotten conflict needs a documented legal-counsel checkpoint); accessibility as statute not best-practice (WCAG 2.2 AA + ADA Title II June 2026 / 2027, Section 508, UK Public Sector Bodies Accessibility Regulations 2018, EU EAA + EN 301 549, German BITV 2.0; VPAT in US, Konformitätserklärung in DE are mandatory deliverables); constituent-data privacy across overlapping regimes (Privacy Act of 1974, state-by-state PII, BDSG layered over GDPR with public-sector §§ 22–35, plus sector overlays like CJIS / NHS Digital, plus state-actor threat model); procurement / vendor-compliance shaping the timeline (SOC 2 Type II baseline, FedRAMP Moderate / High mandatory for US federal cloud, German IT-Grundschutz / C5 / Schrems II hosting, ENS in Spain, CCN-CERT in defence, 6–18-month sales cycles, no opaque pricing); election infrastructure as a separate compliance track (EAC VVSG + state-by-state certification in US, §§ 8–50 BWG in Germany, criminal-liability exposure for tampering, mandatory air-gap / chain-of-custody, never bundle into ordinary feature roadmap).
+  - **Positioning** (5 bullets): citizens-first not agency-first (the worst-equipped-citizen path is the spec; staff dashboard inherits the simplifications); compliance-as-default not compliance-behind-an-Enterprise-paywall (procurement-killer pattern); audience as 10k–500k-resident municipalities + departments inside larger agencies + civic-tech NGOs, not federal-tier (Booz Allen / Capgemini / Accenture / SAP-Public-Services territory wins on lobby presence); pricing transparent + lock-in-explicit (per-resident / per-record / flat — published, no "contact for pricing"); audit trail + one-click export as a marketing surface (every action might become a FOIA request next month, sells procurement-shortcut, quantify in agency units like time-to-fulfil-records-request, % within statutory deadline).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief,claude}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **87/87** pass (was 85 → +2 for government & civic risks + positioning subsection-presence tests; SPECIALISED_DOMAINS test now expects twelve entries instead of eleven).
+- **No prior tests had to be adjusted this run.** `government & civic` is in `DOMAIN_DETECTION_CASES` (positive detection list, line 96) and `civic` is in the round-trip keyword list (line 436), but neither is in a non-target list, so adding the specialisation triggers no test changes beyond the additions. Fifth run in the depth series with this property (others: #018, #019, #020, #033).
+- `npm run generate:examples` → **zero drift**. Both worked examples have non-government domains (`small business`, `professional services`).
+- Live smoke against `node server.js` with `"A civic engagement app for municipality residents"`: domain `government & civic`, audience `municipality residents`. Confirmed `### Domain-specific risks (government & civic)` heading present + FOIA + WCAG 2.2 AA + Election-infrastructure bullets render; `### Domain-specific positioning (government & civic)` heading + Citizens-first + Compliance-as-default + Audit-trail bullets render.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Coverage milestone**
+Twelve of 21 domain values are now specialised (~57 %). Remaining 9 unspecialised: `small business`, `developer tools`, `agriculture`, `travel & tourism`, `gaming`, `manufacturing`, `HR & recruiting`, `events & ticketing`, `general`. At one domain per session, the (a)-tier candidates (`manufacturing`, `HR & recruiting`, `travel & tourism`, `agriculture`, `events & ticketing`) cover ~5 more sessions of useful work; (b) `developer tools` and `gaming` may not need this depth because the audiences are technical and self-knowing; (c) `general` and `small business` stay deliberately generic.
+
+**Known limitations**
+- **Government-keyword detection** (`government`, `civic`, `public sector`, `municipality`, `citizen`, `gov-tech`, `public records`) covers the obvious surfaces but misses adjacent ones — `agency`, `federal`, `state`, `Bundesbehörde`, `Landratsamt`, `Verwaltung`, `commune`, `mairie`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- **The risk bullet on FedRAMP / IT-Grundschutz / C5 specifies multiple overlapping certifications** but doesn't enumerate every one (Spain's ENS is mentioned briefly; Italy's Misure Minime, France's RGS, Australia's IRAP, Canada's ITSG-33 aren't). The bullet is calibrated for the most common procurement contexts (US federal, German federal, EU member-state public sector); other jurisdictions exist but adding them would dilute the bullet rather than strengthen it.
+- **The election-infrastructure bullet is intentionally a "this is its own track" warning**, not an exhaustive cert checklist. Every jurisdiction has its own voting-system certification body and process; the value of the bullet is "do not bundle this into ordinary feature work", not "here is the specification".
+- **The audience cap "10k–500k-resident municipalities"** is a useful framing for the typical builder-kit user but excludes both ends — village-tier (~1k–10k) and metro-tier (>500k) have meaningfully different procurement realities. Not a load-bearing claim; the kit's readers will adjust.
+- **The compliance-paywall bullet is opinionated** — some vendors do successfully sell tiered compliance (basic FOIA in starter, advanced FOIA + retention in growth). The bullet warns against the pattern as a procurement risk, not as an absolute prohibition.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `agency / federal / Bundesbehörde / Verwaltung` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019 / #020 / #021 / #033.)
+- **Test idea uses `civic` and `municipality residents` for unambiguity**: "A civic engagement app for municipality residents" — matches via `civic` and `municipality`, audience parses cleanly to `municipality residents`. Same idea as already in `DOMAIN_DETECTION_CASES`, intentionally — keeps the test surface coherent.
+- **No prior tests adjusted** — fifth consecutive run in the depth series with this property.
+- **Government & civic picked over manufacturing for the twelfth slot.** Both have substantive depth. Government won on (a) regulatory density (FOIA + ADA + procurement + election separation is a uniquely dense surface, manufacturing is more about operational technology / IoT security which is less standardised), (b) the citizens-first / compliance-as-default framing creates unusually clear positioning bullets, (c) wider relevance for civic-tech projects which appear regularly in builder-kit-shaped ideas (volunteer apps, transparency tools, council-streaming products).
+
+**Next session starts with**
+- Domain depth thirteenth domain (`manufacturing`, `HR & recruiting`, `travel & tourism`, `agriculture`, or `events & ticketing`) if cadence continues.
+- Or pivot to the viral-completion side: real counter / metrics dashboard (Run #035), dynamic OG-image generator, public opt-in gallery.
+- Or EN versions of the legal pages.
+
+---
+
+## Run #033 — 2026-04-30 — Domain depth: eleventh domain (`non-profit & community`)
+
+**Trigger:** Owner: *"Domain-Tiefe wieder"* — resume the depth pivot after the reach + viral work landed. Same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018 / #019 / #020 / #021. Picked `non-profit & community` over `government & civic` for two reasons: (a) wider relevance for typical builder-kit ideas (more people building volunteer-coord / donor / fundraising tools than gov-tech), (b) cleaner test surface (`non-profit & community` is not used as a non-target domain anywhere in the test suite, so this is a zero-prior-test-adjustment run).
+
+**What changed**
+
+- Added `"non-profit & community"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): charity registration + tax-deductible-status compliance jurisdictionally specific (US 501(c)(3) + IRS Form 990; UK Charity Commission; German Gemeinnützigkeit per §52 AO + Freistellungsbescheid); donor-data privacy as special-category-adjacent (GDPR Art. 9 territory because donations reveal political/religious/social beliefs, vulnerable-populations exposure); restricted vs. unrestricted funds as a hard accounting boundary (US fiduciary breach / German gemeinnützigkeitsrechtliche Mittelfehlverwendung); mission-vs-platform trust as fragile (the audience writes about being mistreated, on principle); operational reality is shoestring (volunteer admins, no IT staff, 2018-browser support, flaky-bandwidth-tolerant).
+  - **Positioning** (5 bullets): mission-first not platform-first ("keeps every volunteer in the loop" beats "empowers nonprofits to scale their impact"); calm pricing aligned with annual budget cycles (no per-seat creep, no upsell ladder, predictable beats expansive); audience as 1–20-staff orgs running with volunteers, not enterprise non-profits where Red Cross / Caritas / MSF / UNICEF chapters have IT teams; privacy as a marketing surface (most competitors track aggressively because customer = the org, tracked person = donor — flip it explicitly); quantify in mission-units (volunteers onboarded, donor-retention rate, recurring-donor share, cost-per-acquired-recurring-donor, fund-restriction-compliance rate).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief,claude}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **85/85** pass (was 83 → +2 for the two new subsection-presence tests; SPECIALISED_DOMAINS test now expects eleven entries instead of ten).
+- **No prior tests had to be adjusted this run** — `non-profit & community` was not used as a non-target in either the "non-target domains" or "helpers return empty" lists. Cleanest possible specialisation diff.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-non-profit domains (`small business`, `professional services`).
+- Live smoke against `node server.js` with `"A volunteer coordination platform for non-profit organisations"`: domain `non-profit & community`, `### Domain-specific risks (non-profit & community)` heading present, "Charity registration" + "501(c)(3)" bullets present, `### Domain-specific positioning (non-profit & community)` heading present, "Mission-first, not platform-first" + "Privacy as a marketing surface" bullets present.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Coverage milestone**
+Eleven of 21 domain values are now specialised (~52 % by raw count). Remaining 10 unspecialised domains: `small business`, `developer tools`, `government & civic`, `agriculture`, `travel & tourism`, `gaming`, `manufacturing`, `HR & recruiting`, `events & ticketing`, `general`. The "every domain a typical idea would land on is specialised" threshold was already crossed at Run #021 (real estate); this run + future runs are diminishing-return depth additions. At one domain per session, the (a)-tier candidates (`government & civic`, `manufacturing`, `HR & recruiting`, `travel & tourism`, `agriculture`, `events & ticketing`) cover ~6 more sessions of useful work; (b) `developer tools` and `gaming` may not need this depth because the audience for those domains is technical and self-knows the risks; (c) `general` and `small business` stay deliberately generic.
+
+**Known limitations**
+- Non-profit-keyword detection (`nonprofit`, `non-profit`, `charity`, `volunteer`, `ngo`, `fundraising`) covers the obvious surfaces but misses adjacent ones — `donor`, `donation`, `philanthropy`, `civic`, `community-led`, `mutual aid`, `member organisation`, `Verein` (German), `Gemeinnützig` (German), `association` (French/UK). Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations. Names age — they're correct as of April 2026 but US 501(c)(3) form numbers, UK Charity Commission filing thresholds, and German §52 AO interpretive notes all evolve. The text is written so a stale specific reads as a concrete example, not a load-bearing reference.
+- The "vulnerable-populations exposure" bullet is broad on purpose — it covers donors to political causes, addiction-recovery support, domestic-abuse shelters, refugee-aid orgs, etc. Each has more specific obligations (e.g. addiction-recovery is HIPAA-touching in the US, refugee-aid is GDPR-Art-9-with-extra-context); the masterplan doesn't try to enumerate them, but flags the territory explicitly.
+- The "Caritas / MSF / UNICEF" name list is for context, not contractual. Other large enterprise-tier non-profits (Save the Children, Oxfam, ICRC, Diakonie, Médecins du Monde) are equivalent; the bullet doesn't claim to be exhaustive.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `donor / donation / philanthropy / community-led / Verein / Gemeinnützig` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019 / #020 / #021.)
+- **Test idea uses `volunteer` and `non-profit` for unambiguity**: "A volunteer coordination platform for non-profit organisations" — matches via `volunteer` and `non-profit`, audience parses cleanly to `non-profit organisations`.
+- **No prior tests adjusted this run** — fourth run with this property since the depth runs began (others: #018, #019, #020). Run #021 (real estate) needed swap-out work because real-estate had been the canonical non-target since Run #017's earlier swap; the current non-target lists (gaming / travel & tourism / general / small business) keep the right unspecialised set for non-profit too.
+- **Non-profit picked over government & civic** for the eleventh slot. Both have substantive depth. Non-profit won on (a) more frequent appearance in builder-kit-style ideas, (b) the donor-privacy + restricted-funds bullets give the kit unusual concreteness for an under-specialised audience, (c) the "operational reality is shoestring" framing is uniquely valuable here — most product advice ignores that constraint and recommends features non-profit users can't deploy.
+- **Watermark unchanged** (Run #032 added it to `CLAUDE.md` template). Non-profit kits get the same self-branding footer as every other kit.
+
+**Next session starts with**
+- Domain depth twelfth domain (`government & civic`, `manufacturing`, or `HR & recruiting`) if the owner wants to keep the cadence.
+- Or pivot back to the viral-completion side: real counter / metrics dashboard (Run #034), dynamic OG-image generator (Run #035).
+- Or EN versions of the legal pages (`imprint.html` / `privacy.html`).
+
+---
+
 ## Run #032 — 2026-04-30 — Wizard-Polish in 5 Teilen — Richtung viral
 
 **Trigger:** Owner: *"Wizard-Polish aber in 5 Teilen die speziell auf die Optik und Logistik gehen das gesamte System soll viral gehen wenn es fertig ist (schätze wieweit wie davon entfernt sind und lenke unseren Plan in die Richtung)"*. Strategic pivot: every UI improvement from now on serves two ends — better UX *and* a concrete step toward a tool that gets shared, talked about, used by strangers' strangers.
