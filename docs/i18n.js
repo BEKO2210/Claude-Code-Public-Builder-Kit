@@ -9,6 +9,7 @@
   var STRINGS = {
     en: {
       "title": "Builder Kit — turn one sentence into a complete project plan",
+      "nav.flow": "The full picture",
       "nav.how": "How it works",
       "nav.example": "Example",
       "nav.what": "What you get",
@@ -26,6 +27,34 @@
       "hero.card.label": "Your idea",
       "hero.card.idea": "An app for parents of small children that helps them organise daily routines.",
       "hero.card.more": "+ 9 more",
+
+      "flow.kicker": "The full picture",
+      "flow.h2": "From one word to a working project.",
+      "flow.subtitle": "The wizard is just the entry door. Here is what actually happens between \"I have an idea\" and \"Claude is shipping code for me\".",
+      "flow.s1.title": "One word in.",
+      "flow.s1.body": "You type something short — even a single phrase like <em>\"Training Plan App\"</em>. No essay required, no forms to fill out, no jargon expected.",
+      "flow.s1.demo": "Training Plan App",
+      "flow.s2.title": "The wizard sharpens it.",
+      "flow.s2.body": "Three short follow-up questions: who's it for, what should it do better, and is anything sparse — then a one-glance summary before generating. If you only typed one word, the wizard nudges you to add a little more.",
+      "flow.s2.pill1": "📱 An app",
+      "flow.s2.pill2": "For busy parents",
+      "flow.s2.pill3": "Saves time on planning",
+      "flow.s3.title": "12 documents are generated.",
+      "flow.s3.body": "Vision, roadmap, risks, architecture, marketing brief, prompts — all consistent with each other, all immediately useful. No <code>TODO</code> stubs, no placeholder paragraphs.",
+      "flow.s3.more": "+ 8 more",
+      "flow.s4.title": "You sharpen the plan with Claude.",
+      "flow.s4.body": "Drop the masterplan into a free claude.ai chat with the prepared starter prompt. Each session iterates on a piece of the plan — Phase 1 / Step 1, then Step 2, then a risk you want to dig into. The plan stops being a generated stub and becomes the spec your project actually runs on.",
+      "flow.s4.msg1": "📎 MASTERPLAN.md",
+      "flow.s4.msg2": "Got it. Want to start with Phase 1 / Step 1?",
+      "flow.s4.msg3": "Yes. What's the first decision?",
+      "flow.s4.msg4": "Are users tracking the same plan or each their own?",
+      "flow.s5.title": "Claude builds autonomously.",
+      "flow.s5.body": "Once the plan is sharp, Claude executes against it — writes the code, runs the tests, reports back. You stay in the loop only on decisions, not on every line. The masterplan is the contract; Claude works it down phase by phase.",
+      "flow.s5.code1": "Reading MASTERPLAN.md…",
+      "flow.s5.code2": "Implementing Phase 1 / Step 2: data model.",
+      "flow.s5.code3": "User entity + tests added (12 passing).",
+      "flow.s5.code4": "Committed: feat(data) — user entity",
+      "flow.cta": "Start with one word",
 
       "how.kicker": "How it works",
       "how.h2": "Three steps. No technical background needed.",
@@ -63,6 +92,8 @@
 
       "footer.line1.html": "MIT licensed · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit\" rel=\"noopener\">Source on GitHub</a> · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE\" rel=\"noopener\">LICENSE</a>",
       "footer.line2.html": "Static site published from <code>/docs</code> via GitHub Pages. No tracking. No JavaScript required.",
+      "footer.imprint": "Imprint",
+      "footer.privacy": "Privacy notice",
 
       "skip-link": "Skip to main content",
       "lang.aria": "Language"
@@ -70,6 +101,7 @@
 
     de: {
       "title": "Builder Kit — aus einem Satz wird ein kompletter Projektplan",
+      "nav.flow": "Das ganze Bild",
       "nav.how": "So geht's",
       "nav.example": "Beispiel",
       "nav.what": "Was du bekommst",
@@ -87,6 +119,34 @@
       "hero.card.label": "Deine Idee",
       "hero.card.idea": "Eine App für Eltern kleiner Kinder, die ihnen hilft, ihren Tagesablauf zu organisieren.",
       "hero.card.more": "+ 9 weitere",
+
+      "flow.kicker": "Das ganze Bild",
+      "flow.h2": "Von einem Wort bis zum laufenden Projekt.",
+      "flow.subtitle": "Der Wizard ist nur die Eingangstür. Hier ist, was wirklich zwischen „Ich hab eine Idee" und „Claude liefert für mich Code" passiert.",
+      "flow.s1.title": "Ein Wort rein.",
+      "flow.s1.body": "Du tippst etwas Kurzes — auch nur einen Begriff wie <em>„Training Plan App"</em>. Kein Aufsatz nötig, keine Formulare, kein Fachjargon erwartet.",
+      "flow.s1.demo": "Training Plan App",
+      "flow.s2.title": "Der Wizard schärft die Idee.",
+      "flow.s2.body": "Drei kurze Folge-Fragen: für wen, was soll es besser machen, und falls etwas zu knapp war — dann eine kurze Zusammenfassung. Hast du nur ein Wort getippt, fragt der Wizard kurz nach.",
+      "flow.s2.pill1": "📱 Eine App",
+      "flow.s2.pill2": "Für berufstätige Eltern",
+      "flow.s2.pill3": "Spart Zeit beim Planen",
+      "flow.s3.title": "12 Dokumente werden erzeugt.",
+      "flow.s3.body": "Vision, Roadmap, Risiken, Architektur, Marketing-Brief, Prompts — alles aufeinander abgestimmt, alles sofort nutzbar. Keine <code>TODO</code>-Platzhalter, keine Lücken.",
+      "flow.s3.more": "+ 8 weitere",
+      "flow.s4.title": "Du schärfst den Plan mit Claude.",
+      "flow.s4.body": "Du lädst den Masterplan in einen kostenlosen claude.ai-Chat hoch und fügst den vorbereiteten Starter-Prompt ein. Jede Session bearbeitet einen Teil des Plans — Phase 1 / Schritt 1, dann Schritt 2, dann ein Risiko, das du vertiefen willst. Aus dem Stub wird die echte Spec, mit der dein Projekt läuft.",
+      "flow.s4.msg1": "📎 MASTERPLAN.md",
+      "flow.s4.msg2": "Hab's gelesen. Wollen wir mit Phase 1 / Schritt 1 starten?",
+      "flow.s4.msg3": "Ja. Welche Entscheidung steht zuerst an?",
+      "flow.s4.msg4": "Verfolgen alle Nutzer den gleichen Plan oder jeder seinen eigenen?",
+      "flow.s5.title": "Claude baut autonom weiter.",
+      "flow.s5.body": "Sobald der Plan steht, arbeitet Claude den Plan ab — schreibt Code, lässt Tests laufen, meldet zurück. Du entscheidest nur noch — nicht mehr Zeile für Zeile. Der Masterplan ist der Vertrag; Claude arbeitet ihn Phase für Phase ab.",
+      "flow.s5.code1": "Lese MASTERPLAN.md…",
+      "flow.s5.code2": "Implementiere Phase 1 / Schritt 2: Datenmodell.",
+      "flow.s5.code3": "User-Entity + Tests hinzugefügt (12 grün).",
+      "flow.s5.code4": "Commit: feat(data) — User-Entity",
+      "flow.cta": "Starte mit einem Wort",
 
       "how.kicker": "So geht's",
       "how.h2": "Drei Schritte. Kein technisches Vorwissen nötig.",
@@ -124,6 +184,8 @@
 
       "footer.line1.html": "MIT-lizenziert · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit\" rel=\"noopener\">Quellcode auf GitHub</a> · <a href=\"https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE\" rel=\"noopener\">LIZENZ</a>",
       "footer.line2.html": "Statische Seite via GitHub Pages aus <code>/docs</code> veröffentlicht. Kein Tracking. Kein JavaScript nötig.",
+      "footer.imprint": "Impressum",
+      "footer.privacy": "Datenschutz",
 
       "skip-link": "Zum Hauptinhalt springen",
       "lang.aria": "Sprache"
@@ -192,5 +254,33 @@
     document.addEventListener("DOMContentLoaded", apply);
   } else {
     apply();
+  }
+
+  // Scroll-reveal for the deep-flow stages. IntersectionObserver-based,
+  // adds .is-visible to a stage when it enters the viewport so its
+  // animations fire. Idempotent — once a stage is visible, we stop
+  // observing it. No-op if there are no stages on the page.
+  function initFlowReveal() {
+    var stages = document.querySelectorAll(".deep-stage");
+    if (!stages.length) return;
+    if (typeof IntersectionObserver === "undefined") {
+      // Fallback for ancient browsers — just show everything.
+      for (var i = 0; i < stages.length; i++) stages[i].classList.add("is-visible");
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          entries[i].target.classList.add("is-visible");
+          io.unobserve(entries[i].target);
+        }
+      }
+    }, { threshold: 0.25, rootMargin: "0px 0px -10% 0px" });
+    for (var j = 0; j < stages.length; j++) io.observe(stages[j]);
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initFlowReveal);
+  } else {
+    initFlowReveal();
   }
 })();

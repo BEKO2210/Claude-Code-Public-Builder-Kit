@@ -469,6 +469,19 @@ const wzAudienceInput = document.getElementById("wz-audience");
 const wzBenefitInput = document.getElementById("wz-benefit");
 const wzSummary = document.getElementById("wz-summary");
 const wzPreview = document.getElementById("wz-preview");
+const wzNudgeAudience = document.getElementById("wz-nudge-audience");
+const wzNudgeBenefit = document.getElementById("wz-nudge-benefit");
+
+// "Sparse" = the user typed something but it's too short to give the
+// inference any traction. We trigger the nudge on either word-count or
+// raw-character thresholds — short words like "Eltern" or "Zeit" should
+// still light it up, but a one-word "Geschäftskundenbetreuer" shouldn't.
+function isSparseInput(value) {
+  const trimmed = (value || "").trim();
+  if (!trimmed) return false;
+  const words = trimmed.split(/\s+/);
+  return words.length <= 1 && trimmed.length <= 14;
+}
 
 const productPhrases = {
   "app": "An app",
@@ -561,23 +574,27 @@ if (wizardSection) {
   wzAudienceInput.addEventListener("input", () => {
     wizardState.audience = wzAudienceInput.value;
     wzNext.disabled = !isWizardStepValid(wizardState.step);
+    if (wzNudgeAudience) wzNudgeAudience.hidden = !isSparseInput(wzAudienceInput.value);
   });
   wizardSection.querySelectorAll("[data-fill-audience]").forEach((btn) => {
     btn.addEventListener("click", () => {
       wzAudienceInput.value = btn.dataset.fillAudience;
       wizardState.audience = wzAudienceInput.value;
       wzNext.disabled = false;
+      if (wzNudgeAudience) wzNudgeAudience.hidden = true;
       wzAudienceInput.focus();
     });
   });
 
   wzBenefitInput.addEventListener("input", () => {
     wizardState.benefit = wzBenefitInput.value;
+    if (wzNudgeBenefit) wzNudgeBenefit.hidden = !isSparseInput(wzBenefitInput.value);
   });
   wizardSection.querySelectorAll("[data-fill-benefit]").forEach((btn) => {
     btn.addEventListener("click", () => {
       wzBenefitInput.value = btn.dataset.fillBenefit;
       wizardState.benefit = wzBenefitInput.value;
+      if (wzNudgeBenefit) wzNudgeBenefit.hidden = true;
       wzBenefitInput.focus();
     });
   });

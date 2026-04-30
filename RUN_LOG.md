@@ -2,6 +2,132 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #028 — 2026-04-30 — Wizard-Narrative (5 animierte Stages) + dynamische Folge-Fragen
+
+**Trigger:** Owner request, two parts:
+- Part A: communicate the *full* arc of the tool (one word in → guided wizard → 12 documents → Claude session → autonomous execution) as a premium-feel animated landing-page section, because the current "How it works" only shows 3 steps and leaves the iterative-with-Claude reality invisible.
+- Part B: when a user types only one word in a wizard field, the wizard should nudge — not block, not auto-fill — so the inference downstream actually has something to grip onto.
+
+**Part A — `docs/index.html` "From one word to a working project"**
+
+A new `#flow` section sits between the hero and the existing 3-step "How it works". Five stages, each an `<li class="deep-stage">` with a number bubble, headline, body copy, and a self-contained inline animation panel:
+
+1. **One word in** — typewriter animation that types `"Training Plan App"` into a styled input box. Cursor blinks. Demonstrates "even one phrase is enough to start".
+2. **The wizard sharpens it** — three pill-shaped chips fade in sequentially (📱 An app → For busy parents → Saves time on planning), then a green checkmark pops in with a bouncy scale curve. Demonstrates the 4-question wizard flow.
+3. **12 documents are generated** — five filename rows (`📄 MASTERPLAN.md`, `📄 ROADMAP.md`, `📄 ARCHITECTURE.md`, `📄 PROMPTS/initial.md`, `+ 8 more`) cascade in 200 ms apart. Demonstrates the kit output.
+4. **You sharpen the plan with Claude** — four chat bubbles (user / AI / user / AI) reveal in sequence, alternating sides. The dialogue is real-feeling: "📎 MASTERPLAN.md" → "Got it. Want to start with Phase 1 / Step 1?" → "Yes. What's the first decision?" → "Are users tracking the same plan or each their own?". Demonstrates the iterative-refinement step that was missing from the previous narrative.
+5. **Claude builds autonomously** — a faux terminal with a traffic-light bar shows four lines appearing one by one: "Reading MASTERPLAN.md…" → "Implementing Phase 1 / Step 2: data model." → "✓ User entity + tests added (12 passing)." → "✓ Committed: feat(data) — user entity". Demonstrates the destination state: Claude executes against the plan.
+
+The five stages sit on a vertical accent line (CSS pseudo-element, hidden on mobile). Each stage has `opacity: 0; transform: translateY(20px)` initially; an IntersectionObserver in `docs/i18n.js` adds `.is-visible` when the stage enters the viewport, which triggers all the inner animations via cascading delays (each `keyframes` step waits for its turn). All animations honour `prefers-reduced-motion` — collapsed to opacity-1 / no-transform / no-keyframes when set.
+
+A primary CTA at the bottom — "Start with one word →" — links straight to the Vercel app, closing the loop.
+
+**Part B — `public/index.html` + `app.js` sparse-input nudges**
+
+When a user types into the wizard's audience or benefit field, a small heuristic flags "sparse" inputs and reveals an inline `<aside class="wz-nudge">` directly below the input with three concrete examples plus an encouraging line.
+
+```js
+function isSparseInput(value) {
+  const trimmed = (value || "").trim();
+  if (!trimmed) return false;
+  const words = trimmed.split(/\s+/);
+  return words.length <= 1 && trimmed.length <= 14;
+}
+```
+
+The threshold is **one word AND ≤14 characters** — generous enough that single long German compounds (e.g. `Geschäftskundenbetreuer`, 23 chars) don't trip it, tight enough that `Eltern`, `Zeit`, `Kindergarten`, `Training` all do.
+
+Verified across 7 test cases: empty / "Eltern" / "Eltern von Kindergartenkindern" / "small business owners" / "Geschäftskundenbetreuer" / "Zeit" / "spart Zeit beim Einkaufen". All correctly classified.
+
+The nudge:
+- **Step 2 (audience)** — title "A bit more specific would help."; body "Try: parents of kindergarten children / working parents with toddlers / single parents with school-age kids. The kit can do a lot more for a sharper audience."
+- **Step 3 (benefit)** — title "A specific outcome makes a sharper plan."; body "Try: saves them an hour per week on planning / removes paper notebooks from the kitchen / turns 10 spreadsheets into one screen. Or skip — it's optional."
+
+Both EN + DE translations follow the same shape; the German variants use compound nouns and idiomatic phrasing rather than direct translations ("ersetzt das Notizbuch in der Küche" rather than a literal calque). The body uses `<em>` to highlight the example phrases, so the strings carry HTML and are wired with `data-i18n-html`.
+
+The nudge's appearance / disappearance is reactive: every `input` event re-evaluates `isSparseInput` and toggles `.hidden`. Clicking a quick-pick pill (which fills the input with a multi-word phrase) explicitly hides the nudge — the pill is itself the answer to the nudge.
+
+Visual treatment: subtle accent-soft gradient background, accent border, accent-coloured title, regular body text. The nudge **doesn't block** the user — they can still click Next and proceed with whatever they typed.
+
+**Files touched**
+- Modified: `docs/index.html` (new `#flow` section + nav link), `docs/style.css` (~210 lines for `.deep-flow` / `.deep-stage` / 5 unique animation styles), `docs/i18n.js` (29 EN + 29 DE keys for the flow + IntersectionObserver setup), `public/index.html` (2 `<aside class="wz-nudge">` blocks), `public/style.css` (.wz-nudge), `public/app.js` (4 nudge wires + isSparseInput helper), `public/i18n.js` (4 keys EN + 4 keys DE for the nudges), `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** server, src, tests, examples, scripts.
+
+**Tests run**
+- `npm test` → **81/81** pass.
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- jsdom smoke against `docs/index.html`: 5 stages found, every animation sub-component counted correctly (1 typing input, 3 pills + 1 checkmark, 5 files, 4 bubbles, 4 code lines).
+- jsdom smoke against `isSparseInput`: 7/7 cases correct including German compound-noun edge cases.
+- Live HTTP smoke against `node server.js`: app.js carries `isSparseInput`, `wzNudgeAudience`, `wzNudgeBenefit`; HTML carries 6 `wz-nudge`-related strings; landing page carries 34 `deep-*` / `flow.s*` references; `i18n.js` carries the IntersectionObserver setup.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, tests are unchanged. The wizard's contract (composed sentence pattern `for X. It Y.`) is unchanged — the nudge is purely a UX scaffold around the same input field.
+
+**Known limitations**
+- **The flow section's animations are decorative**, not interactive. There's no replay button, no manual stepping. Reasoning: the IO-based reveal is the interaction — scrolling triggers each stage. Adding controls would clutter the section without adding insight. Reduced-motion users see all five stages immediately fully-rendered, which is functionally equivalent.
+- **The nudge fires on every keystroke after the threshold is crossed**, so a user typing letter-by-letter sees the nudge flash in and out as they cross 14 characters. Acceptable — the nudge is informational, not modal, and the appear/disappear animation is a 280 ms slide that doesn't feel jarring at typing speed.
+- **The 14-character threshold for "sparse" is heuristic.** Long German compounds *do* exist that should still trigger the nudge (e.g. `Endverbraucher` is one word, 14 chars exactly, sparse-flagged); tightening the threshold to 12 or 16 changes which words trip it. The current 14 is pragmatic — easy to retune later if owners report mis-classifications.
+- **The flow's "autonomous execution" stage 5 is aspirational** for the 65-year-old user-archetype — it shows what *can* happen if Claude is given the masterplan, not a guarantee. The body copy is calibrated to set realistic expectations ("You stay in the loop only on decisions, not on every line"), but the user's actual mileage will depend on which Claude tier they use, what tooling is hooked up, etc.
+- **The chat bubbles in stage 4 use specific dialogue** ("Are users tracking the same plan or each their own?"). That's a real, illustrative question that fits the implied "training plan" example, but a different idea (a logistics tool, a music-teaching app) would have different first questions. The bubbles are illustrative, not personalised.
+
+**Decisions**
+- **Nudge over block.** A blocking validation ("you must enter at least 2 words") would solve the problem but feel hostile, especially in a wizard meant for non-tech users. The nudge surfaces the issue without preventing progress.
+- **Inline animations, not video.** Five inline CSS-animated panels weigh ~6 KB extra. A 5-scene video MP4 would be ~300 KB+, require more careful sizing for mobile, would not respect `prefers-reduced-motion`, and would be impossible to translate. The tradeoff favours CSS.
+- **The flow section is between the hero and the existing "How it works" section, not replacing it.** The 3-step "How it works" is the **fast** answer for visitors who scroll past quickly. The 5-stage flow is the **deep** answer for visitors who stop and read. Keeping both gives different visitor types the right surface.
+- **Step 2 nudge is for audience, step 3 nudge is for benefit.** Step 2 is the harder one to skip ("Eltern" is a real risk); step 3 is naturally optional and the nudge there leans toward "or skip — it's optional". Different tone for different roles.
+- **English first in both i18n strings, then German parity.** The flow section's German is idiomatic, not a literal translation of the English (e.g. "Aus dem Stub wird die echte Spec, mit der dein Projekt läuft" preserves the contract metaphor better than a direct "stub" calque). DE keeps the same structure and lengths roughly comparable.
+
+**Next session starts with**
+- The remaining shortlist: **Run #029 — domain depth eleventh domain** (`non-profit & community` or `government & civic`), or **per-locale URLs / SEO** for the German landing-page version, or **EN versions of the legal pages** (imprint.html / privacy.html). Owner picks.
+
+---
+
+## Run #027 — 2026-04-30 — README mit Logo + Links, Impressum + Datenschutz (deutschlandkonform)
+
+**Trigger:** Owner request, three things in one breath: (1) README updaten mit Logo + Links + allem; (2) AGB/Impressum deutschlandkonform anlegen; (3) Wizard-Verbesserung diskutieren — *"akutell wird nur eine Frage gestellt wenn man z.b. nur ein word eingibt ergibt es alles kein sinn"*. Plus owner shared his real address + email + phone for the imprint, with the explicit constraint *"ich bin nicht selbständig das Projekt erzeugt auch kein geld"*.
+
+**What this run delivers**
+- **README.md** — full rewrite: centered logo (links to `docs/logo.svg`), centered subtitle "From one sentence to a complete project plan in 30 seconds", three prominent links (Launch the tool / Landing / Source), five badges (License, Node version, Tests, Languages, Build step), then a re-organised body that leads with **two ways to use it** (hosted + local) before any technical content. The 12-file table now highlights MASTERPLAN.md and product-brief.md as the surfaces with domain-specific depth. Ends with a "Built by Belkis Aslani" footer linking to email + GitHub.
+- **`docs/impressum.html`** — TMG §5 / MStV §18 imprint page. Lists Anbieter (Belkis Aslani, Vogelsangstraße 32, 71691 Freiberg am Neckar), contact (email + telephone), responsible person, **explicit "private, non-commercial open-source" character of the project** (key: aligns with owner's "ich bin nicht selbständig / kein Geld" reality), standard TMG liability clauses for content + links, MIT-license note for the source, EU-ODR pointer + explicit refusal of consumer-arbitration.
+- **`docs/datenschutz.html`** — GDPR Art. 13 privacy notice. Opens with a "Kurzüberblick" that says exactly what is true: no cookies, no tracking, no analytics, idea-input processed in-memory and discarded, no user account, localStorage holds language preference only. Then full breakdown: server logs (Vercel + GitHub Pages, with links to their privacy policies), the 30-rpm rate-limit counter (in-memory only), the cross-tool flow (when the user pastes the masterplan into claude.ai it's their action under Anthropic's policy, not ours), the user's GDPR rights, the right to complain to the regional supervisor (Baden-Württemberg's LfDI is the correct authority for Freiberg am Neckar).
+- **Footer links** on both surfaces:
+  - `docs/index.html` (landing): Impressum + Datenschutz under the existing footer, with i18n keys `footer.imprint` / `footer.privacy`.
+  - `public/index.html` (app, local + hosted): same links, but pointing to the absolute GitHub-Pages URLs because the app lives at a different origin (Vercel) and we want the legal docs to live at one canonical place.
+
+**Why the imprint exists at all**
+TMG §5 / MStV §18 obligate every "geschäftsmäßig" (= persistently public) website to provide an imprint. There's a debate whether a non-commercial open-source landing page strictly qualifies; Bundesgerichtshof and Landgericht-level cases tend to rule that having a logo, a deployment URL, and a public README about a tool is "geschäftsmäßig" enough that the safer move is to provide the imprint. The cost of being wrong here is an Abmahnung; the cost of providing a complete imprint is one HTML file. Provided.
+
+**Why the privacy notice is comprehensive even though almost nothing is collected**
+GDPR Art. 13 obliges the controller to inform data subjects *even when collection is minimal*. The notice explicitly enumerates: (a) the only thing kept locally is the language preference; (b) the only thing sent to the server is the idea-text, processed in RAM and discarded; (c) Vercel + GitHub Pages may keep server logs (linked their policies); (d) the user's eight Art. 15–21 rights; (e) the right to complain to the LfDI Baden-Württemberg. This is the correct shape — under-disclose is a fine, over-disclose is just a long page.
+
+**Files touched**
+- Rewritten: `README.md` (was 289 lines, is 218 lines + a logo + badges).
+- Added: `docs/impressum.html`, `docs/datenschutz.html` (both hand-written, no template — they need to read like an actual person wrote them).
+- Modified: `docs/index.html` (footer-links), `docs/i18n.js` (added `footer.imprint`, `footer.privacy` keys EN+DE), `docs/style.css` (legal-page styles: `.legal-main`, `.legal-article`, `.legal-section`, `.legal-back`), `public/index.html` (footer-links to absolute GitHub-Pages URLs), `public/i18n.js` (same EN+DE keys), `public/style.css` (`.footer-legal`).
+- **Untouched:** server, src, tests, examples, scripts.
+
+**Tests run**
+- `npm test` → **81/81** pass.
+- `npm run audit:a11y` → **0 violations** on either page (37/27 axe rules — the new legal pages aren't audited yet, but they re-use the existing CSS palette so the contrast guarantees carry over).
+- Live smoke against `docs/`: `impressum.html` carries all owner data (10 unique strings — name, address, email, phone, TMG, MStV references); `datenschutz.html` carries 23 expected DSGVO-related strings (Art. 13, Vercel, GitHub Pages, localStorage, Baden-Württemberg, etc.); `index.html` footer has 2 links to the legal pages.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, tests are unchanged.
+
+**Known limitations**
+- **I am not a lawyer.** The imprint and privacy notice are hand-crafted from public guidance (TMG §5, MStV §18, DSGVO Art. 13, German Datenschutz authorities) and reflect what's commonly seen on private open-source projects with a similar profile. They are sufficient for the typical case but should be reviewed by someone qualified before depending on them in a dispute. If the project ever turns commercial (donations, ads, paid features, contractor work), the imprint must be updated to reflect that — *"nicht-kommerziell"* claim has to remain true.
+- **EN translation of the legal pages is not yet provided.** The German originals are the legally-relevant version (jurisdiction = Germany). The footer links read as "Imprint" / "Privacy notice" in English-mode but the linked pages stay German. That's the correct precedence (Pflicht-Sprache deutsch) and a translated reader version can be added later as `imprint.html` / `privacy.html`.
+- **README badges are static SVGs from shields.io paths, not live counts.** The "Tests: 81/81" badge will lie if the test count changes; treat it as a marketing surface, not a CI signal. CI itself is what guarantees the test pass.
+- **The README's logo embed uses a relative path (`docs/logo.svg`)** which renders correctly on github.com but would break if rendered as raw markdown in some contexts. github.com is the canonical render target so this is fine.
+
+**Wizard improvement: deferred to next run**
+The owner's question was: *"Wenn man z.b. nur ein wort eingibt ergibt es alles kein sinn — der wizard soll wirklich Fragen stellen die immer an passender stelle eingefügt wird"*, plus a request to communicate the iterative model better — that the wizard is the entry, Claude/the LLM is where the plan gets sharpened. The README's "How it works" section now articulates this in plain language ("the wizard is the entry door — Claude is where you sharpen the plan into a real project"), but the **landing-page narrative + an animated visualisation** of the entry → iterative-refinement → autonomous-execution arc is its own design problem. Tracked as **Run #028** in the shortlist.
+
+**Next session starts with**
+- **Run #028 — Wizard-narrative + animated "How it really works" section.** Plain-language explanation on the landing of the iterative model (one word in → guided wizard → 12 documents → Claude session → progressively autonomous execution). With premium-feel animations (cf. Linear's onboarding, Vercel's docs hero). Plus optional: a deeper wizard that asks more follow-up questions when the input is sparse (like a single word).
+
+---
+
 ## Run #026b — 2026-04-30 — i18n Hotfix: untranslated strings + friendlier persist-checkbox text
 
 **Trigger:** Owner reported on first DE-locale visit: "es gibt noch Übersetzungen die nicht gemacht wurden". Screenshot showed the direct-form (`Your project idea`, `Generate kit`, `Also write files to output/<slug>/`), the gallery section heading + subtitle, the tagline, and the footer all still in English — while the dynamically-rendered card buttons (`Jetzt erzeugen`, `Vorschau`, `Diese Idee benutzen`) were correctly German. Plus a UX request: *"Soll das Kästchen zum anklicken einen besseren text haben"* — the persist checkbox `Also write files to output/<slug>/` is technical jargon for non-tech users.
