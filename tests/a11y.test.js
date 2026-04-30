@@ -144,3 +144,26 @@ test("a11y: every UI colour pair meets WCAG AA contrast", () => {
     `WCAG AA contrast failures:\n  ${fails.join("\n  ")}`
   );
 });
+
+// Sanity: both i18n.js files must parse as valid JavaScript. The Run #028
+// post-mortem caught a SyntaxError caused by ASCII " (U+0022) accidentally
+// closing a string mid-sentence in a German translation — the entire i18n
+// module then failed to load silently in the browser, leaving the UI
+// untranslated and the deep-flow stages invisible (because the
+// IntersectionObserver setup never ran). This test catches that class of
+// bug at CI time, before deploy.
+import { spawnSync } from "node:child_process";
+const i18nFiles = [
+  resolve(REPO_ROOT, "public/i18n.js"),
+  resolve(REPO_ROOT, "docs/i18n.js")
+];
+for (const file of i18nFiles) {
+  test(`syntax: ${file.replace(REPO_ROOT + "/", "")} parses as valid JavaScript`, () => {
+    const r = spawnSync("node", ["-c", file], { encoding: "utf8" });
+    assert.equal(
+      r.status,
+      0,
+      `${file} has a syntax error:\n${r.stderr || r.stdout}`
+    );
+  });
+}
