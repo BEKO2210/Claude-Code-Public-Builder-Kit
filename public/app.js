@@ -16,6 +16,8 @@ const copyBtn = document.getElementById("copy");
 const downloadZipBtn = document.getElementById("download-zip");
 const galleryEl = document.getElementById("example-cards");
 const previewLineEl = document.getElementById("preview-line");
+const kitPromptEl = document.getElementById("kit-prompt-text");
+const copyPromptBtn = document.getElementById("copy-prompt");
 
 let currentFiles = [];
 let activeIndex = -1;
@@ -84,6 +86,13 @@ function selectFile(i) {
   renderFileList();
 }
 
+function buildStarterPrompt(title) {
+  // Plain language. The audience is someone who has never used Claude before.
+  // Keep this short — pasting walls of text scares first-time users.
+  const name = title || "this project";
+  return `I just created a project plan for "${name}". Please read the attached MASTERPLAN.md, summarise it back to me in your own words, then walk me through Phase 1 — Step 1 in plain language. Ask me one question at a time if you need more from me before we start.`;
+}
+
 function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError }) {
   currentFiles = files;
   activeIndex = 0;
@@ -100,6 +109,7 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   } else {
     writtenTo.textContent = "";
   }
+  if (kitPromptEl) kitPromptEl.textContent = buildStarterPrompt(title);
   setSourceBadge(source === "example" ? "Example" : "");
   resultEl.hidden = false;
   hideSkeleton();
@@ -312,6 +322,18 @@ copyBtn.addEventListener("click", async () => {
   } catch {
     copyBtn.textContent = "Copy failed";
     setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+  }
+});
+
+copyPromptBtn?.addEventListener("click", async () => {
+  if (!kitPromptEl) return;
+  try {
+    await navigator.clipboard.writeText(kitPromptEl.textContent || "");
+    copyPromptBtn.textContent = "Copied!";
+    setTimeout(() => { copyPromptBtn.textContent = "Copy prompt"; }, 1500);
+  } catch {
+    copyPromptBtn.textContent = "Copy failed";
+    setTimeout(() => { copyPromptBtn.textContent = "Copy prompt"; }, 1500);
   }
 });
 

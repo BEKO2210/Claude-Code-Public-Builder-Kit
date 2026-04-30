@@ -2,6 +2,64 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #024 — 2026-04-30 — "Was mache ich jetzt damit?" — post-generate guidance panel
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~30 min.
+**Goal going in:** A non-technical user finishes the wizard, sees 12 markdown files, and has no idea what to do next. The implicit instruction was "open them in Claude Code" — which requires a terminal, which is the very thing we exited the previous reach work to avoid. The success path needs an *explicit* answer to "what now?", with no jargon and no install. Three clicks, max.
+
+**The panel**
+
+Between the result-header and the (now-collapsible) file viewer, a new `.use-your-kit` section walks through the post-generate path:
+
+1. **Download your kit.** Primary button → triggers the existing `/api/generate.zip` flow. ZIP, 12 markdown files inside.
+2. **Open Claude.** Primary link → `claude.ai/new` in a new tab. One-line hint mentions ChatGPT works the same way.
+3. **Attach MASTERPLAN.md and paste this prompt.** A pre-filled, project-aware prompt block with a "Copy prompt" button. The prompt is a single paragraph that asks Claude to summarise the masterplan back to the user, then walk them through Phase 1 / Step 1 in plain language, asking one question at a time.
+
+The prompt is built per-result, not static — `buildStarterPrompt(title)` injects the project name so it reads as a personal next step, not as boilerplate. Example output for "Dispatch App for Trucking Fleet Managers":
+
+> *I just created a project plan for "Dispatch App for Trucking Fleet Managers". Please read the attached MASTERPLAN.md, summarise it back to me in your own words, then walk me through Phase 1 — Step 1 in plain language. Ask me one question at a time if you need more from me before we start.*
+
+That phrasing — short, polite, explicit about turn-taking — is calibrated for a first-time AI-chat user: it tells Claude to take the lead and ask follow-ups one at a time, which prevents the wall-of-questions response that scares non-technical users away from second messages.
+
+**Files browser demoted**
+
+The previous "always visible" file viewer (file-list + file-content) is now wrapped in a `<details>` element with a `<summary>` of "Browse the 12 files (optional) — Open the ZIP for the real thing — this is just a peek." Default-closed. The reasoning: in the wizard's primary success flow the user downloads the ZIP and goes to Claude — they don't need a browser-based file inspector blocking the path. It stays available for power users who want to verify the output before downloading.
+
+The summary uses a custom marker (`▸` rotated to `▾` on open) instead of the default disclosure triangle, for visual consistency with the rest of the dark-mode UI.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `docs/**`, `examples/**`, `scripts/**`, `package.json`. No server changes; `/api/generate` and `/api/generate.zip` continue to work exactly as before. The Download ZIP button moved DOM positions but kept its `id="download-zip"` and event handler.
+
+**Tests run**
+- `npm test` → **81/81** pass. Pure UI change.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA. The new panel uses `<ol>` with `<li>` for the steps (semantic ordering), `<h3>` + `<h4>` heading hierarchy below the existing `<h2>` (no level skips), `<details>`/`<summary>` for the collapsible viewer (native, fully accessible), and `target="_blank" rel="noopener noreferrer"` on the external link.
+- Live smoke against `node server.js`: index.html contains all 6 expected new strings (`use-your-kit`, `kit-prompt-text`, `claude.ai/new`, `files-summary`, `copy-prompt`); app.js contains `buildStarterPrompt`, `copyPromptBtn`, and `kit-prompt-text` references. Wired up correctly.
+
+**Drift accounting**
+None. Server contract, generator output, examples, and templates are all byte-identical to Run #023. Only the front-end gained a new layer.
+
+**Known limitations**
+- **The "click the paperclip" instruction in step 3 is text + emoji**, not a screenshot. Reasoning: claude.ai's UI moves around (paperclip placement has changed twice in the last twelve months); a committed screenshot would go stale. The 📎 emoji + "below the chat" verbal instruction is the most resilient compromise. If claude.ai redesigns the attachment affordance again, only this one string needs updating, not an image asset.
+- **Default prompt is English.** Aligns with the wizard (also English). Run #026 introduces a German variant; the prompt is one of the strings that will localise.
+- **No copy-MASTERPLAN-content button.** Could go beside "Copy prompt" — "Copy MASTERPLAN.md content" → user pastes into Claude as text instead of as an attachment, useful on phones where attaching a ZIP-internal file is fiddly. Skipped for this run; first see whether the attachment flow trips users up before adding a workaround.
+- **The collapsible file viewer is closed by default.** Returning users who want to peek at outputs have to click once. Acceptable trade for the cleaner success path; reversible later via `<details open>` if anyone misses it.
+- **Three steps fit a 3-column grid down to ~820 px** then stack to single column. On tablets in portrait (~768 px), they stack — that's intentional, otherwise each step ends up too narrow to read comfortably.
+
+**Decisions**
+- **`<details>`/`<summary>` over a custom collapse pattern.** Native HTML element, free a11y, free keyboard support, ~5 lines of CSS to override the default marker. Custom JS toggle would have been more code with worse a11y.
+- **Prompt is pre-filled, not user-written.** A non-technical user doesn't know what to ask Claude to do with the masterplan. Pre-filling the prompt removes that decision; they just paste. Power users can edit the text in the `<pre>` (it's not contenteditable, but they can copy + edit elsewhere) or skip the panel entirely.
+- **External link uses `claude.ai/new`, not `claude.ai`.** `/new` jumps directly to a new chat, skipping the conversation list — one fewer click for the user to reach the paperclip.
+- **Step 1 absorbs the Download ZIP button** (previously in `result-header > .result-actions`). The header is now just project info + meta + persist-note. Reasoning: the download is part of the success-flow narrative, not a header chrome action. This puts the action where the story expects it.
+- **Card layout, not a vertical list.** Three side-by-side cards on desktop emphasise that this is a *finite, complete* sequence — not an open-ended to-do list. Vertical list felt heavier and read more like a wall of instructions.
+- **Did not add screenshots of claude.ai.** Discussed in Known Limitations above. The visual-language compromise is small inline emojis (📎 ↗) + concrete verb-first instructions. Holds up across UI redesigns of the destination tool.
+
+**Next session starts with**
+- **Run #025 — Logo + landing-page refit.** The hosted app is now usable end-to-end by a non-technical user (#022 hosted, #022b/c hardened, #023 wizard, #024 post-generate guidance). The landing page (`docs/`) still reads as a wall of text and uses the same compass-bloom logo that "looks like a $50 site" (owner's words). Run #025 is the visible-half of the reach work: distinct logo, hero with embedded live demo, three-image "how it works" strip, one example output visible above the fold. Decide the logo direction with the owner before commissioning.
+
+---
+
 ## Run #023 — 2026-04-30 — Wizard-Onboarding (4 freundliche Schritte statt einer Textbox)
 
 **Phase:** Phase 2 — Reach (continued).

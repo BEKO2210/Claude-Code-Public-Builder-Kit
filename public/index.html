@@ -200,21 +200,58 @@
             </h2>
             <p id="project-meta" class="muted"></p>
           </div>
-          <div class="result-actions">
-            <button id="download-zip" type="button" class="primary">Download ZIP</button>
-            <p id="written-to" class="muted" role="status" aria-live="polite"></p>
-          </div>
+          <p id="written-to" class="muted" role="status" aria-live="polite"></p>
         </header>
-        <div class="result-body">
-          <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
-          <article class="file-view" aria-labelledby="active-path">
-            <header class="file-view-header">
-              <span id="active-path" class="path"></span>
-              <button id="copy" type="button" class="secondary">Copy</button>
-            </header>
-            <pre id="file-content" class="file-content" tabindex="0"></pre>
-          </article>
-        </div>
+
+        <section class="use-your-kit" aria-labelledby="use-heading">
+          <header class="use-top">
+            <h3 id="use-heading">Use your kit in 3 steps</h3>
+            <p class="muted">No terminal, no install. You only need a free claude.ai account.</p>
+          </header>
+          <ol class="kit-steps">
+            <li class="kit-step">
+              <span class="kit-step-num" aria-hidden="true">1</span>
+              <h4>Download your kit</h4>
+              <p>A ZIP file with 12 markdown documents — your project plan, ready to share.</p>
+              <button id="download-zip" type="button" class="primary kit-step-action">Download ZIP</button>
+            </li>
+            <li class="kit-step">
+              <span class="kit-step-num" aria-hidden="true">2</span>
+              <h4>Open Claude</h4>
+              <p>Free, no install. Sign in with email or Google. <span class="muted-inline">(ChatGPT works too — same steps.)</span></p>
+              <a class="primary kit-step-action" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">
+                Open claude.ai
+                <span class="ext-ico" aria-hidden="true">↗</span>
+              </a>
+            </li>
+            <li class="kit-step">
+              <span class="kit-step-num" aria-hidden="true">3</span>
+              <h4>Attach MASTERPLAN.md and paste this prompt</h4>
+              <p>In Claude, click the paperclip <span class="ico-clip" aria-hidden="true">📎</span> below the chat, attach <code>MASTERPLAN.md</code> from the ZIP, then paste this:</p>
+              <div class="kit-prompt">
+                <pre id="kit-prompt-text"></pre>
+                <button id="copy-prompt" type="button" class="kit-prompt-copy">Copy prompt</button>
+              </div>
+            </li>
+          </ol>
+        </section>
+
+        <details class="files-details">
+          <summary class="files-summary">
+            <span>Browse the 12 files (optional)</span>
+            <span class="files-summary-hint muted">Open the ZIP for the real thing — this is just a peek.</span>
+          </summary>
+          <div class="result-body">
+            <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
+            <article class="file-view" aria-labelledby="active-path">
+              <header class="file-view-header">
+                <span id="active-path" class="path"></span>
+                <button id="copy" type="button" class="secondary">Copy</button>
+              </header>
+              <pre id="file-content" class="file-content" tabindex="0"></pre>
+            </article>
+          </div>
+        </details>
       </section>
 
       <section class="gallery" aria-labelledby="gallery-heading">
