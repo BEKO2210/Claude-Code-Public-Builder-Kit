@@ -516,6 +516,43 @@ const productPhrases = {
 
 const wizardState = { step: 1, productType: null, otherText: "", audience: "", benefit: "" };
 
+// localStorage save/restore — survives accidental reloads.
+const WIZARD_STORAGE_KEY = "bk-wizard-state";
+function saveWizardState() {
+  try {
+    localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
+      productType: wizardState.productType,
+      otherText: wizardState.otherText,
+      audience: wizardState.audience,
+      benefit: wizardState.benefit
+      // step is NOT saved — every reload starts at step 1, but the user
+      // sees their previous answers pre-filled and can advance fast.
+    }));
+  } catch { /* localStorage full or disabled — non-fatal */ }
+}
+function restoreWizardState() {
+  try {
+    const raw = localStorage.getItem(WIZARD_STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    if (typeof saved.productType === "string") wizardState.productType = saved.productType;
+    if (typeof saved.otherText === "string") wizardState.otherText = saved.otherText;
+    if (typeof saved.audience === "string") wizardState.audience = saved.audience;
+    if (typeof saved.benefit === "string") wizardState.benefit = saved.benefit;
+    // Reflect into the DOM
+    if (wizardState.productType) {
+      const tile = wizardSection.querySelector(`.wz-option[data-product-type="${wizardState.productType}"]`);
+      if (tile) tile.setAttribute("aria-checked", "true");
+      if (wizardState.productType === "other" && wzOtherWrap) {
+        wzOtherWrap.hidden = false;
+        if (wzOtherInput) wzOtherInput.value = wizardState.otherText;
+      }
+    }
+    if (wzAudienceInput) wzAudienceInput.value = wizardState.audience;
+    if (wzBenefitInput) wzBenefitInput.value = wizardState.benefit;
+  } catch { /* corrupted JSON — start fresh */ }
+}
+
 function composeWizardIdea() {
   let opener;
   if (wizardState.productType === "other") {
@@ -547,6 +584,10 @@ function isWizardStepValid(step) {
   return false;
 }
 
+// Direction tracking for slide-transitions; set by gotoWizardStep before
+// the panel switches. Initial render uses no direction (no animation).
+let wizardLastStep = 0;
+
 function renderWizard() {
   wzSteps.forEach((li) => {
     const n = Number(li.dataset.step);
@@ -555,9 +596,30 @@ function renderWizard() {
     if (n === wizardState.step) li.setAttribute("aria-current", "step");
     else li.removeAttribute("aria-current");
   });
+  // Progress-bar fill: 0% before step 1 starts to count, 100% at step 4.
+  // Step 1 = 0%, Step 2 = 33%, Step 3 = 67%, Step 4 = 100%.
+  const stepCount = wzSteps.length || 4;
+  const progress = stepCount <= 1 ? 100 : ((wizardState.step - 1) / (stepCount - 1)) * 100;
+  const stepsList = wizardSection?.querySelector(".wizard-steps");
+  if (stepsList) stepsList.style.setProperty("--progress", String(progress));
+
+  // Direction-aware panel transition class.
+  const direction = wizardLastStep === 0
+    ? null
+    : wizardState.step > wizardLastStep ? "panel-enter-forward" : "panel-enter-back";
+
   wzPanels.forEach((p) => {
-    p.hidden = Number(p.dataset.step) !== wizardState.step;
+    const isActive = Number(p.dataset.step) === wizardState.step;
+    p.hidden = !isActive;
+    // Reset both transition classes, then apply the new one if active.
+    p.classList.remove("panel-enter-forward", "panel-enter-back");
+    if (isActive && direction) {
+      // Force reflow so the animation restarts.
+      void p.offsetWidth;
+      p.classList.add(direction);
+    }
   });
+  wizardLastStep = wizardState.step;
   wzBack.disabled = wizardState.step === 1;
   if (wizardState.step === 4) {
     wzNext.hidden = true;
@@ -598,6 +660,7 @@ if (wizardSection) {
       wizardSection.querySelectorAll(".wz-option").forEach((b) => {
         b.setAttribute("aria-checked", b === btn ? "true" : "false");
       });
+      saveWizardState();
       // "Something else" expands a free-input field instead of advancing.
       if (wizardState.productType === "other") {
         if (wzOtherWrap) wzOtherWrap.hidden = false;
@@ -617,6 +680,7 @@ if (wizardSection) {
   wzOtherInput?.addEventListener("input", () => {
     wizardState.otherText = wzOtherInput.value;
     wzNext.disabled = !isWizardStepValid(1);
+    saveWizardState();
   });
   wzOtherInput?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && isWizardStepValid(1)) {
@@ -629,6 +693,7 @@ if (wizardSection) {
     wizardState.audience = wzAudienceInput.value;
     wzNext.disabled = !isWizardStepValid(wizardState.step);
     if (wzNudgeAudience) wzNudgeAudience.hidden = !isSparseInput(wzAudienceInput.value);
+    saveWizardState();
   });
   wizardSection.querySelectorAll("[data-fill-audience]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -636,6 +701,7 @@ if (wizardSection) {
       wizardState.audience = wzAudienceInput.value;
       wzNext.disabled = false;
       if (wzNudgeAudience) wzNudgeAudience.hidden = true;
+      saveWizardState();
       wzAudienceInput.focus();
     });
   });
@@ -643,12 +709,14 @@ if (wizardSection) {
   wzBenefitInput.addEventListener("input", () => {
     wizardState.benefit = wzBenefitInput.value;
     if (wzNudgeBenefit) wzNudgeBenefit.hidden = !isSparseInput(wzBenefitInput.value);
+    saveWizardState();
   });
   wizardSection.querySelectorAll("[data-fill-benefit]").forEach((btn) => {
     btn.addEventListener("click", () => {
       wzBenefitInput.value = btn.dataset.fillBenefit;
       wizardState.benefit = wzBenefitInput.value;
       if (wzNudgeBenefit) wzNudgeBenefit.hidden = true;
+      saveWizardState();
       wzBenefitInput.focus();
     });
   });
@@ -727,7 +795,14 @@ function refreshWizardPreview() {
 applyTranslations();
 detectHostedMode();
 loadExamples();
-if (wizardSection) renderWizard();
+if (wizardSection) {
+  restoreWizardState();
+  renderWizard();
+  // After restore, refresh the "Next" enabled-state for whatever step
+  // the wizard happens to be on (always step 1 on reload), so a
+  // returning user can continue without re-clicking their tile.
+  if (wzNext) wzNext.disabled = !isWizardStepValid(wizardState.step);
+}
 
 // Re-translate dynamic content when the user switches language.
 onLocaleChange(() => {

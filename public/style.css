@@ -703,12 +703,42 @@ button.primary:hover {
 }
 .wizard-top .muted { font-size: 15px; max-width: 600px; margin-bottom: 18px; }
 
-/* Step indicator */
+/* Step indicator with progress-fill bar between items */
 .wizard-steps {
   list-style: none; padding: 0; margin: 0;
   display: flex; gap: 8px; flex-wrap: wrap;
   counter-reset: step;
+  position: relative;
 }
+/* Progress-bar background line connecting all 4 step pills */
+.wizard-steps::before {
+  content: "";
+  position: absolute;
+  top: 50%; left: 12px; right: 12px;
+  height: 2px;
+  background: var(--border);
+  transform: translateY(-50%);
+  z-index: 0;
+  border-radius: 2px;
+}
+/* Progress-bar fill — width set inline via --progress CSS var (0..100) */
+.wizard-steps::after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 12px;
+  height: 2px;
+  width: calc(var(--progress, 0) * 1%);
+  max-width: calc(100% - 24px);
+  background: linear-gradient(90deg, var(--accent), var(--accent-press));
+  transform: translateY(-50%);
+  border-radius: 2px;
+  transition: width 380ms cubic-bezier(0.2, 0.6, 0.2, 1);
+  z-index: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard-steps::after { transition: none; }
+}
+.wizard-steps li { position: relative; z-index: 1; }
 .wizard-steps li {
   flex: 1 1 100px; min-width: 80px;
   display: flex; align-items: center; gap: 10px;
@@ -742,12 +772,31 @@ button.primary:hover {
 .wizard-steps li.done .step-num { background: var(--accent-soft); }
 .wizard-steps .step-label { white-space: nowrap; }
 
-/* Step panels */
-.wizard-panels { min-height: 280px; }
+/* Step panels — directional slide-in animation when switching steps.
+   .panel-enter-forward / .panel-enter-back classes are toggled in JS
+   by gotoWizardStep() based on whether the user clicked Next or Back. */
+.wizard-panels { min-height: 280px; position: relative; overflow: hidden; }
 .wizard-panel {
   border: 0; padding: 0; margin: 0;
   display: flex; flex-direction: column; gap: 12px;
-  animation: revealIn 220ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.wizard-panel.panel-enter-forward {
+  animation: panel-slide-in-right 320ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.wizard-panel.panel-enter-back {
+  animation: panel-slide-in-left 320ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+@keyframes panel-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes panel-slide-in-left {
+  from { opacity: 0; transform: translateX(-24px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wizard-panel.panel-enter-forward,
+  .wizard-panel.panel-enter-back { animation: none; }
 }
 .wizard-question {
   margin: 0;
