@@ -105,6 +105,12 @@ const STRINGS = {
     "stat.seconds": "seconds",
     "preview.hint": "First 30 lines — open the ZIP for the full plan.",
 
+    "share.label": "Share your kit:",
+    "share.copy-link": "Copy link",
+    "share.copied": "Copied!",
+    "share.copy-failed": "Copy failed",
+    "share.tweet": "Just generated a complete project plan for {name} in 30 seconds with Builder Kit. 12 markdown docs, ready for Claude Code:",
+
     "result.use.heading": "Use your kit in 3 steps",
     "result.use.subtitle": "Built for Claude Code — in your browser via GitHub, or in your terminal. No regular chat — Claude Code can actually read and edit the files in your kit.",
     "result.step1.title": "Download your kit",
@@ -277,6 +283,12 @@ const STRINGS = {
     "stat.words": "Wörter",
     "stat.seconds": "Sekunden",
     "preview.hint": "Erste 30 Zeilen — die ZIP enthält den ganzen Plan.",
+
+    "share.label": "Kit teilen:",
+    "share.copy-link": "Link kopieren",
+    "share.copied": "Kopiert!",
+    "share.copy-failed": "Kopieren fehlgeschlagen",
+    "share.tweet": "Habe gerade einen kompletten Projektplan für {name} in 30 Sekunden mit Builder Kit erstellt. 12 Markdown-Dokumente, ready für Claude Code:",
 
     "result.use.heading": "Dein Kit in 3 Schritten nutzen",
     "result.use.subtitle": "Gemacht für Claude Code — im Browser über GitHub oder im Terminal. Kein normaler Chat — Claude Code kann die Dateien deines Kits wirklich lesen und bearbeiten.",

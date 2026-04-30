@@ -503,6 +503,48 @@ button.primary:hover {
   padding-left: 9px; /* 12 - 3 */
 }
 
+/* ---------- Share row (post-generate viral loop) ---------- */
+
+.result-share {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 16px 22px;
+  background: linear-gradient(180deg, transparent, rgba(138, 180, 255, 0.04));
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 720px) {
+  .result-share { flex-direction: row; align-items: center; }
+}
+.result-share-label {
+  font-size: 13px; font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+}
+.result-share-buttons {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500;
+  text-decoration: none;
+  cursor: pointer; min-height: 36px;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.share-btn:hover {
+  background: var(--panel-3);
+  border-color: var(--accent);
+  color: var(--accent);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.share-btn:active { transform: translateY(0); }
+.share-btn svg { flex-shrink: 0; }
+.share-btn-copy { font-family: inherit; }
+
 /* ---------- Use-your-kit panel ---------- */
 
 .use-your-kit {
