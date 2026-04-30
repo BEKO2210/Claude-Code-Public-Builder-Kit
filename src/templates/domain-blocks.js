@@ -41,6 +41,13 @@ const DOMAIN_RISKS = {
     "Model risk on any predictive component: if the product scores, recommends, or auto-decides, document training-data lineage, validation methodology, ongoing monitoring, and a deterministic fallback for when the model is unavailable or wrong. Regulators will ask; users will not trust unsigned numbers either.",
     "Audit trail is non-negotiable: every state change captured with who / when / what / why, immutably and exportable. Auditors and customers ask for the same evidence — ship the export path before you ship features that depend on it.",
     "Conservative defaults beat impressive automation: \"we suggested + a human approved\" always wins over \"we did\". The blast radius of a wrong automated decision in finance is measured in dollars and lawsuits — design for reversibility before speed."
+  ],
+  "food & hospitality": [
+    "Seasonality and margin pressure: revenue swings hard between peak (weekend lunch, holidays, summer terraces) and trough. The daily core action has to work brilliantly during 2× rushes or it gets dropped during them. Margin per cover is tight — every minute of operator attention has a measurable cost.",
+    "Shift / front-of-house turnover: staff churn in F&B is structurally high (60–100% annual is normal). Product onboarding has to survive a new server's first Friday-night shift, with no read-the-manual moment. Train-by-doing beats train-by-handout.",
+    "Allergen and food-safety compliance: allergen labelling, HACCP records, supply-chain traceability (EU 1169/2011, FDA / FSA equivalents), and date-coding are regulatory bedrock — not \"best effort\". A wrong allergen label is a hospitalised customer and a lawsuit, not a UX bug.",
+    "Peak-hour reliability is the whole game: two minutes of downtime during a Saturday rush is worse than two hours on Tuesday afternoon. Offline graceful degradation, conservative caching, and a predictable performance budget matter more than feature breadth.",
+    "Owner-operator economics: most independents run at single-digit net margins. They will not pay for \"nice to have\" — the product has to demonstrably save labour hours, prevent waste, or unlock revenue per shift. Quantify the saving in the pitch; the operator already does the math."
   ]
 };
 
@@ -71,6 +78,13 @@ const DOMAIN_POSITIONING = {
     "Clear separation between informational and advisory: surface the data clearly, but never blur the line into investment / tax / accounting advice unless you are licensed for it. Wording in the product is the contract with the regulator and the user.",
     "Audience framing: compliance-aware finance teams who already track regulatory cycles, write SOX-style controls, and pass IT audits. Sell to them in their language — controls, evidence, reproducibility — not in fintech-startup language.",
     "Reliability as the marketing message: numbers do not disagree across screens; exports tie back to the system of record; monthly close does not surprise anyone. Predictability is the most valuable thing you can sell to a finance team."
+  ],
+  "food & hospitality": [
+    "Simple-on-shift first: every interaction must work in under five seconds with one hand, on a phone screen smudged with grease. No multi-step modals, no \"click here, then there\" — at peak service the operator has no spare attention to give.",
+    "No laptop needed: the product runs end-to-end on the same phone the operator already has in their apron. Desktop is a back-office bonus, not the primary surface — design mobile-first because it is the only surface that matters during service.",
+    "Audience framing: owner-operators and floor managers of independent restaurants, cafés, bistros, and small chains (1–5 sites). Not enterprise hospitality groups; not platform plays for \"the future of restaurant tech\".",
+    "Save-time-or-save-waste, never both at once in the pitch: one clear value bullet (e.g. \"saves six hours per week of stocktake\") beats a vague \"operations platform\" story. Quantify in the operator's units — labour hours, food cost percent, covers per shift.",
+    "Reliability as the brand: \"still works during the Saturday rush\" is the most expensive thing competitors fail at. Lean into it — uptime numbers, offline mode, two-tap fallbacks. Predictability beats novelty every time in a service environment."
   ]
 };
 

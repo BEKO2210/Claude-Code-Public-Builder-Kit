@@ -2,6 +2,45 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #015 — 2026-04-30 — Domain depth: fifth domain (`food & hospitality`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `food & hospitality` to the specialised set — same pipeline as Runs #008 / #010 / #013, no scope creep, no example drift outside the targeted domain.
+
+**What changed**
+- Added `"food & hospitality"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): seasonality + tight margin pressure (revenue swings hard, daily core action must work brilliantly during 2× rushes); structural front-of-house staff turnover (60–100% annual is normal — onboarding has to survive a new server's first Friday-night shift, train-by-doing > train-by-handout); allergen + food-safety compliance (EU 1169/2011, FDA / FSA, HACCP, date-coding) as regulatory bedrock not "best effort"; peak-hour reliability as the whole game ("two minutes during Saturday rush > two hours on Tuesday"); owner-operator economics (single-digit net margins, the product has to demonstrably save labour, prevent waste, or unlock revenue per shift — quantified).
+  - **Positioning** (5 bullets): simple-on-shift first (every interaction in <5 s with one hand on a phone screen smudged with grease); no-laptop-needed (the same phone in the apron is the only surface that matters during service); audience framing as owner-operators and floor managers of independents and 1–5-site chains, **not** enterprise hospitality groups; save-time-or-save-waste pitched in the operator's units (labour hours, food cost percent, covers per shift); reliability as the brand ("still works during Saturday rush" is the most expensive thing competitors fail at).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **71/71** pass (69 → 71, +2 food & hospitality tests; SPECIALISED_DOMAINS test now expects five entries instead of four).
+- Two existing tests had to be adjusted (not weakened): the "non-target domains" sample list and the "helpers return empty" coverage list both used `food & hospitality` (or a food idea) as a non-target. Replaced with `education` and a study-planner idea — both still hit non-specialised domains, both still exercise the empty-return path.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-food domains (`small business`, `professional services`).
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Five of 21 domain values are now specialised (~24% coverage). Cadence of one domain per session keeps the diff readable and reversible.
+- F&B-keyword detection (`restaurant`, `cafe`, `bistro`, `bar`, `menu`, `kitchen`, `dining`) does not currently catch `pub`, `gastropub`, `food truck`, `caterer`, or `coffee shop` (the last reads as "shop" → retail under leading-`\b` matching, then small business via "small … business"). Edge cases are by design — the kit is explicit that the inferred domain is a heuristic and the user is expected to sharpen it.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **No keyword-list expansion in this run.** Adding `pub` / `gastropub` / `caterer` / `food truck` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run.
+- **Test idea uses `restaurant` and `app` for unambiguity**: "A menu management app for restaurant staff" — matches food via `restaurant` and `menu`, doesn't accidentally hit any earlier-iterated domain.
+- **Two prior tests adjusted, not weakened.** The `non-target domains` test still asserts no orphan headings on three non-specialised domains; the `helpers return empty` test still asserts on four non-specialised domains. Only the *specific* food/hospitality ideas were swapped out — the intent and coverage are unchanged.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **one-click "Generate now" on gallery cards** (small UX win), then **`education`** or **`logistics & supply chain`** as the sixth specialised domain.
+
+---
+
 ## Run #014 — 2026-04-30 — Brand identity v3 + landing-page polish (PNG OG, hero, asset sync)
 
 **Phase:** Phase 1 — UX surface (continued)

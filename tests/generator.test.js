@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the four expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the five expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "finance", "health & wellness", "professional services"]
+    ["climate & sustainability", "finance", "food & hospitality", "health & wellness", "professional services"]
   );
 });
 
@@ -263,6 +263,22 @@ test("domain depth: finance — DOCS/product-brief.md has the positioning subsec
   assert.match(md, /Reliability/);
 });
 
+test("domain depth: food & hospitality — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A menu management app for restaurant staff", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(food & hospitality\)/);
+  assert.match(md, /Seasonality/);
+  assert.match(md, /Allergen/);
+  assert.match(md, /Peak-hour reliability/);
+});
+
+test("domain depth: food & hospitality — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A menu management app for restaurant staff", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(food & hospitality\)/);
+  assert.match(md, /Simple-on-shift/);
+  assert.match(md, /No laptop needed/);
+  assert.match(md, /Reliability as the brand/);
+});
+
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
   // small business — already a worked example; must not regress.
   const sbMaster = fileFromKit("A website system for small local businesses", "MASTERPLAN.md", { now: "2026-04-29T00:00:00Z" });
@@ -270,10 +286,10 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
   assert.doesNotMatch(sbMaster, /Domain-specific risks/);
   assert.doesNotMatch(sbBrief, /Domain-specific positioning/);
 
-  // food & hospitality, gaming, general — sample three more non-target domains.
+  // gaming, education, general — sample three more non-target domains.
   for (const idea of [
-    "I want to build an app for small restaurants",
     "A matchmaking server for online multiplayer indie game lobbies",
+    "A study planner app for students preparing for exams",
     "Just a tool for keeping track of stuff"
   ]) {
     const m = fileFromKit(idea, "MASTERPLAN.md");
@@ -291,7 +307,7 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
 test("domain depth: helpers return empty string for unspecialised domains", () => {
   for (const ctx of [
     { domain: "general" },
-    { domain: "food & hospitality" },
+    { domain: "education" },
     { domain: "gaming" },
     { domain: "small business" }
   ]) {
