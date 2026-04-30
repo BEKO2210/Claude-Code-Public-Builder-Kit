@@ -2,6 +2,48 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #017 — 2026-04-30 — Domain depth: sixth domain (`education`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Add `education` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015. Picked education over `logistics & supply chain` for two reasons: (a) wider relevance for the kit's likely user base (more people building EdTech than carrier dispatching tools), and (b) neither worked example is education, which guarantees a zero-drift run on `examples/`.
+
+**What changed**
+- Added `"education"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): student-data privacy as special-category from day one (FERPA in the US, GDPR Art. 9 + age-appropriate-design codes in EU/UK, PIPEDA / FOIPPA in Canada, COPPA's verifiable-parental-consent rule for under-13) plus the parent-vs-student consent split (under-13 parent-controlled, 13–18 jurisdiction-dependent, 18+ student-controlled); minor-safety as a duty-of-care surface on any peer-to-peer or teacher-student channel (moderation, reporting, age-gating, cross-role logging — "family-friendly" copy is the regulatory floor); accessibility for diverse learners as the procurement gate (WCAG 2.2 AA is the entry cost — failing an accessibility audit gets a product banned from districts overnight); proctoring + academic-integrity features as a real harm-risk surface (camera-on, tab-blocking, keystroke patterns, AI cheating detection — default to assistive, not surveillance); outcomes claims as advertising claims subject to FTC / ED Department / ASA scrutiny ("raises grades by X%" needs a study, a cohort, a time window, and a comparator).
+  - **Positioning** (5 bullets): tutor-not-replacement framing (lead with "saves the teacher four hours a week", avoid "AI teacher" / "auto-grader" copy that collapses procurement trust and triggers union pushback); inclusive-by-default (low-bandwidth path, captions + transcripts on every video, font-size + contrast controls, home-language ≠ English support); audience framing as teachers / administrators / parents-as-buyers, students as daily-users (rostering hooks: Clever, ClassLink, OneRoster; SSO via Google or Microsoft for Education; classroom integrations: Google Classroom, Canvas, Schoology); evidence-over-hype with cited pedagogical methods (retrieval practice, spaced repetition, formative assessment); procurement-ready marketing surface (public DPA template, FERPA / GDPR posture, WCAG audit summary, third-party sub-processor list as the most valuable B2B page in this space).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **73/73** pass (71 → 73, +2 education tests; SPECIALISED_DOMAINS test now expects six entries instead of five).
+- Two existing tests had to be adjusted (not weakened): the "non-target domains" sample list and the "helpers return empty" coverage list both used `education` (or a study-planner idea) as a non-target. Replaced with `real estate` and a property-listing idea — both still hit non-specialised domains, both still exercise the empty-return path. (Same kind of swap as Run #015 did for food & hospitality.)
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-education domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A classroom platform for K-12 teachers"`): productType `platform`, audience `K-12 teachers`, domain `education`. MASTERPLAN.md is 6377 bytes, contains `### Domain-specific risks (education)` and the FERPA bullet. DOCS/product-brief.md contains `### Domain-specific positioning (education)` and the "Tutor, not replacement" bullet. A second smoke against `"A property listing platform for real estate agents"` (now a non-target) confirmed no `Domain-specific` heading leaked into either file.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Six of 21 domain values are now specialised (~29% coverage). Cadence of one domain per session keeps the diff readable and reversible.
+- Education-keyword detection (`school`, `student`, `course`, `learning`, `tutor`, `teacher`, `classroom`) catches the obvious ideas but misses adjacent surfaces like `university`, `college`, `bootcamp`, `EdTech`, `LMS`, `curriculum`, `homework`, `lesson`, `grade`, `parent` (which would help with parent-side products). Same explicit limitation as prior runs — the inferred domain is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- The risk bullets cite specific named regulations (FERPA, COPPA, GDPR Art. 9, age-appropriate-design codes, FOIPPA, EEF) and named procurement systems (Clever, ClassLink, OneRoster, Google Classroom, Canvas, Schoology). Names age — they're fine today (Apr 2026) but will need a refresh if any of them rebrand or sunset. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **No keyword-list expansion in this run.** Adding `university` / `college` / `LMS` / `curriculum` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Run #015.)
+- **Test idea uses `classroom` and `teachers` for unambiguity**: "A classroom platform for K-12 teachers" — matches education via `classroom` and `teacher`, doesn't accidentally hit any earlier-iterated domain. Tested against `buildContext` directly: productType `platform`, audience `K-12 teachers`, domain `education`. Clean.
+- **Two prior tests adjusted, not weakened** (mirroring Run #015): the `non-target domains` test still asserts no orphan headings on three non-specialised domains; the `helpers return empty` test still asserts on four non-specialised domains. Only the *specific* education ideas were swapped out — the intent and coverage are unchanged.
+- **Education over logistics & supply chain.** Both have substantive depth available. Education won on (a) breadth of likely user-base relevance, (b) zero-drift guarantee for `examples/`, and (c) more legible regulatory surface (FERPA / COPPA / WCAG are universally recognisable; logistics has telematics / DOT / ELD / HOS rules that are less commonly known). Logistics moves to top of the next-session shortlist.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`logistics & supply chain` as the seventh specialised domain** (driver UX, hardware integration, telematics privacy, peak-season reliability, ELD / HOS regulatory surface). Public landing page is still waiting on a one-time owner action.
+
+---
+
 ## Run #016 — 2026-04-30 — One-click "Generate now" on gallery cards
 
 **Phase:** Phase 1 — UX surface (continued)
