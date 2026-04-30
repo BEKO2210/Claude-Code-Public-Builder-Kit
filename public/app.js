@@ -20,12 +20,59 @@ const galleryEl = document.getElementById("example-cards");
 const previewLineEl = document.getElementById("preview-line");
 const kitPromptEl = document.getElementById("kit-prompt-text");
 const copyPromptBtn = document.getElementById("copy-prompt");
+const statFilesEl = document.getElementById("stat-files");
+const statSectionsEl = document.getElementById("stat-sections");
+const statWordsEl = document.getElementById("stat-words");
+const statTimeEl = document.getElementById("stat-time");
+const previewBodyEl = document.getElementById("result-preview-body");
 
 let currentFiles = [];
 let activeIndex = -1;
 let lastIdea = "";
 let lastSlug = "";
 let resultSource = null; // "generate" | "example" | null
+
+// --- Stats helpers ---
+
+// Compute headline numbers for the post-generate stats card.
+// Sections counts H2-style ## headings across all files (the way each
+// generated doc is actually structured); H3+ are not counted because
+// they're sub-sections of those.
+function computeKitStats(files, durationMs) {
+  let sections = 0;
+  let words = 0;
+  for (const f of files) {
+    const c = f.content || "";
+    sections += (c.match(/^##\s+/gm) || []).length;
+    // Word count: split on whitespace, filter empties. Cheap; close enough.
+    words += c.trim() ? c.trim().split(/\s+/).length : 0;
+  }
+  return {
+    files: files.length,
+    sections,
+    words,
+    seconds: durationMs != null ? Math.max(0.1, durationMs / 1000) : null
+  };
+}
+
+function formatWords(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+
+function formatSeconds(s) {
+  if (s == null) return "—";
+  return s < 10 ? s.toFixed(1) : Math.round(s).toString();
+}
+
+// Categorise a file path into a colour-coded group for the file-list.
+function fileCategory(path) {
+  if (/^MASTERPLAN\.md$|^ROADMAP\.md$|^ACCEPTANCE_CRITERIA\.md$/.test(path)) return "strategy";
+  if (/^ARCHITECTURE\.md$|^CLAUDE\.md$|technical-decisions/.test(path)) return "tech";
+  if (/product-brief|market-positioning/.test(path)) return "brief";
+  if (/^PROMPTS\//.test(path)) return "prompts";
+  return "meta";
+}
 
 function setStatus(message, kind = "") {
   // kind: "" (info) | "error" | "busy" | "success"
@@ -70,6 +117,7 @@ function renderFileList() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = file.path;
+    btn.setAttribute("data-cat", fileCategory(file.path));
     if (i === activeIndex) {
       btn.classList.add("active");
       btn.setAttribute("aria-current", "true");
@@ -95,7 +143,7 @@ function buildStarterPrompt(title) {
   return t("prompt.starter", { name });
 }
 
-function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError }) {
+function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError, durationMs }) {
   currentFiles = files;
   activeIndex = 0;
   lastIdea = idea;
@@ -113,6 +161,22 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   }
   if (kitPromptEl) kitPromptEl.textContent = buildStarterPrompt(title);
   setSourceBadge(source === "example" ? t("label.example-badge") : "");
+
+  // Stats card — concrete numbers the user can quote when sharing.
+  const stats = computeKitStats(files, durationMs);
+  if (statFilesEl) statFilesEl.textContent = String(stats.files);
+  if (statSectionsEl) statSectionsEl.textContent = String(stats.sections);
+  if (statWordsEl) statWordsEl.textContent = formatWords(stats.words);
+  if (statTimeEl) statTimeEl.textContent = formatSeconds(stats.seconds);
+
+  // Live MASTERPLAN.md preview — first 30 lines, with CSS fade-mask.
+  const masterplan = files.find((f) => f.path === "MASTERPLAN.md");
+  if (previewBodyEl) {
+    previewBodyEl.textContent = masterplan
+      ? masterplan.content.split("\n").slice(0, 30).join("\n")
+      : "";
+  }
+
   resultEl.hidden = false;
   hideSkeleton();
   renderFileList();
@@ -204,6 +268,7 @@ async function previewExample(id, triggerBtn) {
   }
   setStatus(t("status.loading-example"), "busy");
   showSkeleton({ scrollIntoView: true });
+  const t0 = performance.now();
   try {
     const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
     const data = await res.json();
@@ -215,7 +280,8 @@ async function previewExample(id, triggerBtn) {
       slug: data.context.slug,
       idea: data.idea,
       source: "example",
-      writtenToPath: null
+      writtenToPath: null,
+      durationMs: performance.now() - t0
     });
     setStatus(t("status.loaded-example", { title: data.title }));
   } catch (err) {
@@ -241,12 +307,14 @@ function useIdea(idea) {
 
 async function runGenerate(idea, { scrollToResult = false, persist = false } = {}) {
   showSkeleton({ scrollIntoView: scrollToResult });
+  const t0 = performance.now();
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idea, persist })
   });
   const data = await res.json();
+  const durationMs = performance.now() - t0;
   if (!res.ok) {
     throw new Error(data.error || t("status.generation-failed"));
   }
@@ -258,7 +326,8 @@ async function runGenerate(idea, { scrollToResult = false, persist = false } = {
     idea,
     source: "generate",
     writtenToPath: data.writtenTo,
-    persistError: data.persistError
+    persistError: data.persistError,
+    durationMs
   });
   return data;
 }

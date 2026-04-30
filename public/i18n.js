@@ -99,6 +99,12 @@ const STRINGS = {
     "direct.persist": "Save a copy on my computer",
     "direct.submit": "Generate kit",
 
+    "stat.files": "files",
+    "stat.sections": "sections",
+    "stat.words": "words",
+    "stat.seconds": "seconds",
+    "preview.hint": "First 30 lines — open the ZIP for the full plan.",
+
     "result.use.heading": "Use your kit in 3 steps",
     "result.use.subtitle": "Built for Claude Code — in your browser via GitHub, or in your terminal. No regular chat — Claude Code can actually read and edit the files in your kit.",
     "result.step1.title": "Download your kit",
@@ -265,6 +271,12 @@ const STRINGS = {
     "direct.hint.html": "Ein Satz reicht. Das Kit erkennt Produkttyp, Zielgruppe und Bereich — den Rest schärfst du in <code>MASTERPLAN.md</code>.",
     "direct.persist": "Eine Kopie auf meinem Computer speichern",
     "direct.submit": "Kit erzeugen",
+
+    "stat.files": "Dateien",
+    "stat.sections": "Abschnitte",
+    "stat.words": "Wörter",
+    "stat.seconds": "Sekunden",
+    "preview.hint": "Erste 30 Zeilen — die ZIP enthält den ganzen Plan.",
 
     "result.use.heading": "Dein Kit in 3 Schritten nutzen",
     "result.use.subtitle": "Gemacht für Claude Code — im Browser über GitHub oder im Terminal. Kein normaler Chat — Claude Code kann die Dateien deines Kits wirklich lesen und bearbeiten.",
