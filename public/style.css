@@ -380,6 +380,202 @@ button.primary:hover {
   .example-card .card-actions button { min-height: 44px; padding: 10px 14px; flex: 1 1 auto; }
 }
 
+/* ---------- Wizard ---------- */
+
+.wizard {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+}
+
+.wizard-top { margin-bottom: 24px; }
+.wizard-top h2 {
+  margin: 0 0 6px;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.wizard-top .muted { font-size: 15px; max-width: 600px; margin-bottom: 18px; }
+
+/* Step indicator */
+.wizard-steps {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; gap: 8px; flex-wrap: wrap;
+  counter-reset: step;
+}
+.wizard-steps li {
+  flex: 1 1 100px; min-width: 80px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  color: var(--muted);
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.wizard-steps li.done {
+  background: var(--accent-soft);
+  border-color: rgba(138, 180, 255, 0.35);
+  color: var(--accent);
+}
+.wizard-steps li.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0b0f18;
+  font-weight: 600;
+}
+.wizard-steps .step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 12px; font-weight: 700;
+  flex-shrink: 0;
+}
+.wizard-steps li.active .step-num { background: rgba(0, 0, 0, 0.3); }
+.wizard-steps li.done .step-num { background: var(--accent-soft); }
+.wizard-steps .step-label { white-space: nowrap; }
+
+/* Step panels */
+.wizard-panels { min-height: 280px; }
+.wizard-panel {
+  border: 0; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: revealIn 220ms cubic-bezier(0.2, 0.6, 0.2, 1);
+}
+.wizard-question {
+  margin: 0;
+  font-size: clamp(17px, 2.5vw, 20px);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text);
+}
+.wz-optional { color: var(--muted); font-weight: 400; font-size: 0.85em; }
+.wizard-help { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+/* Step 1 — option grid */
+.wizard-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+.wz-option {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  display: flex; flex-direction: column; gap: 4px; align-items: flex-start;
+  text-align: left;
+  cursor: pointer; min-height: 96px;
+  font-weight: 500;
+  transition: transform var(--t-fast), border-color var(--t-fast), background var(--t-fast), box-shadow var(--t-fast);
+}
+.wz-option:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.wz-option[aria-checked="true"] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(138, 180, 255, 0.18);
+}
+.wz-ico { font-size: 28px; line-height: 1; }
+.wz-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.wz-option[aria-checked="true"] .wz-title { color: var(--accent); }
+.wz-sub { font-size: 13px; color: var(--muted); }
+
+/* Step 2 + 3 — text input + suggestions */
+.wz-input {
+  width: 100%;
+  background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px;
+  font-family: var(--sans); font-size: 16px;
+  line-height: 1.5;
+  transition: border-color var(--t-fast), box-shadow var(--t-fast);
+}
+.wz-input:focus {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+  border-color: var(--accent);
+}
+.wz-input::placeholder { color: var(--muted); }
+
+.wizard-suggestions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.wz-pill {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer; min-height: 36px;
+  transition: background var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.wz-pill:hover { background: var(--panel-3); border-color: var(--border-strong); }
+.wz-pill:active { transform: translateY(1px); }
+
+/* Step 4 — summary card */
+.wz-summary-card {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.wz-summary-text {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--text);
+  font-weight: 500;
+}
+.wz-persist-row { padding: 0 4px; }
+
+/* Wizard footer / nav */
+.wizard-nav {
+  display: flex; gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+.wizard-nav button { flex: 1 1 auto; min-width: 120px; }
+#wz-generate { background: var(--accent); color: #0b0f18; box-shadow: 0 6px 18px rgba(138, 180, 255, 0.18); }
+#wz-generate:hover { background: var(--accent-press); box-shadow: 0 8px 22px rgba(138, 180, 255, 0.28); }
+
+/* Skip / linkish text-button */
+.wizard-skip {
+  margin: 18px 0 0;
+  text-align: center;
+  font-size: 14px;
+  color: var(--muted);
+}
+.linkish {
+  background: transparent; color: var(--accent); border: 0;
+  padding: 4px 6px; min-height: 0;
+  font-weight: 500; font-size: inherit;
+  text-decoration: underline; text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkish:hover { color: var(--accent-press); background: transparent; }
+
+/* Mobile wizard tweaks */
+@media (max-width: 540px) {
+  .wizard { padding: 20px; }
+  .wizard-steps li { flex-basis: 0; padding: 8px 10px; }
+  .wizard-steps .step-label { display: none; }
+  .wizard-steps li.active .step-label { display: inline; }
+  .wizard-options { grid-template-columns: 1fr 1fr; }
+  .wz-option { padding: 14px 12px; min-height: 86px; }
+  .wizard-nav button { font-size: 15px; padding: 12px 16px; min-height: 48px; }
+  .wz-summary-text { font-size: 16px; }
+}
+
 /* ---------- Reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {

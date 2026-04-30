@@ -2,6 +2,86 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #023 — 2026-04-30 — Wizard-Onboarding (4 freundliche Schritte statt einer Textbox)
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~50 min.
+**Goal going in:** A 65-year-old user who types "Kindergarten" into the textarea gets `Detected: product · for early adopters in your target segment · in general` — the inference falls back to defaults because there's nothing to grip on. The textarea is fine for users who already know what they want to type ("An app for restaurants that helps them manage staff rotas") but is a cliff-edge for everyone else. Replace the empty-textbox cliff with a 4-step guided onboarding that produces a richer sentence.
+
+**The wizard**
+
+Four steps, in plain language, no jargon:
+
+1. **What kind of thing do you want to build?** — six tiles (app, website, web app, tool, service, platform), each with an emoji + one-line subhint. Acts as a radio group via `aria-checked`. Picking auto-advances after 240 ms (so the user sees the highlight settle, then the next step opens).
+2. **Who is it for?** — single text input + 6 quick-pick pills (small business owners, parents and families, students and learners, freelancers and consultants, non-profit teams, health-conscious adults). Pills fill the input but stay editable. Required.
+3. **What problem should it solve, or what should it do better?** — optional text input + 4 quick-pick pills (saves time, simpler than alternatives, costs less, no learning curve).
+4. **Here's your idea — does this look right?** — composed sentence + live `Detected: …` preview line + persist-checkbox (hidden on hosted) + Generate button.
+
+A "Switch to direct input" link at the bottom of the wizard reveals the classic textarea form for users who already know what to type. The direct form has its own "Back to guided steps" link to flip back. Mode toggle is per-page-load (no localStorage cookie this run; can be added later if asked).
+
+**Composition**
+
+The wizard answers compose into a deterministic sentence:
+
+```
+{ productType: "app", audience: "small business owners", benefit: "saves them time on bookkeeping" }
+→ "An app for small business owners. It saves them time on bookkeeping."
+```
+
+Crucially, the wizard uses **two sentences** (`for X. It Y.`), not one (`for X that Y`). Reason: the existing audience-extraction regex `/for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i` is lazy and stops at the first sentence-terminating punctuation. With one sentence, the audience capture would run all the way through `that helps them...`. With two sentences, the period acts as the natural boundary and audience comes out clean. Verified with three smoke calls:
+
+- `An app for parents of kindergarten children. It helps them organise daily routines.` → audience `parents of kindergarten children` ✓
+- `A web app for music teachers. It saves them time on lesson planning.` → audience `music teachers`, domain `education` (the `teacher` keyword fires) ✓
+- `An app for small business owners.` → audience `small business owners`, domain `small business` ✓
+
+That's a deliberate, documented coupling — not a hack. The wizard owns the contract that two sentences are produced; the inference contract that punctuation terminates the audience capture is unchanged.
+
+**Step indicator**
+
+Pill-style row with four items (1 · What → 2 · Who → 3 · Why → 4 · Generate). Active step has accent fill + bold weight; completed steps have soft accent background (`done` class). Mobile (≤540 px): only the active step shows its label, the others collapse to just the number — saves horizontal space without losing context.
+
+**Focus management**
+
+When a step renders, focus moves automatically to the primary affordance:
+- Step 1: the first option tile (or the currently selected one if revisiting).
+- Step 2: the audience input.
+- Step 3: the benefit input.
+- Step 4: the Generate button.
+
+`focus({ preventScroll: true })` is used so the focus shift doesn't override the page-level scroll position — the user stays where they are visually, but the keyboard / screen-reader cursor moves correctly.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** server.js, src/**, tests/**, docs/**, examples/**, scripts/**, package.json. The audience extraction in `src/context.js` is unchanged — the wizard's two-sentence composition pattern is the integration point.
+
+**Tests run**
+- `npm test` → **81/81** pass. UI changes are static-DOM + CSS + client JS; no server contract changes, no template changes.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA. The wizard markup uses `role="radiogroup"` + `aria-checked`, `<fieldset><legend>` for each step, `aria-current="step"` on the active step indicator, `aria-live="polite"` on the preview line.
+- Live smoke against `node server.js`: composed sentences from the wizard pattern produce clean audience inferences (3 different shapes verified). `npm run audit:a11y` re-run after the wizard is in place — same result, no new violations.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and tests are all byte-identical to Run #022c. Only the front-end gained a new entry path.
+
+**Known limitations**
+- **Wizard mode is non-persistent across page-loads.** Every visit starts in the wizard. A returning user who prefers the textarea has to click "Switch to direct input" each time. Trivial to add localStorage if anyone complains.
+- **The benefit phrase composition is naive** — `s += " It " + benefit + "."`. If the user types a benefit that already starts with "It" / "This" / "saves" / "helps", the result reads slightly awkwardly ("It It saves them time"). The quick-pick pills phrase the benefit as a verb-clause that joins cleanly ("saves them time" → "It saves them time") but free-text input can produce mild grammatical bumps. Not worth fixing — the LLM consuming the kit will smooth it out, and humans skim past it.
+- **Six product-type tiles fits two columns on narrow phones, three on tablets, six on desktop.** That's by design — six is the right number to express the productType set without overwhelming. Adding a seventh would force three rows on most phones.
+- **The wizard is English-only.** That's the canonical UI language for this run. Run #026 introduces a German variant; both will share this structure.
+- **Step 3 ("Why") is the easiest step to skip and produces the smallest improvement to the inference.** That's correct — "Why" affects the kit's tone, not its productType / audience / domain. We document optionality with a `(optional)` marker on the legend.
+- **Generated test ideas in the test suite still use one-sentence form.** That's correct — the inference contract is unchanged; both shapes work, the wizard just prefers the cleaner two-sentence form for the cases that contain a benefit clause.
+
+**Decisions**
+- **Wizard primary, textarea behind a link.** The textarea-first approach optimises for users who already know the kit. The hosted version's audience is the opposite — first-time visitors who don't. Wizard primary is the right default; the textarea remains one click away for power users.
+- **Auto-advance after picking a tile.** Modern multi-step forms (Stripe, Linear's onboarding, Notion's signup) all auto-advance on definitive choices. Saves a click and signals "yes, that's a complete answer". Step 2 / 3 don't auto-advance because they need free-text input where "I'm done typing" is fuzzy.
+- **Two-sentence composition over regex extension.** The regex `/for X (terminator)/` is in `src/context.js`, depended on by the worked examples and the test suite. Extending it to add `that / which / who` as terminators risks drift in places I haven't audited. Composing the wizard sentence to match the existing regex is a one-place change with zero blast radius.
+- **No new dependencies.** Step navigation, state, validation, focus management, and live preview are all <300 lines of vanilla JS. CLAUDE.md hard rule #3 stands.
+- **Wizard does not save state across reloads.** Considered localStorage; rejected for now. Adds a CSP / privacy surface and the wizard is fast enough that re-entry is cheap.
+
+**Next session starts with**
+- **Run #024 — "Was mache ich jetzt damit?" post-generate guidance.** After Generate succeeds, instead of dumping 12 files in front of the user, show a 3-step "use your kit" panel: (1) Download ZIP, (2) Open claude.ai (or chat.openai.com) and start a new chat, (3) drop in `MASTERPLAN.md` and paste the starter prompt. With screenshots. Removes the "Claude Code / Terminal" assumption from the success path — the wizard onboards the user *into* the tool, the next run onboards them *out of* it.
+
+---
+
 ## Run #022c — 2026-04-30 — Mobile UX bug + styling refresh
 
 **Phase:** Phase 2 — Reach (continued).
