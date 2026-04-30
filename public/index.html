@@ -48,35 +48,69 @@
             <p class="wizard-help" data-i18n="step1.help">Pick the one that fits best. You can change your mind later.</p>
             <div class="wizard-options" role="radiogroup" aria-label="Project type">
               <button type="button" class="wz-option" data-product-type="app" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">📱</span>
                 <span class="wz-title" data-i18n="step1.app.title">An app</span>
                 <span class="wz-sub" data-i18n="step1.app.sub">For phone or tablet</span>
               </button>
               <button type="button" class="wz-option" data-product-type="website" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">🌐</span>
                 <span class="wz-title" data-i18n="step1.website.title">A website</span>
                 <span class="wz-sub" data-i18n="step1.website.sub">Pages people visit</span>
               </button>
               <button type="button" class="wz-option" data-product-type="web app" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">💻</span>
                 <span class="wz-title" data-i18n="step1.webapp.title">A web app</span>
                 <span class="wz-sub" data-i18n="step1.webapp.sub">Tool that runs in the browser</span>
               </button>
+              <button type="button" class="wz-option" data-product-type="dashboard" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.dashboard.title">A dashboard</span>
+                <span class="wz-sub" data-i18n="step1.dashboard.sub">Charts, metrics, data views</span>
+              </button>
               <button type="button" class="wz-option" data-product-type="tool" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">🛠️</span>
                 <span class="wz-title" data-i18n="step1.tool.title">A tool</span>
                 <span class="wz-sub" data-i18n="step1.tool.sub">Solves one specific job</span>
               </button>
+              <button type="button" class="wz-option" data-product-type="ai-assistant" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.ai.title">An AI assistant</span>
+                <span class="wz-sub" data-i18n="step1.ai.sub">Chatbot or copilot</span>
+              </button>
               <button type="button" class="wz-option" data-product-type="service" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">🤝</span>
                 <span class="wz-title" data-i18n="step1.service.title">A service</span>
                 <span class="wz-sub" data-i18n="step1.service.sub">A repeated offering for customers</span>
               </button>
+              <button type="button" class="wz-option" data-product-type="api" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.api.title">An API or backend</span>
+                <span class="wz-sub" data-i18n="step1.api.sub">For other apps to talk to</span>
+              </button>
               <button type="button" class="wz-option" data-product-type="platform" role="radio" aria-checked="false">
-                <span class="wz-ico" aria-hidden="true">🏗️</span>
                 <span class="wz-title" data-i18n="step1.platform.title">A platform</span>
                 <span class="wz-sub" data-i18n="step1.platform.sub">Connects different groups of users</span>
               </button>
+              <button type="button" class="wz-option" data-product-type="marketplace" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.marketplace.title">A marketplace</span>
+                <span class="wz-sub" data-i18n="step1.marketplace.sub">Buyers and sellers in one place</span>
+              </button>
+              <button type="button" class="wz-option" data-product-type="community" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.community.title">A community</span>
+                <span class="wz-sub" data-i18n="step1.community.sub">Forum, group, or social space</span>
+              </button>
+              <button type="button" class="wz-option" data-product-type="game" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.game.title">A game</span>
+                <span class="wz-sub" data-i18n="step1.game.sub">Video game or playful experience</span>
+              </button>
+              <button type="button" class="wz-option wz-option-other" data-product-type="other" role="radio" aria-checked="false">
+                <span class="wz-title" data-i18n="step1.other.title">Something else</span>
+                <span class="wz-sub" data-i18n="step1.other.sub">Describe in your own words</span>
+              </button>
+            </div>
+            <div id="wz-other-wrap" class="wz-other-wrap" hidden>
+              <label for="wz-other-input" class="wz-other-label" data-i18n="step1.other.label">Describe what you want to build:</label>
+              <input
+                type="text"
+                id="wz-other-input"
+                class="wz-input"
+                maxlength="60"
+                placeholder="e.g. a Slack bot, a browser extension, a CLI tool, a newsletter, a podcast"
+                data-i18n-placeholder="step1.other.placeholder"
+                autocomplete="off"
+              />
             </div>
           </fieldset>
 

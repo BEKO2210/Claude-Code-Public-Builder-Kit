@@ -2,6 +2,79 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #029 — 2026-04-30 — Wizard step 1: more options, no emojis, free-input fallback
+
+**Trigger:** Owner: *"verbessere denn wizard 1 keine Emojis 2. bessere Formatierung und immer noch eine eigene freie Eingabe.. es soll viel mehr ab decken"*. The 6-tile picker felt thin and the emoji icons read as juvenile in a tool meant for non-technical adults. Also: a few common project archetypes (AI assistant, marketplace, community, dashboard, API, game) just weren't on the list, so users with those ideas had to map themselves onto an awkward "tool" or "platform" tile.
+
+**What changed**
+
+Step 1 expanded from 6 tiles to 13 tiles + a free-input fallback. No emojis on any tile. Each tile is two lines: title (semibold, accent-on-select) + sub-line (muted, one-sentence description).
+
+The 13 options:
+
+| Tile | data-product-type | Composed opener | Existing "tool" / "platform" / "service" mapping |
+|---|---|---|---|
+| An app | `app` | "An app" | (unchanged) |
+| A website | `website` | "A website" | (unchanged) |
+| A web app | `web app` | "A web app" | (unchanged) |
+| A dashboard | `dashboard` | "A dashboard" | inferred as `web app` server-side |
+| A tool | `tool` | "A tool" | (unchanged) |
+| An AI assistant | `ai-assistant` | "An AI assistant" | inferred as `product` |
+| A service | `service` | "A service" | (unchanged) |
+| An API or backend | `api` | "An API" | inferred as `service` (the `api` keyword) |
+| A platform | `platform` | "A platform" | (unchanged) |
+| A marketplace | `marketplace` | "A marketplace" | inferred as `platform` (the `marketplace` keyword) |
+| A community | `community` | "A community" | inferred as `product`, possibly with `non-profit & community` domain |
+| A game | `game` | "A game" | inferred as `product`, possibly with `gaming` domain |
+| Something else | `other` | *user's free-input text* | inference does its normal job |
+
+Critical detail: the **server-side inference** in `src/context.js` is unchanged and does its own re-detection from the full sentence. So the new UI tiles can produce phrases like "A marketplace for X" — the server infers `platform` productType (because of the `marketplace` keyword) and gets the domain right downstream. No template changes needed.
+
+**Free-input fallback**
+
+The 13th tile is **Something else — Describe in your own words**. Clicking it does *not* auto-advance. Instead, an animated `<aside class="wz-other-wrap">` reveals a text input with a placeholder hinting at concrete examples ("e.g. a Slack bot, a browser extension, a CLI tool, a newsletter, a podcast"). The user types, presses Enter (or clicks Next), and the wizard moves on.
+
+The composed sentence uses `articleFor(text)` to pick "A" or "An" based on the first letter of the user's input — handles "An iOS widget" / "A newsletter" / "An AI copilot" correctly without a hard-coded list of vowel-starts.
+
+**Visual treatment without icons**
+
+- **3-column grid** on desktop (≥720 px), 2-column on tablet (≥420 px), 1-column on phone.
+- **Tighter padding** than the 6-tile version (14 px vs. 18 px) so 13 tiles don't take a screenful.
+- **Selection indicator** is now a small accent dot in the top-right corner of the active tile (visible because the eye is no longer occupied by an emoji).
+- **"Something else" tile** has a dashed border by default, switches to solid when selected — visually marks it as the escape-hatch.
+- **Active tile** also gets `aria-checked="true"` + 2-px accent ring + accent-coloured title, matching the pre-existing radio-group pattern.
+
+**Files touched**
+- Modified: `public/index.html` (13 tiles + free-input wrap; emoji `<span class="wz-ico">` elements removed), `public/style.css` (rewrote `.wizard-options` + `.wz-option` rules for 3-col grid, no-icon layout, `::before` selection dot, dashed-border `.wz-option-other` variant; added `.wz-other-wrap` + `.wz-other-label`), `public/app.js` (new productPhrases map with 12 entries + sentinel `"other"`, `articleFor()` helper, new `composeWizardIdea` branch for free-input, click-handler skips auto-advance for "other" and instead reveals the input + focuses it, Enter-key on the input advances), `public/i18n.js` (24 EN + 24 DE keys for the 7 new tiles + free-input label/placeholder; old emoji-only tile keys still present for any hold-out HTML), `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** server, src, tests, examples.
+
+**Tests run**
+- `npm test` → **83/83** pass.
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- 5/5 new productType compositions verified for grammatical correctness ("A marketplace for indie crafters" / "An AI assistant for small business owners" / "An API for mobile teams" / "A community for amateur photographers" / "A dashboard for factory managers").
+- 5/5 free-input examples verified — `articleFor` handles `Slack bot` / `AI copilot` / `browser extension` / `newsletter` / `iOS widget` correctly.
+- 7/7 inference smokes verified the server re-detection produces sensible types/domains for the new sentence shapes — `factory managers` → manufacturing, `online shoppers` → retail & e-commerce, `amateur photographers` → creative & media, etc.
+
+**Drift accounting**
+None. Generator behaviour unchanged. The wizard's contract (composed sentence pattern `for X. It Y.`) is unchanged.
+
+**Known limitations**
+- **Free-input quality is the user's responsibility.** A user typing "AI" alone produces "An AI for X." — grammatically valid, semantically thin. The sparse-input nudge from Run #028 doesn't fire on the step-1 free input (different field). Acceptable; if this becomes an actual problem, we'd add a dedicated nudge there.
+- **The 13-tile grid is dense on phone.** With single-column layout each tile is ~48 px tall, so the picker takes ~620 px of vertical space. That's a lot to scroll on a small device. Could be improved with a category collapser ("Apps & websites / Tools & services / Platforms / Other") if user feedback says it's too long, but for now flat-and-scrollable beats hierarchical-and-confusing.
+- **Server-side inference doesn't see the UI tile choice** — only the composed sentence. A user who selects "marketplace" but writes a sentence the server reads as plain `platform` will get a generic platform-shaped kit. That's by design (the server stays single-source-of-truth for inference) but it means the tile is a UI hint, not a hard contract.
+- **Old emoji-only DE tile keys** (e.g. `step1.app.title`) are reused for the new no-emoji versions. New keys (`step1.dashboard.*`, `step1.ai.*`, etc.) are German-EN parity. No orphaned keys remain that previous deploys depended on.
+
+**Decisions**
+- **Flat grid over hierarchical category picker.** A "Software people use / Tools / Platforms / Other"-grouped picker would scale better but adds two clicks (open category, pick tile). For 13 options a single-page grid stays scannable on desktop and the user controls scroll-pace on mobile.
+- **Dot indicator instead of emoji icon.** The dot is purely decorative — a small accent-coloured circle on the selected tile. Without an emoji to draw the eye, the selection state needs *some* visual marker beyond border + background-tint, especially for users with low contrast vision who might miss subtle background changes.
+- **Dashed border for "Something else"** signals "this is different, you're going custom" without saying so explicitly. Solid on select to confirm "you've committed to free-input now".
+- **Article picker (`A`/`An`)** for free input uses a vowel-start heuristic. Doesn't cover edge cases like "An hour" (h is silent) or "A user" (u sounds like /j/) but those don't show up as productType phrases. If they do, it's still grammatical-with-a-slight-jolt, not nonsense.
+
+**Next session starts with**
+- Owner picks: domain depth eleventh domain (`non-profit & community` / `government & civic`), EN versions of legal pages (`imprint.html` / `privacy.html`), or further wizard polish (e.g. the sparse-input nudge for the free-input field).
+
+---
+
 ## Run #028b — 2026-04-30 — Hotfix: SyntaxError in i18n.js (broken DE quotes) + IO fallback
 
 **Trigger:** Owner reported on mobile after Run #028 deploy: deep-flow section showed only the heading + tagline + a vertical line, then complete black space — none of the 5 stages visible. Plus the persist-checkbox in the app still showed the old "Also write files to output/<slug>/" text from before the Run #026 hotfix.

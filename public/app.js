@@ -471,6 +471,8 @@ const wzSummary = document.getElementById("wz-summary");
 const wzPreview = document.getElementById("wz-preview");
 const wzNudgeAudience = document.getElementById("wz-nudge-audience");
 const wzNudgeBenefit = document.getElementById("wz-nudge-benefit");
+const wzOtherWrap = document.getElementById("wz-other-wrap");
+const wzOtherInput = document.getElementById("wz-other-input");
 
 // "Sparse" = the user typed something but it's too short to give the
 // inference any traction. We trigger the nudge on either word-count or
@@ -483,19 +485,45 @@ function isSparseInput(value) {
   return words.length <= 1 && trimmed.length <= 14;
 }
 
+// Pick "A " or "An " for free-input strings based on the first letter.
+// Crude but right almost always — "An API", "An IDE", "A newsletter".
+function articleFor(text) {
+  const first = (text.trim()[0] || "").toLowerCase();
+  return "aeiou".includes(first) ? "An" : "A";
+}
+
+// Each tile carries a `data-product-type` value; this map turns that into
+// the natural-language opener used in the composed sentence the wizard
+// hands to /api/generate. The server's inference re-detects the
+// productType from the full text, so the values here just have to read
+// well as English ("A marketplace for X" / "An AI assistant for X").
+// The "other" sentinel uses the user's free-input text directly.
 const productPhrases = {
   "app": "An app",
   "website": "A website",
   "web app": "A web app",
+  "dashboard": "A dashboard",
   "tool": "A tool",
+  "ai-assistant": "An AI assistant",
   "service": "A service",
-  "platform": "A platform"
+  "api": "An API",
+  "platform": "A platform",
+  "marketplace": "A marketplace",
+  "community": "A community",
+  "game": "A game"
 };
 
-const wizardState = { step: 1, productType: null, audience: "", benefit: "" };
+const wizardState = { step: 1, productType: null, otherText: "", audience: "", benefit: "" };
 
 function composeWizardIdea() {
-  let s = productPhrases[wizardState.productType] || "A product";
+  let opener;
+  if (wizardState.productType === "other") {
+    const txt = wizardState.otherText.trim();
+    opener = txt ? `${articleFor(txt)} ${txt}` : "A product";
+  } else {
+    opener = productPhrases[wizardState.productType] || "A product";
+  }
+  let s = opener;
   const audience = wizardState.audience.trim();
   const benefit = wizardState.benefit.trim();
   if (audience) s += ` for ${audience}`;
@@ -507,7 +535,11 @@ function composeWizardIdea() {
 }
 
 function isWizardStepValid(step) {
-  if (step === 1) return wizardState.productType !== null;
+  if (step === 1) {
+    if (wizardState.productType === null) return false;
+    if (wizardState.productType === "other") return wizardState.otherText.trim().length > 0;
+    return true;
+  }
   if (step === 2) return wizardState.audience.trim().length > 0;
   if (step === 3) return true;  // optional
   if (step === 4) return true;  // ready to generate
@@ -565,10 +597,31 @@ if (wizardSection) {
       wizardSection.querySelectorAll(".wz-option").forEach((b) => {
         b.setAttribute("aria-checked", b === btn ? "true" : "false");
       });
+      // "Something else" expands a free-input field instead of advancing.
+      if (wizardState.productType === "other") {
+        if (wzOtherWrap) wzOtherWrap.hidden = false;
+        wzNext.disabled = !isWizardStepValid(1);
+        wzOtherInput?.focus({ preventScroll: true });
+        return;
+      }
+      // Any other choice: collapse the free-input wrap if it was open, and auto-advance.
+      if (wzOtherWrap) wzOtherWrap.hidden = true;
       wzNext.disabled = false;
       // Auto-advance briefly after the visual selection so the user sees the highlight.
       setTimeout(() => gotoWizardStep(2), 240);
     });
+  });
+
+  // Free-input for "Something else"
+  wzOtherInput?.addEventListener("input", () => {
+    wizardState.otherText = wzOtherInput.value;
+    wzNext.disabled = !isWizardStepValid(1);
+  });
+  wzOtherInput?.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && isWizardStepValid(1)) {
+      e.preventDefault();
+      gotoWizardStep(2);
+    }
   });
 
   wzAudienceInput.addEventListener("input", () => {
