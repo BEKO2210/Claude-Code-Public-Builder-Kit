@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the nine expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the ten expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "retail & e-commerce"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -343,6 +343,22 @@ test("domain depth: creative & media — DOCS/product-brief.md has the positioni
   assert.match(md, /Workflow over hype/);
 });
 
+test("domain depth: real estate — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A property listing platform for real estate agents", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(real estate\)/);
+  assert.match(md, /Fair[- ]housing/);
+  assert.match(md, /MLS/);
+  assert.match(md, /Anti-money-laundering/);
+});
+
+test("domain depth: real estate — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A property listing platform for real estate agents", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(real estate\)/);
+  assert.match(md, /Trust-and-disclosure-first/);
+  assert.match(md, /Local-by-default/);
+  assert.match(md, /Inventory accuracy/);
+});
+
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
   // small business — already a worked example; must not regress.
   const sbMaster = fileFromKit("A website system for small local businesses", "MASTERPLAN.md", { now: "2026-04-29T00:00:00Z" });
@@ -350,10 +366,10 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
   assert.doesNotMatch(sbMaster, /Domain-specific risks/);
   assert.doesNotMatch(sbBrief, /Domain-specific positioning/);
 
-  // gaming, real estate, general — sample three more non-target domains.
+  // gaming, travel & tourism, general — sample three more non-target domains.
   for (const idea of [
     "A matchmaking server for online multiplayer indie game lobbies",
-    "A property listing platform for real estate agents",
+    "A trip planner app for solo travelers",
     "Just a tool for keeping track of stuff"
   ]) {
     const m = fileFromKit(idea, "MASTERPLAN.md");
@@ -371,7 +387,7 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
 test("domain depth: helpers return empty string for unspecialised domains", () => {
   for (const ctx of [
     { domain: "general" },
-    { domain: "real estate" },
+    { domain: "travel & tourism" },
     { domain: "gaming" },
     { domain: "small business" }
   ]) {
