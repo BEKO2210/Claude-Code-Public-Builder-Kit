@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the eleven expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the twelve expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "government & civic", "health & wellness", "logistics & supply chain", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -373,6 +373,22 @@ test("domain depth: non-profit & community — DOCS/product-brief.md has the pos
   assert.match(md, /Mission-first, not platform-first/);
   assert.match(md, /Calm pricing/);
   assert.match(md, /Privacy as a marketing surface/);
+});
+
+test("domain depth: government & civic — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A civic engagement app for municipality residents", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(government & civic\)/);
+  assert.match(md, /FOIA/);
+  assert.match(md, /WCAG 2\.2 AA/);
+  assert.match(md, /Election infrastructure/);
+});
+
+test("domain depth: government & civic — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A civic engagement app for municipality residents", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(government & civic\)/);
+  assert.match(md, /Citizens-first, not agency-first/);
+  assert.match(md, /Compliance-as-default/);
+  assert.match(md, /Audit trail and one-click export/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
