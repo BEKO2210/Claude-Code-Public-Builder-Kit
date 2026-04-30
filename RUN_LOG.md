@@ -2,6 +2,79 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #030 — 2026-04-30 — "Use your kit" — three honest paths instead of one half-truth
+
+**Trigger:** Owner caught a real inconsistency: the post-generate panel told the user to upload **just MASTERPLAN.md** to claude.ai — but the kit hands them **12 files**. The other 11 vanished from the user's view of the flow. Plus, the panel pretended that claude.ai was the only path; the GitHub-and-terminal options were silently invisible. Owner: *"warum soll ich nur master plan hochladen wenn ich 2 datein bekomme??!! entweder man läd die in github.com hoch (erkläre auch für super Anfänger wie oder man startet claude code in dem ordern über terminal"*.
+
+**What changed**
+
+Step 3 of the "Use your kit in 3 steps" panel now says **"Attach all 12 files and paste this prompt"** with an honest fallback: *"If your plan has an upload limit, at minimum attach `MASTERPLAN.md`, `ROADMAP.md` and `ARCHITECTURE.md`."* That answers the owner's question — yes, drop all of them, and here's the minimum if you can't.
+
+**New `<details>` block underneath: "Other ways to use your kit"** (collapsed by default, with a hint summary). Two equal sub-cards inside:
+
+### Path 2 — Save it to GitHub (free, beginner-friendly)
+
+Six numbered steps written for someone who has *never used GitHub*:
+1. Sign up at github.com/signup (just email + password)
+2. Click `+` top-right → New repository → name (e.g. `my-kit`) → Public → Create repository
+3. On the new empty page, click the link "**uploading an existing file**"
+4. Drag *all* the unzipped files onto the page
+5. Scroll down, click the green **Commit changes** button
+6. Back to claude.ai, paste this prompt (with `{URL}` placeholder for the user to swap in their repo URL)
+
+The 6th step shows a **mini-prompt** in a code-style block plus its own **"Copy this prompt"** button. The prompt is locale-aware (DE/EN), gets re-rendered on language switch.
+
+### Path 3 — Use Claude Code in your terminal (for developers)
+
+Four steps:
+1. Unzip the kit
+2. `cd` into the unzipped folder
+3. Run `npx @anthropic-ai/claude-code` (with hint: first run installs, signs in once)
+4. In Claude Code, type: *"Read MASTERPLAN.md and CLAUDE.md, then walk me through Phase 1 / Step 1."*
+
+Both paths use a tiny `.alt-code` block for shell commands, with monospace styling that matches the existing code-block aesthetic.
+
+**Layout**
+- Two sub-cards in a 2-column grid on desktop (≥820 px), stacked on mobile.
+- Card backgrounds use `--panel-2` (one tier deeper than the white-cards above), so they read as "secondary path" without disappearing.
+- Numbered list with proper decimal markers (`list-style: decimal`) — the user can follow along sequentially without losing their place.
+- `<a href>` links to github.com/signup and claude.ai/new have `target="_blank" rel="noopener noreferrer"`.
+
+**i18n**
+- 21 new EN keys + 21 new DE keys for the alt-paths content, including the GitHub mini-prompt itself (translated into DE: *"Ich habe einen Projektplan in einem GitHub-Repo. Bitte lies alle 12 Markdown-Dateien unter {URL} ..."*).
+- The `{URL}` placeholder stays literal — the user is told to "replace this with your repo URL — copy it from your browser address bar". Keeping the placeholder visible is the point.
+
+**Files touched**
+- Modified: `public/index.html` (rewrote step 3 body, added `<details class="alt-paths">` with two `<article class="alt-path">` blocks), `public/style.css` (~120 lines of new rules for `.alt-paths`, `.alt-path`, `.alt-steps`, `.alt-code`, `.alt-mini-prompt`, `.alt-mini-copy`), `public/app.js` (`renderGithubPrompt()` helper + copy-handler for the GitHub mini-prompt + locale-change re-render), `public/i18n.js` (42 keys for alt-paths content, EN+DE parity), `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** server, src, tests, examples, docs landing.
+
+**Tests run**
+- `npm test` → **83/83** pass (the syntax tests still catch the i18n.js files cleanly).
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- HTTP smoke: 27 `alt-paths` markup references in served HTML, 14 `renderGithubPrompt` / `copyGithubPromptBtn` references in served `app.js`, 40 `alt.*` keys in served `i18n.js` (twice — EN block + DE block).
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and tests are byte-identical.
+
+**Known limitations**
+- **claude.ai's actual upload limit isn't documented stably** across plans (Free / Pro / Team). The new step 3 hedges with "If your plan has an upload limit, at minimum…" — accurate without committing to specific numbers that change.
+- **The GitHub mini-prompt asks Claude to "read all 12 markdown files at {URL}"**, but **claude.ai's web-chat UI cannot fetch URLs directly** — the user has to either paste the file contents or use the Claude API with web tools. The prompt is still useful because it primes the conversation; the user can then drag-drop their downloaded files into the chat as a follow-up. Documenting that nuance would explode the step count; the pragmatic compromise is "the prompt sets the framing; the user's next action is upload-or-paste".
+- **The terminal path assumes Node.js is installed.** If it isn't, `npx` fails with an unhelpful error. Out-of-scope to detect-and-explain that here; the audience for the terminal path is by definition someone who has Node or knows how to install it.
+- **No path 4 for "I just want to read the files myself"**, which is a real path the user might take (read MASTERPLAN.md in their editor, manually steer their thinking). The collapsed file viewer (`<details class="files-details">`) below the alt-paths block already serves that case.
+
+**Decisions**
+- **Honest "all 12 files" with a fallback over "MASTERPLAN.md only".** The previous text was simpler but a half-truth. The user noticed. Honesty scales; cute simplifications don't.
+- **`<details>` collapsed by default.** Path 1 (claude.ai upload) is the easiest and the right default for the 95th-percentile user. Hiding paths 2-3 behind one click keeps the primary flow short while preserving them for users who want them.
+- **6 steps for GitHub, written for someone who's never seen the UI.** Not "create a repo" but "click the `+` top-right and choose New repository". Specific clicks, not category names. That's the difference between "instructions" and "documentation".
+- **Mini-prompt in path 2 is locale-aware**, separate from the main step-3 prompt. Two prompts in the panel, both copyable, both bilingual. Adds maintenance surface but the user benefits.
+- **No screenshots of github.com or claude.ai.** Both UIs change frequently (the "+" button's exact position, the "uploading an existing file" link's wording). Verbal instructions plus quoted UI strings (`<strong>+</strong>`, `<strong>Create repository</strong>`) hold up across UI revisions; committed screenshots would go stale. Same precedent as the `📎`-instead-of-screenshot decision in Run #024.
+- **The terminal command is `npx @anthropic-ai/claude-code`** rather than `claude`. `npx` works for everyone with Node ≥ 16; `claude` only works after a separate install step. Pragmatic.
+
+**Next session starts with**
+- Owner picks: domain depth eleventh domain (`non-profit & community` or `government & civic`), EN versions of the legal pages (`imprint.html` / `privacy.html`), or further wizard polish (sparse-input nudge for the step-1 free-input field).
+
+---
+
 ## Run #029 — 2026-04-30 — Wizard step 1: more options, no emojis, free-input fallback
 
 **Trigger:** Owner: *"verbessere denn wizard 1 keine Emojis 2. bessere Formatierung und immer noch eine eigene freie Eingabe.. es soll viel mehr ab decken"*. The 6-tile picker felt thin and the emoji icons read as juvenile in a tool meant for non-technical adults. Also: a few common project archetypes (AI assistant, marketplace, community, dashboard, API, game) just weren't on the list, so users with those ideas had to map themselves onto an awkward "tool" or "platform" tile.

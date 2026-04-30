@@ -284,14 +284,58 @@
             </li>
             <li class="kit-step">
               <span class="kit-step-num" aria-hidden="true">3</span>
-              <h4 data-i18n="result.step3.title">Attach MASTERPLAN.md and paste this prompt</h4>
-              <p data-i18n-html="result.step3.body.html">In Claude, click the paperclip <span class="ico-clip" aria-hidden="true">📎</span> below the chat, attach <code>MASTERPLAN.md</code> from the ZIP, then paste this:</p>
+              <h4 data-i18n="result.step3.title">Attach all 12 files and paste this prompt</h4>
+              <p data-i18n-html="result.step3.body.html">Open the ZIP. In Claude, click the paperclip <span class="ico-clip" aria-hidden="true">📎</span> below the chat and select <strong>all 12 files</strong> from the unzipped folder (or hold Ctrl/Cmd and click each one). If your plan has an upload limit, at minimum attach <code>MASTERPLAN.md</code>, <code>ROADMAP.md</code> and <code>ARCHITECTURE.md</code>. Then paste this:</p>
               <div class="kit-prompt">
                 <pre id="kit-prompt-text"></pre>
                 <button id="copy-prompt" type="button" class="kit-prompt-copy" data-i18n="result.step3.copy">Copy prompt</button>
               </div>
             </li>
           </ol>
+
+          <details class="alt-paths">
+            <summary class="alt-paths-summary">
+              <span data-i18n="alt.summary">Other ways to use your kit</span>
+              <span class="alt-paths-hint muted" data-i18n="alt.hint">If you want a backup on GitHub or you're comfortable with a terminal.</span>
+            </summary>
+            <div class="alt-paths-body">
+              <article class="alt-path">
+                <header class="alt-path-head">
+                  <h5 data-i18n="alt.github.title">Save it to GitHub (free, beginner-friendly)</h5>
+                  <p class="muted" data-i18n="alt.github.body">Best if you want a backup, want to come back to the plan later, or want to share it with someone. Takes about 3 minutes the first time.</p>
+                </header>
+                <ol class="alt-steps">
+                  <li data-i18n-html="alt.github.s1">Go to <a href="https://github.com/signup" target="_blank" rel="noopener noreferrer">github.com/signup</a> and create a free account (just email + password).</li>
+                  <li data-i18n-html="alt.github.s2">Once logged in, click the <strong>+</strong> top-right and choose <strong>New repository</strong>. Pick any name (e.g. <code>my-kit</code>), choose <strong>Public</strong>, leave the rest as default, click <strong>Create repository</strong>.</li>
+                  <li data-i18n-html="alt.github.s3">On the new empty page, click the link <strong>uploading an existing file</strong>.</li>
+                  <li data-i18n-html="alt.github.s4">Open the ZIP you downloaded. Drag <em>all the files</em> from inside it onto the GitHub upload page. Wait until they appear in the list.</li>
+                  <li data-i18n-html="alt.github.s5">Scroll down and click the green <strong>Commit changes</strong> button. Done — your kit is online.</li>
+                  <li data-i18n-html="alt.github.s6">Now go back to <a href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">claude.ai</a> and paste this in your chat:
+                    <span class="alt-mini-prompt" id="alt-github-prompt"></span>
+                    <button type="button" class="alt-mini-copy" id="copy-github-prompt" data-i18n="alt.github.copy">Copy this prompt</button>
+                  </li>
+                </ol>
+              </article>
+
+              <article class="alt-path">
+                <header class="alt-path-head">
+                  <h5 data-i18n="alt.terminal.title">Use Claude Code in your terminal (for developers)</h5>
+                  <p class="muted" data-i18n="alt.terminal.body">If you have Node.js installed and are comfortable in a shell, this is the most powerful way — Claude reads every file in the folder and can edit them directly.</p>
+                </header>
+                <ol class="alt-steps">
+                  <li data-i18n-html="alt.terminal.s1">Unzip the kit somewhere on your computer.</li>
+                  <li data-i18n-html="alt.terminal.s2">Open a terminal and <code>cd</code> into the unzipped folder.</li>
+                  <li data-i18n-html="alt.terminal.s3">Run:
+                    <pre class="alt-code"><code>npx @anthropic-ai/claude-code</code></pre>
+                    <span class="alt-step-hint muted" data-i18n="alt.terminal.s3hint">First run installs Claude Code; subsequent runs are instant. Sign in once with your Claude account.</span>
+                  </li>
+                  <li data-i18n-html="alt.terminal.s4">Once Claude Code starts, type:
+                    <pre class="alt-code"><code data-i18n="alt.terminal.s4cmd">Read MASTERPLAN.md and CLAUDE.md, then walk me through Phase 1 / Step 1.</code></pre>
+                  </li>
+                </ol>
+              </article>
+            </div>
+          </details>
         </section>
 
         <details class="files-details">
