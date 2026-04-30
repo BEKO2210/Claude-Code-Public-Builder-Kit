@@ -159,7 +159,7 @@ const STRINGS = {
 
     "status.empty": "Enter an idea first.",
     "status.generating": "Generating your kit…",
-    "status.generated": "Generated {n} files. Scroll the file list to explore, or download as ZIP.",
+    "status.generated": "Generated {n} files. Follow the 3 steps below to use your kit.",
     "status.loading-example": "Loading example…",
     "status.loaded-example": "Loaded example: {title}.",
     "status.idea-loaded": "Idea loaded into the form. Click Generate kit to continue.",
@@ -326,7 +326,7 @@ const STRINGS = {
 
     "status.empty": "Bitte zuerst eine Idee eingeben.",
     "status.generating": "Erzeuge dein Kit…",
-    "status.generated": "{n} Dateien erzeugt. Scrolle durch die Liste oder lade als ZIP herunter.",
+    "status.generated": "{n} Dateien erzeugt. Folge den 3 Schritten unten, um dein Kit zu nutzen.",
     "status.loading-example": "Lade Beispiel…",
     "status.loaded-example": "Beispiel geladen: {title}.",
     "status.idea-loaded": "Idee in das Feld geladen. Auf Kit erzeugen klicken, um fortzufahren.",
