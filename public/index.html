@@ -8,15 +8,21 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <a class="skip-link" href="#main" data-i18n="header.skip">Skip to main content</a>
 
     <header class="site-header">
-      <div class="container">
+      <div class="container site-header-inner">
         <div class="brand">
           <img class="brand-logo" src="/logo.svg" alt="" aria-hidden="true" width="48" height="48" />
-          <h1>Claude Code Public Builder Kit</h1>
+          <h1 data-i18n="header.title">Claude Code Public Builder Kit</h1>
         </div>
-        <p class="tagline">
+        <div class="lang-switcher" role="group" data-i18n-aria-label="lang.switcher.aria" aria-label="Language">
+          <button type="button" class="lang-btn" data-lang-set="en" aria-pressed="false">EN</button>
+          <button type="button" class="lang-btn" data-lang-set="de" aria-pressed="false">DE</button>
+        </div>
+      </div>
+      <div class="container">
+        <p class="tagline" data-i18n="header.tagline">
           Turn a one-line project idea into a clean, structured planning
           foundation: vision, roadmap, acceptance criteria, architecture, prompts.
         </p>
@@ -26,116 +32,122 @@
     <main id="main" class="container" tabindex="-1">
       <section id="wizard" class="wizard" aria-labelledby="wizard-heading">
         <header class="wizard-top">
-          <h2 id="wizard-heading">Tell me about your idea</h2>
-          <p class="muted">Four short questions. We turn your answers into a complete project plan in 12 files.</p>
+          <h2 id="wizard-heading" data-i18n="wizard.title">Tell me about your idea</h2>
+          <p class="muted" data-i18n="wizard.subtitle">Four short questions. We turn your answers into a complete project plan in 12 files.</p>
           <ol class="wizard-steps" aria-label="Progress">
-            <li data-step="1" class="active" aria-current="step"><span class="step-num">1</span><span class="step-label">What</span></li>
-            <li data-step="2"><span class="step-num">2</span><span class="step-label">Who</span></li>
-            <li data-step="3"><span class="step-num">3</span><span class="step-label">Why</span></li>
-            <li data-step="4"><span class="step-num">4</span><span class="step-label">Generate</span></li>
+            <li data-step="1" class="active" aria-current="step"><span class="step-num">1</span><span class="step-label" data-i18n="wizard.step.what">What</span></li>
+            <li data-step="2"><span class="step-num">2</span><span class="step-label" data-i18n="wizard.step.who">Who</span></li>
+            <li data-step="3"><span class="step-num">3</span><span class="step-label" data-i18n="wizard.step.why">Why</span></li>
+            <li data-step="4"><span class="step-num">4</span><span class="step-label" data-i18n="wizard.step.generate">Generate</span></li>
           </ol>
         </header>
 
         <div class="wizard-panels">
           <fieldset class="wizard-panel" data-step="1">
-            <legend class="wizard-question">What kind of thing do you want to build?</legend>
-            <p class="wizard-help">Pick the one that fits best. You can change your mind later.</p>
+            <legend class="wizard-question" data-i18n="step1.question">What kind of thing do you want to build?</legend>
+            <p class="wizard-help" data-i18n="step1.help">Pick the one that fits best. You can change your mind later.</p>
             <div class="wizard-options" role="radiogroup" aria-label="Project type">
               <button type="button" class="wz-option" data-product-type="app" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">📱</span>
-                <span class="wz-title">An app</span>
-                <span class="wz-sub">For phone or tablet</span>
+                <span class="wz-title" data-i18n="step1.app.title">An app</span>
+                <span class="wz-sub" data-i18n="step1.app.sub">For phone or tablet</span>
               </button>
               <button type="button" class="wz-option" data-product-type="website" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">🌐</span>
-                <span class="wz-title">A website</span>
-                <span class="wz-sub">Pages people visit</span>
+                <span class="wz-title" data-i18n="step1.website.title">A website</span>
+                <span class="wz-sub" data-i18n="step1.website.sub">Pages people visit</span>
               </button>
               <button type="button" class="wz-option" data-product-type="web app" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">💻</span>
-                <span class="wz-title">A web app</span>
-                <span class="wz-sub">Tool that runs in the browser</span>
+                <span class="wz-title" data-i18n="step1.webapp.title">A web app</span>
+                <span class="wz-sub" data-i18n="step1.webapp.sub">Tool that runs in the browser</span>
               </button>
               <button type="button" class="wz-option" data-product-type="tool" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">🛠️</span>
-                <span class="wz-title">A tool</span>
-                <span class="wz-sub">Solves one specific job</span>
+                <span class="wz-title" data-i18n="step1.tool.title">A tool</span>
+                <span class="wz-sub" data-i18n="step1.tool.sub">Solves one specific job</span>
               </button>
               <button type="button" class="wz-option" data-product-type="service" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">🤝</span>
-                <span class="wz-title">A service</span>
-                <span class="wz-sub">A repeated offering for customers</span>
+                <span class="wz-title" data-i18n="step1.service.title">A service</span>
+                <span class="wz-sub" data-i18n="step1.service.sub">A repeated offering for customers</span>
               </button>
               <button type="button" class="wz-option" data-product-type="platform" role="radio" aria-checked="false">
                 <span class="wz-ico" aria-hidden="true">🏗️</span>
-                <span class="wz-title">A platform</span>
-                <span class="wz-sub">Connects different groups of users</span>
+                <span class="wz-title" data-i18n="step1.platform.title">A platform</span>
+                <span class="wz-sub" data-i18n="step1.platform.sub">Connects different groups of users</span>
               </button>
             </div>
           </fieldset>
 
           <fieldset class="wizard-panel" data-step="2" hidden>
-            <legend class="wizard-question">Who is it for?</legend>
-            <p class="wizard-help">In your own words. The clearer you are about the audience, the more useful the kit will be.</p>
+            <legend class="wizard-question" data-i18n="step2.question">Who is it for?</legend>
+            <p class="wizard-help" data-i18n="step2.help">In your own words. The clearer you are about the audience, the more useful the kit will be.</p>
             <input
               type="text"
               id="wz-audience"
               class="wz-input"
               maxlength="160"
               placeholder="e.g. parents of small children, busy restaurant owners, music teachers"
+              data-i18n-placeholder="step2.placeholder"
               autocomplete="off"
             />
             <div class="wizard-suggestions" aria-label="Audience suggestions">
-              <button type="button" class="wz-pill" data-fill-audience="small business owners">small business owners</button>
-              <button type="button" class="wz-pill" data-fill-audience="parents and families">parents and families</button>
-              <button type="button" class="wz-pill" data-fill-audience="students and learners">students and learners</button>
-              <button type="button" class="wz-pill" data-fill-audience="freelancers and consultants">freelancers and consultants</button>
-              <button type="button" class="wz-pill" data-fill-audience="non-profit teams">non-profit teams</button>
-              <button type="button" class="wz-pill" data-fill-audience="health-conscious adults">health-conscious adults</button>
+              <button type="button" class="wz-pill" data-fill-audience="small business owners" data-i18n="step2.pill.smb">small business owners</button>
+              <button type="button" class="wz-pill" data-fill-audience="parents and families" data-i18n="step2.pill.parents">parents and families</button>
+              <button type="button" class="wz-pill" data-fill-audience="students and learners" data-i18n="step2.pill.students">students and learners</button>
+              <button type="button" class="wz-pill" data-fill-audience="freelancers and consultants" data-i18n="step2.pill.freelancers">freelancers and consultants</button>
+              <button type="button" class="wz-pill" data-fill-audience="non-profit teams" data-i18n="step2.pill.nonprofit">non-profit teams</button>
+              <button type="button" class="wz-pill" data-fill-audience="health-conscious adults" data-i18n="step2.pill.health">health-conscious adults</button>
             </div>
           </fieldset>
 
           <fieldset class="wizard-panel" data-step="3" hidden>
-            <legend class="wizard-question">What problem should it solve, or what should it do better? <span class="wz-optional">(optional)</span></legend>
-            <p class="wizard-help">A short phrase is enough. Skip if you're not sure yet.</p>
+            <legend class="wizard-question">
+              <span data-i18n="step3.question">What problem should it solve, or what should it do better?</span>
+              <span class="wz-optional" data-i18n="step3.optional">(optional)</span>
+            </legend>
+            <p class="wizard-help" data-i18n="step3.help">A short phrase is enough. Skip if you're not sure yet.</p>
             <input
               type="text"
               id="wz-benefit"
               class="wz-input"
               maxlength="200"
               placeholder="e.g. helps them organise daily routines, saves time on bookkeeping"
+              data-i18n-placeholder="step3.placeholder"
               autocomplete="off"
             />
             <div class="wizard-suggestions" aria-label="Benefit suggestions">
-              <button type="button" class="wz-pill" data-fill-benefit="saves them time on a recurring task">saves them time</button>
-              <button type="button" class="wz-pill" data-fill-benefit="is simpler than existing alternatives">is simpler than alternatives</button>
-              <button type="button" class="wz-pill" data-fill-benefit="costs less than current solutions">costs less than alternatives</button>
-              <button type="button" class="wz-pill" data-fill-benefit="works without a steep learning curve">works without a learning curve</button>
+              <button type="button" class="wz-pill" data-fill-benefit="saves them time on a recurring task" data-i18n="step3.pill.time">saves them time</button>
+              <button type="button" class="wz-pill" data-fill-benefit="is simpler than existing alternatives" data-i18n="step3.pill.simpler">is simpler than alternatives</button>
+              <button type="button" class="wz-pill" data-fill-benefit="costs less than current solutions" data-i18n="step3.pill.cheaper">costs less than alternatives</button>
+              <button type="button" class="wz-pill" data-fill-benefit="works without a steep learning curve" data-i18n="step3.pill.no-curve">works without a learning curve</button>
             </div>
           </fieldset>
 
           <fieldset class="wizard-panel" data-step="4" hidden>
-            <legend class="wizard-question">Here's your idea — does this look right?</legend>
-            <p class="wizard-help">If anything is off, go back and edit. Otherwise, generate your kit.</p>
+            <legend class="wizard-question" data-i18n="step4.question">Here's your idea — does this look right?</legend>
+            <p class="wizard-help" data-i18n="step4.help">If anything is off, go back and edit. Otherwise, generate your kit.</p>
             <div class="wz-summary-card">
               <p id="wz-summary" class="wz-summary-text"></p>
               <p id="wz-preview" class="preview-line" aria-live="polite"></p>
             </div>
             <label class="checkbox wz-persist-row">
               <input type="checkbox" id="persist" checked />
-              <span>Also write files to <code>output/&lt;slug&gt;/</code> (local only)</span>
+              <span data-i18n-html="step4.persist.html">Also write files to <code>output/&lt;slug&gt;/</code> (local only)</span>
             </label>
           </fieldset>
         </div>
 
         <footer class="wizard-nav">
-          <button type="button" id="wz-back" class="secondary" disabled>← Back</button>
-          <button type="button" id="wz-next" disabled>Next →</button>
-          <button type="button" id="wz-generate" hidden>Generate my kit</button>
+          <button type="button" id="wz-back" class="secondary" disabled data-i18n="nav.back">← Back</button>
+          <button type="button" id="wz-next" disabled data-i18n="nav.next">Next →</button>
+          <button type="button" id="wz-generate" hidden data-i18n="nav.generate">Generate my kit</button>
         </footer>
 
         <p class="wizard-skip">
-          Already know what to type? <button type="button" id="wz-skip" class="linkish">Switch to direct input</button>.
+          <span data-i18n="wizard.skip-prompt">Already know what to type?</span>
+          <button type="button" id="wz-skip" class="linkish" data-i18n="wizard.skip-link">Switch to direct input</button>.
         </p>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
@@ -143,29 +155,30 @@
       <section id="generator" class="generator" aria-labelledby="generator-heading" hidden>
         <h2 id="generator-heading" class="visually-hidden">Generate a kit</h2>
         <form id="generate-form" novalidate>
-          <label for="idea">Your project idea</label>
+          <label for="idea" data-i18n="direct.label">Your project idea</label>
           <textarea
             id="idea"
             name="idea"
             rows="3"
             maxlength="500"
             placeholder="e.g. I want to build an app for small restaurants"
+            data-i18n-placeholder="direct.placeholder"
             aria-describedby="idea-hint"
             required
           ></textarea>
-          <p id="idea-hint" class="hint">
+          <p id="idea-hint" class="hint" data-i18n-html="direct.hint.html">
             One sentence is enough. The kit infers product type, audience, and domain — you sharpen the rest in <code>MASTERPLAN.md</code>.
           </p>
           <p id="preview-line" class="preview-line" aria-live="polite"></p>
           <div class="row">
             <label class="checkbox">
               <input type="checkbox" id="persist-direct" checked />
-              Also write files to <code>output/&lt;slug&gt;/</code>
+              <span data-i18n-html="direct.persist.html">Also write files to <code>output/&lt;slug&gt;/</code></span>
             </label>
-            <button type="submit" id="submit">Generate kit</button>
+            <button type="submit" id="submit" data-i18n="direct.submit">Generate kit</button>
           </div>
           <p class="wizard-skip">
-            <button type="button" id="wz-back-to-wizard" class="linkish">← Back to guided steps</button>
+            <button type="button" id="wz-back-to-wizard" class="linkish" data-i18n="wizard.back-to-wizard">← Back to guided steps</button>
           </p>
         </form>
       </section>
@@ -205,32 +218,35 @@
 
         <section class="use-your-kit" aria-labelledby="use-heading">
           <header class="use-top">
-            <h3 id="use-heading">Use your kit in 3 steps</h3>
-            <p class="muted">No terminal, no install. You only need a free claude.ai account.</p>
+            <h3 id="use-heading" data-i18n="result.use.heading">Use your kit in 3 steps</h3>
+            <p class="muted" data-i18n="result.use.subtitle">No terminal, no install. You only need a free claude.ai account.</p>
           </header>
           <ol class="kit-steps">
             <li class="kit-step">
               <span class="kit-step-num" aria-hidden="true">1</span>
-              <h4>Download your kit</h4>
-              <p>A ZIP file with 12 markdown documents — your project plan, ready to share.</p>
-              <button id="download-zip" type="button" class="primary kit-step-action">Download ZIP</button>
+              <h4 data-i18n="result.step1.title">Download your kit</h4>
+              <p data-i18n="result.step1.body">A ZIP file with 12 markdown documents — your project plan, ready to share.</p>
+              <button id="download-zip" type="button" class="primary kit-step-action" data-i18n="result.step1.btn">Download ZIP</button>
             </li>
             <li class="kit-step">
               <span class="kit-step-num" aria-hidden="true">2</span>
-              <h4>Open Claude</h4>
-              <p>Free, no install. Sign in with email or Google. <span class="muted-inline">(ChatGPT works too — same steps.)</span></p>
+              <h4 data-i18n="result.step2.title">Open Claude</h4>
+              <p>
+                <span data-i18n="result.step2.body">Free, no install. Sign in with email or Google.</span>
+                <span class="muted-inline" data-i18n="result.step2.aside">(ChatGPT works too — same steps.)</span>
+              </p>
               <a class="primary kit-step-action" href="https://claude.ai/new" target="_blank" rel="noopener noreferrer">
-                Open claude.ai
+                <span data-i18n="result.step2.btn">Open claude.ai</span>
                 <span class="ext-ico" aria-hidden="true">↗</span>
               </a>
             </li>
             <li class="kit-step">
               <span class="kit-step-num" aria-hidden="true">3</span>
-              <h4>Attach MASTERPLAN.md and paste this prompt</h4>
-              <p>In Claude, click the paperclip <span class="ico-clip" aria-hidden="true">📎</span> below the chat, attach <code>MASTERPLAN.md</code> from the ZIP, then paste this:</p>
+              <h4 data-i18n="result.step3.title">Attach MASTERPLAN.md and paste this prompt</h4>
+              <p data-i18n-html="result.step3.body.html">In Claude, click the paperclip <span class="ico-clip" aria-hidden="true">📎</span> below the chat, attach <code>MASTERPLAN.md</code> from the ZIP, then paste this:</p>
               <div class="kit-prompt">
                 <pre id="kit-prompt-text"></pre>
-                <button id="copy-prompt" type="button" class="kit-prompt-copy">Copy prompt</button>
+                <button id="copy-prompt" type="button" class="kit-prompt-copy" data-i18n="result.step3.copy">Copy prompt</button>
               </div>
             </li>
           </ol>
@@ -238,15 +254,15 @@
 
         <details class="files-details">
           <summary class="files-summary">
-            <span>Browse the 12 files (optional)</span>
-            <span class="files-summary-hint muted">Open the ZIP for the real thing — this is just a peek.</span>
+            <span data-i18n="files.summary">Browse the 12 files (optional)</span>
+            <span class="files-summary-hint muted" data-i18n="files.summary-hint">Open the ZIP for the real thing — this is just a peek.</span>
           </summary>
           <div class="result-body">
             <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
             <article class="file-view" aria-labelledby="active-path">
               <header class="file-view-header">
                 <span id="active-path" class="path"></span>
-                <button id="copy" type="button" class="secondary">Copy</button>
+                <button id="copy" type="button" class="secondary" data-i18n="file-view.copy">Copy</button>
               </header>
               <pre id="file-content" class="file-content" tabindex="0"></pre>
             </article>
@@ -256,20 +272,20 @@
 
       <section class="gallery" aria-labelledby="gallery-heading">
         <header class="section-header">
-          <h2 id="gallery-heading">Example gallery</h2>
-          <p class="muted">
+          <h2 id="gallery-heading" data-i18n="gallery.heading">Example gallery</h2>
+          <p class="muted" data-i18n="gallery.subtitle">
             Real kits produced by the same generator. Preview the files, or load an idea into the form to start your own.
           </p>
         </header>
         <ul id="example-cards" class="example-cards" aria-live="polite" aria-busy="true">
-          <li class="example-card placeholder">Loading examples…</li>
+          <li class="example-card placeholder" data-i18n="gallery.loading">Loading examples…</li>
         </ul>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="container">
-        <p>
+        <p data-i18n-html="footer.text.html">
           MIT licensed. Generated docs are yours — edit them freely.
           See <code>CLAUDE.md</code> for how to drive subsequent Claude Code
           sessions inside a generated kit.

@@ -1,3 +1,5 @@
+import { t, applyTranslations, onLocaleChange, getLocale } from "/i18n.js";
+
 const form = document.getElementById("generate-form");
 const ideaInput = document.getElementById("idea");
 const persistInput = document.getElementById("persist");           // wizard step-4 checkbox
@@ -89,8 +91,8 @@ function selectFile(i) {
 function buildStarterPrompt(title) {
   // Plain language. The audience is someone who has never used Claude before.
   // Keep this short — pasting walls of text scares first-time users.
-  const name = title || "this project";
-  return `I just created a project plan for "${name}". Please read the attached MASTERPLAN.md, summarise it back to me in your own words, then walk me through Phase 1 — Step 1 in plain language. Ask me one question at a time if you need more from me before we start.`;
+  const name = title || (getLocale() === "de" ? "dieses Projekt" : "this project");
+  return t("prompt.starter", { name });
 }
 
 function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError }) {
@@ -103,14 +105,14 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   projectName.textContent = title;
   projectMeta.textContent = meta;
   if (writtenToPath) {
-    writtenTo.textContent = `Written to: ${writtenToPath}`;
+    writtenTo.textContent = t("label.written-to", { path: writtenToPath });
   } else if (persistError) {
-    writtenTo.textContent = `Note: ${persistError}`;
+    writtenTo.textContent = t("label.note", { message: persistError });
   } else {
     writtenTo.textContent = "";
   }
   if (kitPromptEl) kitPromptEl.textContent = buildStarterPrompt(title);
-  setSourceBadge(source === "example" ? "Example" : "");
+  setSourceBadge(source === "example" ? t("label.example-badge") : "");
   resultEl.hidden = false;
   hideSkeleton();
   renderFileList();
@@ -125,7 +127,7 @@ function renderExampleCards(examples) {
   if (!examples.length) {
     const li = document.createElement("li");
     li.className = "example-card placeholder";
-    li.textContent = "No examples available.";
+    li.textContent = t("gallery.empty");
     galleryEl.appendChild(li);
     return;
   }
@@ -154,22 +156,22 @@ function renderExampleCards(examples) {
 
     const generateBtn = document.createElement("button");
     generateBtn.type = "button";
-    generateBtn.textContent = "Generate now";
-    generateBtn.setAttribute("aria-label", `Generate kit from idea: ${ex.idea}`);
+    generateBtn.textContent = t("card.generate-now");
+    generateBtn.setAttribute("aria-label", t("card.aria.generate-now", { idea: ex.idea }));
     generateBtn.addEventListener("click", () => generateFromCard(ex.idea, generateBtn));
 
     const previewBtn = document.createElement("button");
     previewBtn.type = "button";
     previewBtn.className = "secondary";
-    previewBtn.textContent = "Preview example";
-    previewBtn.setAttribute("aria-label", `Preview example: ${ex.title}`);
+    previewBtn.textContent = t("card.preview-example");
+    previewBtn.setAttribute("aria-label", t("card.aria.preview", { title: ex.title }));
     previewBtn.addEventListener("click", () => previewExample(ex.id, previewBtn));
 
     const useBtn = document.createElement("button");
     useBtn.type = "button";
     useBtn.className = "secondary";
-    useBtn.textContent = "Use this idea";
-    useBtn.setAttribute("aria-label", `Use this idea as input: ${ex.idea}`);
+    useBtn.textContent = t("card.use-this-idea");
+    useBtn.setAttribute("aria-label", t("card.aria.use-idea", { idea: ex.idea }));
     useBtn.addEventListener("click", () => useIdea(ex.idea));
 
     actions.append(generateBtn, previewBtn, useBtn);
@@ -182,14 +184,14 @@ async function loadExamples() {
   try {
     const res = await fetch("/api/examples");
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to load examples.");
+    if (!res.ok) throw new Error(data.error || t("status.failed-examples-load"));
     renderExampleCards(data.examples || []);
   } catch (err) {
     galleryEl.innerHTML = "";
     galleryEl.setAttribute("aria-busy", "false");
     const li = document.createElement("li");
     li.className = "example-card placeholder";
-    li.textContent = `Could not load examples: ${err.message}`;
+    li.textContent = t("gallery.error", { error: err.message });
     galleryEl.appendChild(li);
   }
 }
@@ -198,14 +200,14 @@ async function previewExample(id, triggerBtn) {
   const original = triggerBtn ? triggerBtn.textContent : null;
   if (triggerBtn) {
     triggerBtn.disabled = true;
-    triggerBtn.textContent = "Loading…";
+    triggerBtn.textContent = t("card.loading");
   }
-  setStatus("Loading example…", "busy");
+  setStatus(t("status.loading-example"), "busy");
   showSkeleton({ scrollIntoView: true });
   try {
     const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Failed to load example.");
+    if (!res.ok) throw new Error(data.error || t("status.failed-example"));
     renderResult({
       projectName: data.context.projectName,
       meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
@@ -215,10 +217,10 @@ async function previewExample(id, triggerBtn) {
       source: "example",
       writtenToPath: null
     });
-    setStatus(`Loaded example: ${data.title}.`);
+    setStatus(t("status.loaded-example", { title: data.title }));
   } catch (err) {
     clearResult();
-    setStatus(err.message || "Failed to load example.", "error");
+    setStatus(err.message || t("status.failed-example"), "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -232,7 +234,7 @@ function useIdea(idea) {
   ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
   ideaInput.focus();
   ideaInput.setSelectionRange(idea.length, idea.length);
-  setStatus("Idea loaded into the form. Click Generate kit to continue.");
+  setStatus(t("status.idea-loaded"));
 }
 
 // ---- Generate flow ----
@@ -246,7 +248,7 @@ async function runGenerate(idea, { scrollToResult = false, persist = false } = {
   });
   const data = await res.json();
   if (!res.ok) {
-    throw new Error(data.error || "Generation failed.");
+    throw new Error(data.error || t("status.generation-failed"));
   }
   renderResult({
     projectName: data.context.projectName,
@@ -265,22 +267,22 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const idea = ideaInput.value.trim();
   if (!idea) {
-    setStatus("Enter an idea first.", "error");
+    setStatus(t("status.empty"), "error");
     ideaInput.focus();
     return;
   }
   submitBtn.disabled = true;
-  setStatus("Generating your kit…", "busy");
+  setStatus(t("status.generating"), "busy");
 
   try {
     const data = await runGenerate(idea, {
       scrollToResult: true,
       persist: persistInputDirect?.checked === true
     });
-    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
+    setStatus(t("status.generated", { n: data.files.length }));
   } catch (err) {
     clearResult();
-    setStatus(err.message || "Network error.", "error");
+    setStatus(err.message || t("status.network-error"), "error");
   } finally {
     submitBtn.disabled = false;
   }
@@ -290,19 +292,19 @@ async function generateFromCard(idea, triggerBtn) {
   const original = triggerBtn ? triggerBtn.textContent : null;
   if (triggerBtn) {
     triggerBtn.disabled = true;
-    triggerBtn.textContent = "Generating…";
+    triggerBtn.textContent = t("card.generating");
   }
   ideaInput.value = idea;
   ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
-  setStatus("Generating your kit…", "busy");
+  setStatus(t("status.generating"), "busy");
   try {
     // Card-driven generates never persist — the user didn't ask for it,
     // and on hosted there's no disk anyway.
     const data = await runGenerate(idea, { scrollToResult: true, persist: false });
-    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
+    setStatus(t("status.generated", { n: data.files.length }));
   } catch (err) {
     clearResult();
-    setStatus(err.message || "Network error.", "error");
+    setStatus(err.message || t("status.network-error"), "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -317,11 +319,11 @@ copyBtn.addEventListener("click", async () => {
   if (activeIndex < 0) return;
   try {
     await navigator.clipboard.writeText(currentFiles[activeIndex].content);
-    copyBtn.textContent = "Copied";
-    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1200);
+    copyBtn.textContent = t("file-view.copied");
+    setTimeout(() => { copyBtn.textContent = t("file-view.copy"); }, 1200);
   } catch {
-    copyBtn.textContent = "Copy failed";
-    setTimeout(() => { copyBtn.textContent = "Copy"; }, 1500);
+    copyBtn.textContent = t("file-view.copy-failed");
+    setTimeout(() => { copyBtn.textContent = t("file-view.copy"); }, 1500);
   }
 });
 
@@ -329,11 +331,11 @@ copyPromptBtn?.addEventListener("click", async () => {
   if (!kitPromptEl) return;
   try {
     await navigator.clipboard.writeText(kitPromptEl.textContent || "");
-    copyPromptBtn.textContent = "Copied!";
-    setTimeout(() => { copyPromptBtn.textContent = "Copy prompt"; }, 1500);
+    copyPromptBtn.textContent = t("result.step3.copied");
+    setTimeout(() => { copyPromptBtn.textContent = t("result.step3.copy"); }, 1500);
   } catch {
-    copyPromptBtn.textContent = "Copy failed";
-    setTimeout(() => { copyPromptBtn.textContent = "Copy prompt"; }, 1500);
+    copyPromptBtn.textContent = t("result.step3.copy-failed");
+    setTimeout(() => { copyPromptBtn.textContent = t("result.step3.copy"); }, 1500);
   }
 });
 
@@ -341,7 +343,7 @@ downloadZipBtn.addEventListener("click", async () => {
   if (!lastIdea) return;
   const originalLabel = downloadZipBtn.textContent;
   downloadZipBtn.disabled = true;
-  downloadZipBtn.textContent = "Building ZIP…";
+  downloadZipBtn.textContent = t("status.zip-building");
   try {
     const res = await fetch("/api/generate.zip", {
       method: "POST",
@@ -361,11 +363,11 @@ downloadZipBtn.addEventListener("click", async () => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-    downloadZipBtn.textContent = "Downloaded";
+    downloadZipBtn.textContent = t("status.zip-downloaded");
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } catch (err) {
-    downloadZipBtn.textContent = "Failed";
-    setStatus(err.message || "ZIP download failed.", "error");
+    downloadZipBtn.textContent = t("status.zip-failed-short");
+    setStatus(err.message || t("status.zip-failed"), "error");
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } finally {
     downloadZipBtn.disabled = false;
@@ -385,10 +387,10 @@ function renderPreview(ctx) {
   previewLineEl.innerHTML = "";
   const label = document.createElement("span");
   label.className = "pv-label";
-  label.textContent = "Detected: ";
+  label.textContent = t("label.detected");
   const value = document.createElement("span");
   value.className = "pv-value";
-  value.textContent = `${ctx.productType} · for ${ctx.audience} · in ${ctx.domain}`;
+  value.textContent = t("label.detected.value", { type: ctx.productType, audience: ctx.audience, domain: ctx.domain });
   previewLineEl.append(label, value);
 }
 
@@ -588,7 +590,7 @@ if (wizardSection) {
   wzGenerate.addEventListener("click", async () => {
     const idea = composeWizardIdea();
     wzGenerate.disabled = true;
-    setStatus("Generating your kit…", "busy");
+    setStatus(t("status.generating"), "busy");
     try {
       const data = await runGenerate(idea, {
         scrollToResult: true,
@@ -598,10 +600,10 @@ if (wizardSection) {
       // sees what was sent and can tweak from the direct form.
       ideaInput.value = idea;
       ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
-      setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
+      setStatus(t("status.generated", { n: data.files.length }));
     } catch (err) {
       clearResult();
-      setStatus(err.message || "Network error.", "error");
+      setStatus(err.message || t("status.network-error"), "error");
     } finally {
       wzGenerate.disabled = false;
     }
@@ -637,10 +639,10 @@ function refreshWizardPreview() {
         wzPreview.innerHTML = "";
         const label = document.createElement("span");
         label.className = "pv-label";
-        label.textContent = "Detected: ";
+        label.textContent = t("label.detected");
         const value = document.createElement("span");
         value.className = "pv-value";
-        value.textContent = `${data.context.productType} · for ${data.context.audience} · in ${data.context.domain}`;
+        value.textContent = t("label.detected.value", { type: data.context.productType, audience: data.context.audience, domain: data.context.domain });
         wzPreview.append(label, value);
       }
     } catch {
@@ -651,6 +653,28 @@ function refreshWizardPreview() {
 
 // ---- Bootstrap ----
 
+applyTranslations();
 detectHostedMode();
 loadExamples();
 if (wizardSection) renderWizard();
+
+// Re-translate dynamic content when the user switches language.
+onLocaleChange(() => {
+  // Static [data-i18n*] elements are handled by applyTranslations(),
+  // which i18n.js itself calls on setLocale. Here we re-render the
+  // dynamic surfaces app.js owns: gallery cards, result-side prompt,
+  // wizard preview line, and any open status banner.
+  if (galleryEl && galleryEl.children.length > 0 && !galleryEl.firstElementChild?.classList.contains("placeholder")) {
+    loadExamples();
+  } else if (galleryEl?.firstElementChild?.classList.contains("placeholder")) {
+    galleryEl.firstElementChild.textContent = t("gallery.loading");
+  }
+  if (kitPromptEl && projectName.textContent) {
+    kitPromptEl.textContent = buildStarterPrompt(projectName.textContent);
+  }
+  // Source badge respects the new locale.
+  if (resultSource === "example") setSourceBadge(t("label.example-badge"));
+  // Persisted "Written to:" / "Note:" labels rebuild from the underlying flags.
+  // These are computed only at render time, so we leave them — they'll refresh
+  // on the next renderResult().
+});

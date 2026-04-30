@@ -2,6 +2,89 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #026 — 2026-04-30 — Deutsche Sprachvariante (i18n auf beiden Pages)
+
+**Phase:** Phase 2 — Reach (concluding the polish layer).
+**Duration:** ~1.2 sessions.
+**Goal going in:** Owner is German-speaking and the target audience is partly German (Vater-Test). The whole tool — wizard, post-generate panel, landing page, status messages, the prompt that gets copied to Claude's clipboard — was English-only. Add a German locale so the whole flow can be done in either language, with auto-detection from the browser and a manual switcher for explicit choice.
+
+**The architecture**
+
+Two parallel client-side i18n implementations, both **dependency-free, build-step-free, no-server-change**, both pure progressive enhancement (HTML still ships with English content as a default; without JS the site stays English without errors):
+
+- `public/i18n.js` — ESM module imported by `public/app.js`. Exposes `t(key, vars)`, `setLocale(lang)`, `applyTranslations(root)`, `onLocaleChange(fn)`. Holds ~165 string entries per locale (English + German parity). Walks `[data-i18n]`, `[data-i18n-html]`, `[data-i18n-placeholder]`, `[data-i18n-aria-label]`, `[data-i18n-title]`, `[data-i18n-value]` attributes on the document, replaces text/HTML/attributes with the resolved translation. Listens globally for clicks on `[data-lang-set]` switcher buttons and applies the new locale. Persists the user's choice in `localStorage` under `bk-lang`.
+- `docs/i18n.js` — IIFE script (no module — keeps it loadable from a static file via `<script src defer>`). Holds ~50 string entries per locale (the landing page's user-facing copy). Same convention for HTML attributes. Same switcher pattern. Persists under `bk-lang-docs` (separate origin from the app, so a separate localStorage key).
+
+The **detection rule** in both: if `localStorage` has a stored choice (`en` or `de`), use it. Otherwise inspect `navigator.language` — if it starts with `de` (case-insensitive), German; everything else English. This is the lightest possible "respect the browser, give the user a manual override" pattern.
+
+**What's translated**
+
+- App (`public/`): wizard heading + subtitle, all four step legends + helps + placeholders, all 6 product-type tile titles + sublines, all 10 quick-pick pills (audience + benefit), step indicator labels, nav buttons (Back / Next / Generate my kit), wizard-skip prompt + link, direct-form label + placeholder + hint + persist-checkbox + submit + back-to-wizard link, result section's `Use your kit in 3 steps` heading + subtitle + all 3 step titles + bodies + buttons (Download ZIP, Open claude.ai, Copy prompt), files-summary disclosure copy, file-view Copy button, gallery heading + subtitle, gallery card buttons (Generate now / Preview example / Use this idea) + their aria-labels, status messages (generating / generated / loading-example / loaded-example / idea-loaded / network-error / zip-failed / failed-example), source badge ("Example"), `Detected: …` label + value template, written-to / note labels, and the **starter prompt** that Claude consumes — that one is the most important translation because it's the hand-off into Claude.
+- Landing page (`docs/`): nav links, hero eyebrow + headline + lede + CTAs + trust-row, hero-card example sentence, all 3 how-it-works step titles + bodies + tile labels + chat mocks + CTA, example-output section copy, what-you-get section copy, for-developers section copy, footer.
+
+**The starter prompt — translated with care**
+
+This string is special: when the user clicks "Copy prompt", it goes to the clipboard verbatim and is pasted into a fresh Claude chat. Both English and German variants ask Claude to (a) read the attached `MASTERPLAN.md`, (b) summarise it back in own words, (c) walk through Phase 1 / Step 1 in plain language, (d) ask one question at a time. The German wording is:
+
+> *Ich habe gerade einen Projektplan für „{name}" erstellt. Bitte lies die angehängte MASTERPLAN.md, fasse sie in deinen eigenen Worten zusammen, und führe mich dann Schritt für Schritt durch Phase 1 — Schritt 1 in einfacher Sprache. Stell mir bitte eine Frage nach der anderen, falls du noch Informationen von mir brauchst, bevor wir starten.*
+
+Concrete and polite — calibrated for an absolute first-time AI-chat user. Same shape and intent as the English version, not a literal word-for-word translation. The `{name}` placeholder receives the project name from the generation context.
+
+**Switcher UI**
+
+Pill-style segment control with two compact buttons (`EN` | `DE`), placed in the header — top-right of the app, in the primary nav of the landing page. Active state is `aria-pressed="true"` + accent-fill; inactive is muted ghost-button. Mobile: same component, same widths, just laid out differently per page. On the landing page, the nav links collapse to icons-or-hidden below 720 px but the switcher stays visible — language is the higher-frequency action than "What you get".
+
+**Handling locale change on the live page**
+
+`public/app.js` subscribes to `onLocaleChange` and re-renders the surfaces it owns dynamically:
+
+- **Gallery cards** — re-fetches `/api/examples` (cheap, deterministic) and re-renders so the button labels and aria-labels reflect the new locale.
+- **Result panel** — the `kit-prompt-text` (the project-aware starter prompt) is rebuilt via `buildStarterPrompt(title)` so the new locale's prompt template applies.
+- **Source badge** — re-applied if the result is currently from an example (`Example` ↔ `Beispiel`).
+- **Static `[data-i18n]` elements** — `applyTranslations()` runs as part of `setLocale()` itself and handles all of these without per-element subscriptions.
+
+The wizard preview line (`Detected: …`) will rebuild on the next preview-fetch (debounced by user input). Acceptable lag — the user typically types more after switching language.
+
+**Files touched**
+- Added: `public/i18n.js` (ESM module, ~330 lines including both locales and the switcher event handler), `docs/i18n.js` (IIFE script, ~145 lines).
+- Modified: `public/index.html` (added `data-i18n*` to ~75 elements + switcher in header), `public/app.js` (imports `t/applyTranslations/onLocaleChange/getLocale`, replaces ~71 hardcoded strings with `t()` calls, subscribes to locale change), `public/style.css` (added `.lang-switcher` + `.lang-btn` styles), `docs/index.html` (added `data-i18n*` to ~49 elements + switcher + script tag), `docs/style.css` (mirrored switcher styles), `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `examples/**`, `scripts/**`, `package.json`. The locale lives entirely in the browser.
+
+**Tests run**
+- `npm test` → **81/81** pass. No server-side changes; the templates are unchanged.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 27 axe rules), all 13 contrast pairs still pass WCAG AA. The switcher uses `aria-pressed` for state (correct semantic for a toggle group); the `<html lang="...">` attribute is updated when the user switches languages so screen-readers pick the right voice.
+- `npm run sync:assets:check` → in sync.
+- Live smoke against `node server.js`: 74 `data-i18n*` attrs in `public/index.html`, 2 switcher buttons, both locales loaded, 71 `t()` references in `app.js`. Static-server smoke against `docs/`: 49 `data-i18n*` attrs, 2 switcher buttons, 86 string-keys in `docs/i18n.js`, script tag wired with `defer`.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and the test suite are byte-identical to Run #025.
+
+**Known limitations**
+- **Initial paint flickers from English to German** for German-speaking users on first load. Strictly server-side rendering would prevent this, but we have no server-render path on the landing page (GitHub Pages is static). The flicker is ~50 ms; acceptable trade for keeping the kit dependency-light. Could be hidden with a brief opacity fade on `<body>` until `applyTranslations()` runs, but that's UX gilding.
+- **Locale is per-origin.** `localStorage` cannot be shared between `*.github.io` (landing) and `*.vercel.app` (app). A user who switches to German on the landing page and clicks "Launch the tool" will see the **app** auto-detect again from `navigator.language` — usually fine because both should be German for a German user, but explicitly setting English on the landing then crossing to the app would not preserve the choice. Acceptable; cross-origin localStorage sharing is a much bigger change.
+- **Meta tags (title, og:description) stay English** on the landing page. They affect SEO + social-card unfurls, both of which are international audiences, and switching them on language change has no SEO benefit (Google indexes the static HTML). The `<title>` IS updated client-side after locale apply, so the browser tab title reflects the active locale once the user is on the page.
+- **No per-locale URLs.** `/de/index.html` would be required for first-class SEO of the German content. Out of scope for this run; can be added later as a build step (which would also re-introduce the build-step rule debate).
+- **Examples-on-disk and the SMB-accountant snippet on the landing page stay in English.** The kit's *output* is always English (the templates are English; the worked examples are byte-stable English). Translating those would invalidate the `examples regenerate byte-identically` test guarantee. The right scope for German output is a future "DE template variant" run, separate concern.
+- **The `for X` pattern in the wizard's composed sentence stays English.** The wizard composes sentences like *"An app for parents…"* / *"Eine App für Eltern…"* — both shapes parse cleanly because `src/context.js` regexes for `for\s+...` match the English form. The German `für` would not match and audience extraction would fail. This is fine: the wizard knows to compose in English regardless of UI language, because the *output* is English. The wizard's UI labels and prompts are German, but the composed idea sentence is English. This split is invisible to the user — they see the German UI, they get an English-language MASTERPLAN.md (which has been the case all along).
+
+**Decisions**
+- **Auto-detect + manual switcher, not auto-detect only.** A DE-speaking user who *prefers* English in this kit (because the output is English) needs an escape hatch. The switcher costs ~30 lines of CSS/JS and gives explicit user control.
+- **Two parallel i18n implementations, not one shared.** `public/` and `docs/` have different scopes (the landing page's strings are about marketing, the app's are about UX flow), different deployment targets (Vercel vs. GitHub Pages), different module systems (ESM vs. IIFE on a script tag). Sharing infrastructure would have meant adding a `docs/i18n.js` that imports from `public/i18n.js` across origins — impossible. The duplication is acceptable: ~50 keys in `docs/i18n.js`, ~165 in `public/i18n.js`, no overlap.
+- **The starter prompt translates in full,** not just "swap the variable". The DE version is a careful localisation, not a Google-Translate of the EN version. This string is the only one that exits the tool into Claude — quality matters disproportionately.
+- **No new runtime dependency.** Both i18n modules are hand-written. No `i18next`, no `intl-messageformat`, no `formatjs/intl`. CLAUDE.md hard rule #3 stands.
+- **`{name}`-style placeholders, not `{0}`-style or template literals.** Named placeholders read cleanly in the strings file (`Loaded example: {title}.`) and survive translation reordering (German often reorders sentence parts, e.g. *"Beispiel geladen: {title}."* — placeholder name, not position).
+- **`data-i18n-html` for keys carrying inline tags** (e.g. the `<code>MASTERPLAN.md</code>` in the direct-form hint). Keeps the strings file readable for translators.
+
+**What this closes**
+
+After Run #026 the reach + polish work is fully complete. A German-speaking 65-year-old can land at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/`, see *"Aus einem Satz wird ein kompletter Projektplan"*, click *"Tool starten"*, complete the German wizard, and get a kit with German UI guidance + English markdown output (which is what their grandkids / Claude / a translator will read anyway). End-to-end German UX without a single line of terminal.
+
+**Next session starts with**
+- **Domain depth: resume at the eleventh domain** (`non-profit & community` or `government & civic`) — the reach pivot is done; output substance is the natural next priority. The remaining ~7 specialisations were paused after Run #021, can resume from the same shortlist.
+- Or: **per-locale URLs / SEO** for the German landing-page version — a smaller polish-the-polish run, only worthwhile if German organic traffic becomes a goal.
+
+---
+
 ## Run #025 — 2026-04-30 — Logo redesign + landing-page refit (live URL linked)
 
 **Phase:** Phase 2 — Reach (concluding).
