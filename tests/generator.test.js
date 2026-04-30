@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the seven expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the eight expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services"]
+    ["climate & sustainability", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "retail & e-commerce"]
   );
 });
 
@@ -309,6 +309,22 @@ test("domain depth: logistics & supply chain — DOCS/product-brief.md has the p
   assert.match(md, /Operations-first/);
   assert.match(md, /Mobile-first for the field/);
   assert.match(md, /Reliability and offline-first/);
+});
+
+test("domain depth: retail & e-commerce — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A checkout optimization tool for e-commerce shops", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(retail & e-commerce\)/);
+  assert.match(md, /PCI DSS/);
+  assert.match(md, /chargeback/);
+  assert.match(md, /European Accessibility Act/);
+});
+
+test("domain depth: retail & e-commerce — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A checkout optimization tool for e-commerce shops", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(retail & e-commerce\)/);
+  assert.match(md, /Conversion-first/);
+  assert.match(md, /checkout-first on mobile/);
+  assert.match(md, /Trust signals/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {

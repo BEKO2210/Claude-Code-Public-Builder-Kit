@@ -2,6 +2,50 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #019 — 2026-04-30 — Domain depth: eighth domain (`retail & e-commerce`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `retail & e-commerce` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018. Picked retail over `creative & media` for two reasons: (a) wider relevance for typical builder-kit ideas (more people building stores / checkout / returns / inventory than rights-management products), and (b) the regulatory surface (PCI DSS, SCA, EAA, ADA Title III, DAC7, DSA, INFORM Consumers Act, Wayfair-era marketplace-facilitator rules) is dense enough to give the bullets real weight. Neither worked example is retail, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"retail & e-commerce"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): payment-card compliance is non-negotiable (PCI DSS v4.0 scope, 3-D Secure + PSD2 SCA in Europe, tokenisation through compliant processors — Stripe, Adyen, Worldpay, Braintree — and the rule that storing PAN data in-app is an immediate scope expansion almost no team should take); peak-season + flash-sale reliability as the operational test (Black Friday / Cyber Monday / Singles' Day / Boxing Day push 5–20× over baseline; capacity-test against 10× peak, document the queuing strategy, wire up a public status page before the first sale event); returns + chargebacks as an adversarial surface (return fraud and "friendly fraud" cost online retailers single-digit % of revenue; capture evidence — delivery proof, IP / device fingerprint, photos at receipt and return — at the moment it's cheap, not 90 days later); marketplace-vs-merchant as a regulatory split (VAT / sales-tax under EU OSS / IOSS + Wayfair-era US state thresholds, DAC7 reporting in the EU, marketplace-facilitator laws in 40+ US states, DSA + INFORM Consumers Act counterfeit / safety obligations); storefront accessibility is law not aspiration (EAA in full effect since June 2025, ADA Title III stream of US litigation — Domino's, Winn-Dixie — and WCAG 2.2 AA on every customer-facing page is the entry cost).
+  - **Positioning** (5 bullets): conversion-first not catalogue-first (every screen earns its place by add-to-cart rate, conversion, or AOV — merchandising features come second); mobile-first means *checkout-first on mobile* (over 70% of traffic is mobile; one-thumb checkout with Apple Pay / Google Pay / Shop Pay / express wallets is the single biggest conversion lever); audience as independent merchants, DTC brands, and small-to-mid retailers (1–50 stores or up to ~$50M GMV — Shopify / BigCommerce / WooCommerce / Adobe Commerce are the platform incumbents, Salesforce Commerce Cloud + SAP Commerce sit above them); trust signals as the conversion lever (visible secure-checkout iconography, reviews surfaced in-context with source named, shipping-and-return policy on the product page, unsubscribed-by-default privacy posture); quantify in the merchant's units (conversion rate, AOV, CAC, refund / return rate, gross margin, repeat-purchase rate, contribution margin per order, abandoned-cart recovery rate).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, `README.md`.
+
+**Tests run**
+- `npm test` → **77/77** pass (75 → 77, +2 retail tests; SPECIALISED_DOMAINS test now expects eight entries).
+- **No prior tests had to be adjusted this run** (same as Run #018 — the cleanest specialisation diffs come when the prior swap covered the right ground). Non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is retail.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-retail domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A checkout optimization tool for e-commerce shops"`): productType `tool`, audience `e-commerce shops`, domain `retail & e-commerce`. Confirmed `### Domain-specific risks (retail & e-commerce)` heading present + PCI DSS + European Accessibility Act + Digital Services Act bullets render; `### Domain-specific positioning (retail & e-commerce)` heading present + Conversion-first + Trust signals bullets render.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Eight of 21 domain values are now specialised (~38% coverage). At the current cadence of one domain per session, a sustained "specialise everything substantive" effort would take roughly 5–8 more sessions to bring coverage above 60%; some of the remaining domains (`gaming`, `general`, `small business`) probably do not warrant specialisation at the same depth.
+- Retail-keyword detection (`shop`, `store`, `retail`, `ecommerce`, `e-commerce`, `boutique`) covers the obvious surfaces but misses adjacent ones — `merchant`, `cart`, `checkout`, `marketplace`, `DTC`, `D2C`, `seller`, `vendor`, `POS`, `point of sale`, `subscription`, `omnichannel`, `headless commerce`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations and their effective dates / scope. Names age — they're correct as of Apr 2026 but PCI DSS v4.0 is succeeded by v4.x dot-revisions, SCA thresholds vary by jurisdiction, and the EAA was *enforceable* from 28 June 2025, not enacted then. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- The risks bullet on processors names four (Stripe, Adyen, Worldpay, Braintree). Adyen and Worldpay sit at slightly different tiers than Stripe and Braintree, and the list excludes regional players (Mollie, Razorpay, Paystack, MercadoPago). The intent is "tokenise through a compliant processor", not "here is the canonical processor list".
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `merchant` / `cart` / `checkout` / `marketplace` / `DTC` / `POS` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018.)
+- **Test idea uses `e-commerce` and `shops` for unambiguity**: "A checkout optimization tool for e-commerce shops" — matches retail via `e-commerce` and `shop`, productType is `tool`, audience parses cleanly to `e-commerce shops`.
+- **No prior tests adjusted this run** — second consecutive run with this property. After Run #017's swap, the non-target lists already covered the right unspecialised set for both #018 and #019.
+- **EAA worded as "in full effect since June 2025".** The regulation was enacted in 2019 with a 2025-06-28 enforcement date for in-scope products and services. Phrasing it as "in full effect since June 2025" is current-as-of-Apr-2026 and won't read stale during the typical lifetime of a generated kit.
+- **Retail picked over `creative & media`.** Both have substantive depth. Retail won on (a) breadth of likely user-base relevance, (b) regulatory density that makes the bullets concrete and durable, and (c) zero-drift guarantee for `examples/`. Creative & media moves to top of the next-session shortlist along with `non-profit & community` and `real estate` as candidate ninths.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`creative & media`** (rights / licensing / royalty traceability, contributor-vs-platform trust, AI-generated content disclosure under EU AI Act + state laws, takedown response under DMCA / DSA) or **`real estate`** (fair-housing rules, PII handling on inquiries, MLS / IDX integrations, dual-agent disclosure, jurisdictional patchwork on rental + tenancy + listing accuracy). Public landing page is still waiting on a one-time owner action.
+
+---
+
 ## Run #018 — 2026-04-30 — Domain depth: seventh domain (`logistics & supply chain`)
 
 **Phase:** Phase 1 — Generation quality (continued)
