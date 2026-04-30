@@ -2,6 +2,60 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #026b — 2026-04-30 — i18n Hotfix: untranslated strings + friendlier persist-checkbox text
+
+**Trigger:** Owner reported on first DE-locale visit: "es gibt noch Übersetzungen die nicht gemacht wurden". Screenshot showed the direct-form (`Your project idea`, `Generate kit`, `Also write files to output/<slug>/`), the gallery section heading + subtitle, the tagline, and the footer all still in English — while the dynamically-rendered card buttons (`Jetzt erzeugen`, `Vorschau`, `Diese Idee benutzen`) were correctly German. Plus a UX request: *"Soll das Kästchen zum anklicken einen besseren text haben"* — the persist checkbox `Also write files to output/<slug>/` is technical jargon for non-tech users.
+
+**Root cause analysis**
+
+The split (cards = DE, static text = EN) is the diagnostic clue. `t()` was working — the cards prove that. `applyTranslations()` either didn't run, or ran with an outdated `currentLocale`, or the user's browser had a cached version of `index.html` from before Run #026 (no `data-i18n` attributes) paired with the fresh `app.js` (calls `t()` on dynamic elements).
+
+The most likely cause: the Bootstrap order in `app.js` was the *only* place that called `applyTranslations()`. If `app.js` failed to import `/i18n.js` for any reason — Vercel cache hiccup, ESM-import edge-case, transient 304-with-stale-body — the static strings would never get translated, but the cards would only render later (after `loadExamples`), which gave the i18n system more time to recover.
+
+**Fixes**
+
+1. **Auto-apply on DOM ready, inside `i18n.js` itself.** Defends against any caller forgetting to call `applyTranslations()`. Idempotent — calling it twice is fine. Eight lines added at the bottom of `i18n.js`:
+   ```js
+   if (document.readyState === "loading") {
+     document.addEventListener("DOMContentLoaded", () => applyTranslations());
+   } else {
+     applyTranslations();
+   }
+   ```
+   This ensures the static `[data-i18n*]` elements get translated even if `app.js` doesn't (or hasn't yet) call `applyTranslations`.
+
+2. **Persist checkbox text rewritten in plain language.**
+   - Before: `Also write files to output/<slug>/` (EN) / `Dateien zusätzlich nach output/<slug>/ schreiben` (DE) — both used `<code>` to highlight the technical path, both required `data-i18n-html` (HTML-replace).
+   - After: `Save a copy on my computer` (EN) / `Eine Kopie auf meinem Computer speichern` (DE) — first-person ("my"), no jargon, no path. Plain `data-i18n` (textContent) so the strings don't carry HTML.
+   - Same change applied to both checkbox surfaces: the wizard step 4 (`step4.persist` — adds `(local only)` / `(nur lokal)` suffix because it's the user-facing wizard) and the direct form (`direct.persist` — no suffix, the whole form is local-only by virtue of being the local app).
+   - HTML: the two `<span data-i18n-html="...persist.html">` elements are now `<span data-i18n="...persist">`. Saves a small amount of HTML parsing and matches the simpler text.
+
+3. **Card-meta and result-meta lines translated.** Two strings that were still hard-coded English template literals:
+   - `${ex.fileCount} files · slug: ${ex.slug}` → `t("card.meta", { count, slug })` → German uses `Slug` (capitalised, German convention) and `Dateien` for `files`.
+   - `${productType} · ${audience} · ${domain} · slug: ${slug}` → `t("result.meta", { ... })` → German uses `für` for `for` and `im Bereich` for `in <domain>`.
+
+**Files touched**
+- Modified: `public/i18n.js` (auto-apply hook + 4 string changes — 2 EN, 2 DE for persist; +2 EN, +2 DE for card.meta and result.meta; the original `*persist.html` keys removed), `public/index.html` (2 `data-i18n-html` → `data-i18n` swaps, fallback English text updated), `public/app.js` (1 line: `t("card.meta")`, 2 lines: `t("result.meta")` via sed).
+- **Untouched:** server, src, tests, examples, docs.
+
+**Tests run**
+- `npm test` → **81/81** pass.
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- `jsdom` smoke (forced `bk-lang=de` then `applyTranslations`): **13/13** specific selectors translated correctly across header, form, gallery, footer, wizard, and result panel.
+- HTTP smoke against `node server.js`: served HTML carries the new `data-i18n="step4.persist"` and `data-i18n="direct.persist"` (no more `-html` variant on those); served `i18n.js` carries both the new persist strings and the auto-apply DOMContentLoaded handler.
+
+**Drift accounting**
+None. Pure UI / i18n change.
+
+**Known limitations**
+- The auto-apply in `i18n.js` runs on import, which means it fires *before* anything else on the page if no scripts had a chance to execute earlier. That's by design — the goal is "ensure translations apply, period". Idempotency means subsequent `setLocale()` calls re-run cleanly.
+- On a freshly-deployed page, a returning user with the previous version cached still has to hard-reload. There is no cache-busting query string on `/i18n.js`. Acceptable for a low-traffic landing-app pair where users return rarely; revisit if it becomes a real problem.
+
+**What this run leaves**
+The Vercel auto-redeploy on push will publish the fix. Owner should hard-reload (Strg+Shift+R) once after Vercel signals the new build is ready, then verify the static strings now match the locale.
+
+---
+
 ## Run #026 — 2026-04-30 — Deutsche Sprachvariante (i18n auf beiden Pages)
 
 **Phase:** Phase 2 — Reach (concluding the polish layer).
