@@ -2,6 +2,54 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #016 — 2026-04-30 — One-click "Generate now" on gallery cards
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Cut the gallery flow from two clicks to one. Up to now, the path from "land on the page" to "see a generated kit produced from a worked idea" was: click **Use this idea** → idea fills the form → click **Generate kit**. The first-time-visitor "wow" moment was gated behind that second click. Add a **Generate now** button to each gallery card that runs the same end-to-end generate pipeline on click, populates the textarea so the user can see the round-trip, and scrolls to the result.
+
+**What changed**
+- `public/app.js`:
+  - Extracted a shared `runGenerate(idea, { scrollToResult })` helper. Both the form's submit handler and the new card button funnel through it, so the network contract, the render path, and the source-badge logic stay in exactly one place.
+  - Added `generateFromCard(idea, triggerBtn)` — disables the card button, sets its label to "Generating…", mirrors the idea into the textarea (so the live-inference preview line and audience parsing fire as if the user typed it), calls `runGenerate` with `scrollToResult: true`, and restores the button regardless of success/failure.
+  - Added a third button to each gallery card. Order is now **Generate now** (primary, accent fill), **Preview example** (secondary), **Use this idea** (secondary). The previous "Preview example" was the primary; demoting it to secondary signals the new card-level call to action without removing the faster-loading example path.
+  - The form's submit handler is unchanged behaviourally — it now just delegates the network/render work to `runGenerate`.
+- `public/style.css`: untouched. The default `button` rule already paints accent fill, and `button.secondary` already covers the other two. The existing `.example-card .card-actions { gap: 8px; flex-wrap: wrap; }` handles three buttons on narrow widths without further work.
+
+**Files touched**
+- Modified: `public/app.js`, `RUN_LOG.md`, `CLAUDE.md`, `README.md`.
+- **Untouched:** `public/index.html`, `public/style.css`, `server.js`, `src/**`, `tests/**`, `examples/**`, `docs/**`, `scripts/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **71/71** pass. No test changes needed — the gallery's button layout is dynamic DOM that the existing test suite doesn't assert on.
+- `npm run audit:a11y` → 0 axe violations on either page (37 / 25 rules), all 13 contrast pairs pass WCAG AA, lowest still 5.15:1. Static HTML didn't change, so the audit's coverage didn't change either.
+- Live smoke: started the server, hit `/api/health` → `{"ok":true}`, hit `/api/generate` with the `small-business-website-system` example's idea → 12 files, slug `website-system-for-small-local-businesses`, productType `website`, domain `small business`. Hit `/api/preview` with the SaaS-accountants idea → context returned with productType `web app`, domain `professional services`, audience `small business accountants`. Confirmed the served `/app.js` contains `Generate now`, `generateFromCard`, and `runGenerate`.
+
+**UX details worth knowing**
+- **Mirroring the idea into the textarea on click is intentional, not cosmetic.** It (a) makes the round-trip visible (the user sees their input materialise in the form they would have typed into), (b) fires the live-inference preview line so "Detected: web app · for small business accountants · in professional services" lights up underneath the textarea right before the result renders, and (c) leaves the textarea pre-filled if the user wants to tweak the idea and re-generate.
+- **Scroll-to-result on card-click only.** The form's submit handler doesn't scroll because the submit button is right above the result section; the scroll would feel jumpy. The card button is much further up the page (gallery sits below the form), so the scroll is necessary to reveal the freshly-rendered result without the user having to hunt for it.
+- **The card button shows its own "Generating…" label** independently of the global status line. Status still updates ("Generating…" → "Generated 12 files."), but the per-button label gives local feedback so the user doesn't have to look away from where their click landed.
+- **Race-safety**: `generateFromCard` is `async` and disables the trigger button for the duration. If a user clicks Generate now on card A and then card B before the first finishes, the second click is allowed (different button). That's a non-issue in practice — both calls hit the same idempotent endpoint and the latter's `renderResult` simply overwrites the first. Adding a global "in flight" lock would be over-engineering for a kit where Generate kit also accepts back-to-back submissions.
+
+**Drift accounting**
+None. Generator behaviour is unchanged, examples regenerate byte-identically (no reason to run `npm run generate:examples` — no template touched), and the static HTML is unchanged so the a11y audit holds.
+
+**Known limitations**
+- The new button is text-only ("Generate now"). It could earn an icon for visual differentiation from "Preview example", but adding an SVG icon for a single button is an inconsistency the rest of the UI doesn't have. Skipped.
+- On very narrow viewports (≤ ~360 px), three card buttons can wrap onto three lines. That's by design — `flex-wrap: wrap` is the right call there; the cards stay readable. Tested mentally; not worth a media-query change.
+- The card click bypasses the `persist` checkbox the user might have ticked at the top of the form. We use whatever `persist` is currently set to. That's correct — the checkbox is a global form preference, not a per-card setting.
+
+**Decisions**
+- **Button hierarchy is "Generate now (primary), Preview example (secondary), Use this idea (secondary)".** Previously "Preview example" was the primary. Demoting it sounds risky but is right: a first-time visitor who clicks the primary action of a gallery card now gets the full generator round-trip. The faster-loading "Preview example" path is preserved for users who want to skip rendering, and "Use this idea" stays as the explicit "I want to edit this before generating" escape hatch.
+- **No new CSS class for the primary card button.** The default `button` rule already paints it correctly. Adding a `.card-cta` class would be a layer of indirection without a behavioural difference; we'd be inventing a name for "default button styling".
+- **No global in-flight lock across cards.** Two reasons: (a) the form's Generate kit button doesn't have one either, so adding one only on the gallery would be inconsistent; (b) the worst case is two API round-trips with the second's render winning, which is fine.
+- **Mirror the idea into the textarea on click.** Considered keeping the textarea blank to avoid surprising the user with content they didn't type. Rejected: making the round-trip visible is the whole point of this change.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`education` or `logistics & supply chain` as the sixth specialised domain** (same mechanism as Runs #008 / #010 / #013 / #015). Public landing page is still waiting on a one-time owner action (Settings → Pages → Source: main / /docs).
+
+---
+
 ## Run #015 — 2026-04-30 — Domain depth: fifth domain (`food & hospitality`)
 
 **Phase:** Phase 1 — Generation quality (continued)

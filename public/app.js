@@ -112,8 +112,15 @@ function renderExampleCards(examples) {
     const actions = document.createElement("div");
     actions.className = "card-actions";
 
+    const generateBtn = document.createElement("button");
+    generateBtn.type = "button";
+    generateBtn.textContent = "Generate now";
+    generateBtn.setAttribute("aria-label", `Generate kit from idea: ${ex.idea}`);
+    generateBtn.addEventListener("click", () => generateFromCard(ex.idea, generateBtn));
+
     const previewBtn = document.createElement("button");
     previewBtn.type = "button";
+    previewBtn.className = "secondary";
     previewBtn.textContent = "Preview example";
     previewBtn.setAttribute("aria-label", `Preview example: ${ex.title}`);
     previewBtn.addEventListener("click", () => previewExample(ex.id, previewBtn));
@@ -125,7 +132,7 @@ function renderExampleCards(examples) {
     useBtn.setAttribute("aria-label", `Use this idea as input: ${ex.idea}`);
     useBtn.addEventListener("click", () => useIdea(ex.idea));
 
-    actions.append(previewBtn, useBtn);
+    actions.append(generateBtn, previewBtn, useBtn);
     li.append(title, idea, desc, meta, actions);
     galleryEl.appendChild(li);
   }
@@ -189,6 +196,31 @@ function useIdea(idea) {
 
 // ---- Generate flow ----
 
+async function runGenerate(idea, { scrollToResult = false } = {}) {
+  const res = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idea, persist: persistInput.checked })
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data.error || "Generation failed.");
+  }
+  renderResult({
+    projectName: data.context.projectName,
+    meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
+    files: data.files,
+    slug: data.context.slug,
+    idea,
+    source: "generate",
+    writtenToPath: data.writtenTo
+  });
+  if (scrollToResult) {
+    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  return data;
+}
+
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const idea = ideaInput.value.trim();
@@ -201,25 +233,7 @@ form.addEventListener("submit", async (e) => {
   setStatus("Generating…");
 
   try {
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ idea, persist: persistInput.checked })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setStatus(data.error || "Generation failed.", true);
-      return;
-    }
-    renderResult({
-      projectName: data.context.projectName,
-      meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
-      files: data.files,
-      slug: data.context.slug,
-      idea,
-      source: "generate",
-      writtenToPath: data.writtenTo
-    });
+    const data = await runGenerate(idea);
     setStatus(`Generated ${data.files.length} files.`);
   } catch (err) {
     setStatus(err.message || "Network error.", true);
@@ -227,6 +241,28 @@ form.addEventListener("submit", async (e) => {
     submitBtn.disabled = false;
   }
 });
+
+async function generateFromCard(idea, triggerBtn) {
+  const original = triggerBtn ? triggerBtn.textContent : null;
+  if (triggerBtn) {
+    triggerBtn.disabled = true;
+    triggerBtn.textContent = "Generating…";
+  }
+  ideaInput.value = idea;
+  ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
+  setStatus("Generating…");
+  try {
+    const data = await runGenerate(idea, { scrollToResult: true });
+    setStatus(`Generated ${data.files.length} files.`);
+  } catch (err) {
+    setStatus(err.message || "Network error.", true);
+  } finally {
+    if (triggerBtn) {
+      triggerBtn.disabled = false;
+      triggerBtn.textContent = original;
+    }
+  }
+}
 
 // ---- Copy + Download ZIP ----
 
