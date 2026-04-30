@@ -19,12 +19,12 @@
     "build:og": "node scripts/build-og.js"
   },
   "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "archiver": "^7.0.1",
     "express": "^4.19.2"
   },
   "license": "MIT",
   "devDependencies": {
-    "@resvg/resvg-js": "^2.6.2",
     "axe-core": "^4.11.4",
     "jsdom": "^29.1.0"
   }

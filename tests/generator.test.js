@@ -794,3 +794,85 @@ test("POST /api/generate still works after gallery additions", async () => {
     await new Promise((r) => server.close(r));
   }
 });
+
+test("GET /api/og without idea returns the static PNG", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/og`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") || "", /image\/png/);
+    assert.match(res.headers.get("cache-control") || "", /max-age=\d+/);
+    const buf = Buffer.from(await res.arrayBuffer());
+    // PNG magic bytes 89 50 4E 47
+    assert.deepEqual(Array.from(buf.subarray(0, 4)), [0x89, 0x50, 0x4e, 0x47]);
+    assert.ok(buf.length > 50_000, `expected substantial PNG, got ${buf.length} bytes`);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /api/og?idea=X returns a dynamic PNG with the idea spliced in", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/og?idea=A%20training%20plan%20app%20for%20amateur%20runners`);
+    assert.equal(res.status, 200);
+    assert.match(res.headers.get("content-type") || "", /image\/png/);
+    const buf = Buffer.from(await res.arrayBuffer());
+    assert.deepEqual(Array.from(buf.subarray(0, 4)), [0x89, 0x50, 0x4e, 0x47]);
+    assert.ok(buf.length > 30_000);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET / serves unmodified HTML when ?idea= is absent", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/`);
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.match(html, /content="\/api\/og"/);
+    assert.match(html, /<meta property="og:title" content="Claude Code Public Builder Kit"/);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /?idea=X patches og:image and og:title to a per-idea variant", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/?idea=A%20training%20plan%20app`);
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    assert.match(html, /content="\/api\/og\?idea=A%20training%20plan%20app"/);
+    assert.match(html, /<meta property="og:title" content="A training plan app — Builder Kit"/);
+    assert.match(html, /<meta name="twitter:title" content="A training plan app — Builder Kit"/);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});
+
+test("GET /?idea=X HTML-escapes hostile content in og:title", async () => {
+  const server = app.listen(0);
+  await new Promise((r) => server.once("listening", r));
+  const port = server.address().port;
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/?idea=${encodeURIComponent('<script>alert(1)</script>')}`);
+    assert.equal(res.status, 200);
+    const html = await res.text();
+    // Only the patched meta tags should reference the literal idea — and
+    // they must be escaped so no <script> escapes the attribute context.
+    assert.equal(html.includes("<script>alert(1)"), false);
+    assert.match(html, /og:title" content="&lt;script&gt;alert\(1\)&lt;\/script&gt; — Builder Kit"/);
+  } finally {
+    await new Promise((r) => server.close(r));
+  }
+});

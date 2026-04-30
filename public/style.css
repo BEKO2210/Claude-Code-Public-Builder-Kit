@@ -1126,6 +1126,49 @@ button.primary:hover {
 }
 .linkish:hover { color: var(--accent-press); background: transparent; }
 
+/* Mode toggle — top-of-main segmented control between guided wizard and
+   direct-text input. Two equally-weighted tabs so users immediately see
+   that the wizard is one of two ways in, not the only way. */
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 32px 0 18px;
+  padding: 6px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.mode-tab {
+  display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+  gap: 4px;
+  background: transparent; color: var(--muted);
+  padding: 14px 18px; min-height: 64px;
+  border: 1px solid transparent; border-radius: var(--radius-md);
+  text-align: left; cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast), transform var(--t-fast);
+}
+.mode-tab:hover { background: var(--panel-2); color: var(--text); }
+.mode-tab.is-active {
+  background: var(--accent-soft); color: var(--text);
+  border-color: var(--accent);
+  box-shadow: 0 1px 0 var(--accent-soft);
+}
+.mode-tab-title {
+  font-size: 16px; font-weight: 600; letter-spacing: 0.005em;
+}
+.mode-tab.is-active .mode-tab-title { color: var(--accent); }
+.mode-tab-sub {
+  font-size: 13px; color: var(--muted); font-weight: 400;
+}
+@media (max-width: 540px) {
+  .mode-toggle { gap: 6px; padding: 5px; margin-top: 24px; }
+  .mode-tab { padding: 12px 14px; min-height: 60px; }
+  .mode-tab-title { font-size: 15px; }
+  .mode-tab-sub { font-size: 12px; }
+}
+
 /* Mobile wizard tweaks */
 @media (max-width: 540px) {
   .wizard { padding: 20px; }

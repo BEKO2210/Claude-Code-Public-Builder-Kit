@@ -15,7 +15,8 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 ├── .github/workflows/ci.yml  # Tests + example reproducibility check on push/PR
 ├── LICENSE                   # MIT
 ├── server.js                 # Express app: /api/health, /api/generate, /api/generate.zip,
-│                             #              /api/examples, /api/examples/:id, /api/preview.
+│                             #              /api/examples, /api/examples/:id, /api/preview, /api/og.
+│                             # Also patches og:image / og:title on GET / when ?idea=X is set.
 │                             # Exports the app as default; only listens when run as a CLI
 │                             # (auto-listen guard: process.argv[1] === server.js).
 ├── api/
@@ -40,6 +41,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── context.js            # Heuristic idea → {projectName, slug, productType, audience, domain, generatedAt}
 │   ├── schema.js             # Context typedef + validateContext + assertContext (single contract for templates)
 │   ├── examples.js           # SINGLE SOURCE OF TRUTH for worked examples (id, idea, title, description, now)
+│   ├── og.js                 # Dynamic OG card renderer — wrapIdea, buildSvgForIdea, renderOgPng (in-memory LRU)
 │   ├── templates/            # 12 modules, each `(ctx) => markdown string`
 │   └── utils/
 │       ├── slug.js           # slugify + acronym-aware titleCase
@@ -54,13 +56,15 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (71 tests, no external deps)
+│   └── generator.test.js     # node:test suite (94 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 
-Runtime dependencies: **express** (HTTP), **archiver** (ZIP). Nothing else.
+Runtime dependencies: **express** (HTTP), **archiver** (ZIP), **@resvg/resvg-js** (rasterise the dynamic OG card from a templated SVG). Three runtime deps, no more.
 
-DevDependencies: **axe-core** + **jsdom** (a11y test), **@resvg/resvg-js** (PNG render of the OG card). All audit-only / build-only. The runtime promise (two deps) is unchanged.
+DevDependencies: **axe-core** + **jsdom** (a11y test). All audit-only.
+
+`@resvg/resvg-js` was promoted from devDep to runtime dep in Run #036 to support `/api/og?idea=X` (per-shared-kit OG image). The decision is recorded in `RUN_LOG.md` and was explicitly approved by the owner. Don't add a fourth runtime dep without the same paper trail.
 
 ### Example registry as source of truth
 
@@ -100,7 +104,8 @@ These are non-negotiable. Don't regress them:
 - `src/templates/*.js` — each exports a default function `(ctx: Context) => string`. Keep templates close to 100–250 lines of generated markdown. Longer is fine if substantive; padding is not.
 - `src/templates/domain-blocks.js` — small helper holding domain-conditional content for `MASTERPLAN.md` and `DOCS/product-brief.md`. Keys must be values from `DOMAIN_VALUES` (the load-time check throws on typos). Returns `""` for any unspecialised domain — never an empty heading. To specialise a new domain, add bullets here and run `npm run generate:examples`; drift in `examples/<id>/` is acceptable only if that example's domain matches the key you added.
 - `src/utils/zip.js` — pure function. Validates root name and entry paths against traversal. Don't allow callers to bypass that validation.
-- `server.js` — keep it boring. Validate input at the boundary (`/api/generate`, `/api/generate.zip`, `/api/preview`), reject anything > 500 chars, never let the slug escape `output/`. The lightweight `/api/preview` endpoint exists so the UI can show live inference results as the user types — it must stay cheap (calls `buildContext` only, no template rendering). The file exports the Express app as default and only listens when started as a CLI (the `process.argv[1]` guard at the bottom); both `npm start` and the Vercel adapter rely on that pattern. **Do not** add a top-level `app.listen()`.
+- `server.js` — keep it boring. Validate input at the boundary (`/api/generate`, `/api/generate.zip`, `/api/preview`, `/api/og`), reject anything > 500 chars, never let the slug escape `output/`. The lightweight `/api/preview` endpoint exists so the UI can show live inference results as the user types — it must stay cheap (calls `buildContext` only, no template rendering). The file exports the Express app as default and only listens when started as a CLI (the `process.argv[1]` guard at the bottom); both `npm start` and the Vercel adapter rely on that pattern. **Do not** add a top-level `app.listen()`. The `GET /` and `GET /index.html` interceptor lives **before** `express.static` so it can patch og:image / twitter:image / og:title / twitter:title when `?idea=X` is in the query — without that order, static would short-circuit and the share preview never updates.
+- `src/og.js` — dynamic OG renderer. Reads `docs/og-source.svg` once (cached promise), templates the three headline `<text>` lines with up to three wrapped lines of the user's idea, rasterises via `@resvg/resvg-js`. In-memory LRU cap of 64 PNGs keyed on the lower-cased idea — small enough not to leak, large enough to absorb a viral burst. All errors fall back to the static `docs/og-card.png` so a missing font or malformed SVG never 500s the share-preview.
 - `api/index.js` — three lines. Re-exports the Express app from `server.js` as the Vercel Serverless handler. If you find yourself adding logic here, you are working around `server.js` — fix it there instead so the local and hosted code paths stay identical.
 - `vercel.json` — catch-all rewrite, `version: 2`. Don't add build commands, don't add functions config, don't add env. The whole config fits in 6 lines.
 - **Hosted-mode behaviours** controlled by `process.env.VERCEL === "1"` in `server.js`:

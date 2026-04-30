@@ -23,6 +23,12 @@ const STRINGS = {
     "wizard.title": "Tell me about your idea",
     "wizard.subtitle": "Four short questions. We turn your answers into a complete project plan in 12 files.",
 
+    "mode.toggle.aria": "Choose how to enter your idea",
+    "mode.wizard.title": "Guided steps",
+    "mode.wizard.sub": "Four short questions",
+    "mode.direct.title": "Just type my idea",
+    "mode.direct.sub": "One sentence is enough",
+
     "wizard.step.what": "What",
     "wizard.step.who": "Who",
     "wizard.step.why": "Why",
@@ -61,9 +67,9 @@ const STRINGS = {
 
     "step2.question": "Who is it for?",
     "step2.help": "In your own words. The clearer you are about the audience, the more useful the kit will be.",
-    "step2.placeholder": "e.g. parents of small children, busy restaurant owners, music teachers",
+    "step2.placeholder": "e.g. small business owners, freelance designers, hobby photographers, junior developers",
     "step2.nudge.title": "A bit more specific would help.",
-    "step2.nudge.body": "Try: \"<em>parents of kindergarten children</em>\", \"<em>working parents with toddlers</em>\", or \"<em>single parents with school-age kids</em>\". The kit can do a lot more for a sharper audience.",
+    "step2.nudge.body": "Try: \"<em>solo developers building side projects</em>\", \"<em>independent cafe owners under 10 staff</em>\", or \"<em>community theatre directors</em>\". The kit can do a lot more for a sharper audience.",
     "step2.pill.smb": "small business owners",
     "step2.pill.parents": "parents and families",
     "step2.pill.students": "students and learners",
@@ -202,6 +208,12 @@ const STRINGS = {
     "wizard.title": "Erzähl mir von deiner Idee",
     "wizard.subtitle": "Vier kurze Fragen. Wir machen daraus einen vollständigen Projektplan in 12 Dateien.",
 
+    "mode.toggle.aria": "Wähle, wie du deine Idee eingeben willst",
+    "mode.wizard.title": "Geführte Schritte",
+    "mode.wizard.sub": "Vier kurze Fragen",
+    "mode.direct.title": "Idee direkt eintippen",
+    "mode.direct.sub": "Ein Satz reicht",
+
     "wizard.step.what": "Was",
     "wizard.step.who": "Für wen",
     "wizard.step.why": "Wofür",
@@ -240,9 +252,9 @@ const STRINGS = {
 
     "step2.question": "Für wen ist es?",
     "step2.help": "In deinen eigenen Worten. Je klarer die Zielgruppe, desto nützlicher wird das Kit.",
-    "step2.placeholder": "z.B. Eltern kleiner Kinder, gestresste Restaurant-Besitzer, Musiklehrerinnen",
+    "step2.placeholder": "z.B. kleine Selbstständige, freie Fotografen, Junior-Entwickler, Hobbygärtner",
     "step2.nudge.title": "Etwas konkreter wäre hilfreich.",
-    "step2.nudge.body": "Versuch's mal mit: „<em>Eltern von Kindergartenkindern</em>”, „<em>berufstätige Eltern mit Kleinkindern</em>” oder „<em>Alleinerziehende mit Schulkindern</em>”. Je schärfer die Zielgruppe, desto mehr kann das Kit damit anfangen.",
+    "step2.nudge.body": "Versuch's mal mit: „<em>selbstständige Entwickler in Nebenprojekten</em>”, „<em>Café-Besitzer mit unter 10 Mitarbeitenden</em>” oder „<em>Leiter von Amateurtheatergruppen</em>”. Je schärfer die Zielgruppe, desto mehr kann das Kit damit anfangen.",
     "step2.pill.smb": "kleine Unternehmer",
     "step2.pill.parents": "Eltern und Familien",
     "step2.pill.students": "Schüler und Lernende",
