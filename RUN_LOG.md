@@ -2,6 +2,103 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #022b — 2026-04-30 — Hotfix: ENOENT on Vercel persist write
+
+**Phase:** Phase 2 — Reach (continued from #022).
+**Duration:** ~10 minutes.
+**Trigger:** Owner deployed Run #022 to Vercel and hit `ENOENT: no such file or directory, mkdir '/var/task/output'` on the very first generate. Root cause: the persist checkbox in the local app ships **checked by default**, the user kept it checked, and the request reached the server with `persist: true`. The IS_HOSTED sniff (`process.env.VERCEL === "1"`) didn't trip on this particular Vercel runtime, so the server happily called `writeKit()` against the read-only `/var/task` filesystem and 500'd.
+
+**What changed**
+- `server.js` — three fixes, in defence-in-depth order:
+  1. **Broader hosted-mode sniff.** Checks `process.env.VERCEL`, `process.env.VERCEL_ENV`, `process.env.VERCEL_URL`, `process.env.NOW_REGION`, `process.env.AWS_LAMBDA_FUNCTION_NAME`, *and* whether `__dirname.startsWith("/var/task")`. Any one trips hosted mode. The path-based sniff is the one that catches Vercel runtimes where the documented env vars are unexpectedly missing.
+  2. **`writeKit()` is wrapped in try/catch.** If the broader sniff *still* misses (some future serverless platform we haven't seen), the request no longer 500s. Instead `writtenTo` stays `null` and a new `persistError` field surfaces a friendly note ("filesystem is read-only on this deployment; ZIP download still works"). The generated files are returned successfully — the user keeps the result.
+  3. **`EROFS` and `ENOENT` mapped to a friendly message**, anything else surfaces `err.message`.
+- `public/app.js`:
+  - On boot, fetches `/api/health` and if `hosted: true`, **unchecks and hides the entire persist-checkbox row**. Hosted users no longer see a confusing "write to disk" toggle that has no effect.
+  - `renderResult` now accepts `persistError` and shows it in the same slot where `Written to: …` would have appeared, so the user has a one-line explanation if persistence fell back.
+
+**Files touched**
+- Modified: `server.js`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** everything else.
+
+**Tests run**
+- `npm test` → **81/81** pass. No test changes — the new `persistError` field is additive and the existing tests don't assert on response keys they don't care about.
+- Hosted-mode simulation locally with `VERCEL=1 node server.js`:
+  - `/api/health` → `{"ok":true,"hosted":true}`. ✓
+  - `POST /api/generate` with `persist: true` → `hosted:true`, `writtenTo:null`, `persistError:null`, 12 files. **No 500.** ✓
+- Local mode (no env) preserved: `hosted:false`, persist works as before.
+
+**Drift accounting**
+None. Templates, examples, and the CLAUDE.md / README architecture sections from Run #022 still describe the system correctly — only the hosted detection got more paranoid.
+
+**Owner action**
+None. Pushing this branch triggers Vercel's auto-redeploy; ~30 seconds after push, the production URL serves the hotfix. The hosted-detection improvements take effect on the first cold start.
+
+**Lessons**
+- "Always assume the env-var sniff misses" — defence in depth (sniff + try/catch + UI hide) is cheaper than relying on any one signal. The combination would have caught the Vercel ENOENT even if every single sniff had failed.
+- Default-`checked` persist was a local-first artefact that became a footgun on hosted. Run #023's wizard should re-examine which defaults make sense per environment.
+
+---
+
+## Run #022 — 2026-04-30 — Hosted Web-Version (Vercel) — kein npm install mehr nötig
+
+**Phase:** Phase 2 — Reach. Closing the "non-technical user" gap that the local-only architecture was leaving open.
+**Duration:** ~0.5 session
+**Goal going in:** The whole tool to date assumed the user is comfortable with `npm install && npm start` — which excludes ~95% of the people the kit is supposed to help (anyone who would not recognise a terminal). Goal: make the same generator reachable through a URL, without forking the codebase. Pivot trigger was a direct user request ("mein Vater 65 weiß nicht mal was [ein Terminal] ist") — the local-first guarantee stays, hosted is added on top.
+
+**What changed**
+- New file `vercel.json` — six-line config, `version: 2`, single catch-all rewrite (`/(.*) → /api`). No build command, no functions config, no env. Vercel auto-detects Node 22, treats `public/` as static (served before the rewrite), and routes everything else to the function.
+- New file `api/index.js` — three lines. `import app from "../server.js"; export default app;`. The Vercel Serverless handler is the same Express app `npm start` uses locally. **Zero logic in `api/`** — that's a deliberate constraint to keep the hosted and local paths from drifting.
+- `server.js` extended with three hosted-mode behaviours, all gated on `process.env.VERCEL === "1"`:
+  1. **`IS_HOSTED` flag** — surfaced in `/api/health` and `/api/generate` responses so the UI can adapt copy if needed (it doesn't yet; it can later).
+  2. **Filesystem `persist` force-disabled on hosted.** Locally the user can opt in (default `true`); on hosted, even if the request body says `persist: true`, we ignore it. There is no writable disk on serverless, and even if there were, we don't want one user's slug to collide with the next.
+  3. **Rate limiter** on `/api/generate` and `/api/generate.zip`. 30 requests / IP / 60 s, in-memory `Map`, lazy expiry. Returns `429` with `Retry-After` header. Best-effort on serverless because each Vercel function instance has its own Map; the limiter still meaningfully raises the cost of abuse because warm instances persist long enough that a bad actor lands on the same instance repeatedly.
+- The `app.listen()` block at the bottom of `server.js` was already correctly gated on `process.argv[1] === server.js` (from the original scaffold) — no change needed. That guard is what lets `import app from "../server.js"` not start a listener on Vercel.
+- `README.md` gained a **Hosted version (no install)** section above the local install instructions, explicitly aimed at non-technical users; the project-structure tree now lists `api/index.js` and `vercel.json`.
+- `CLAUDE.md` architecture tree updated; file-by-file conventions added for `api/index.js` and `vercel.json`; the `server.js` entry now documents the auto-listen guard explicitly so future maintainers don't accidentally add a top-level `app.listen()` and break the import-from-Vercel path.
+
+**Files touched**
+- Added: `vercel.json`, `api/index.js`.
+- Modified: `server.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `public/**`, `docs/**`, `src/**`, `tests/**`, `examples/**`, `scripts/**`, `package.json`, `package-lock.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **81/81** pass. No test changes needed: the existing suite already counts ≤6 calls on rate-limited endpoints per run, well under the 30-per-IP-per-60s limit. Locally `process.env.VERCEL` is undefined, so persist-on-disk works exactly as before.
+- Live smoke against `node server.js`:
+  - `/api/health` → `{"ok":true,"hosted":false}`. ✓
+  - `POST /api/generate` (idea: "Eine App für kleine Restaurants") → 12 files, slug `eine-app-fur-kleine-restaurants`, `hosted: false`. ✓
+  - 32 rapid-fire `POST /api/generate` from one IP → first 30 succeed (200/400), then 429 with `Retry-After: 60`. ✓
+- Manual readback of `api/index.js` confirms it is exactly two import + export lines; CI will catch if it drifts.
+
+**Drift accounting**
+None. `examples/` not regenerated this run (no template change). Tests, generators, and templates are byte-identical to Run #021.
+
+**Owner action required to deploy**
+This run prepares the codebase for Vercel; the actual deploy is a one-time owner action (same shape as the GitHub Pages enablement after Run #005). Steps for the next session:
+1. Sign in at vercel.com with the same GitHub account that owns the repo.
+2. **Add New… → Project**, select the `Claude-Code-Public-Builder-Kit` repo. No build settings to change — Vercel detects Node and uses `vercel.json` as-is.
+3. Click **Deploy**. ~30 s later there is a working `https://*.vercel.app` URL.
+4. Optional: in **Settings → Domains**, add a custom domain.
+5. The new URL goes into a follow-up commit that adds a "Tool starten" button to `docs/index.html` (the GitHub Pages landing page) — that's tracked as the first todo of Run #023 so the landing page can link to a real, alive endpoint.
+
+**Known limitations**
+- **Rate limiter is per-instance.** Vercel may run multiple warm function instances behind a single deployment URL when traffic is bursty; each instance counts its own 30-per-minute budget. The effective per-IP limit is therefore "30 × number-of-warm-instances per minute". Adequate for casual abuse and for capping function-quota spend; not a DoS shield. Upgrading to a shared store (Vercel KV, Upstash Redis) would close that gap but adds a runtime dependency we haven't taken on.
+- **No filesystem persist on hosted.** That's a feature, not a bug — but UX implications: hosted users see no `Written to: …` line under the generated kit; the only path to keep the output is the **Download ZIP** button. The local app still shows the path when `persist` is enabled. The UI handles missing `writtenTo` gracefully (the `<p id="written-to">` simply stays empty).
+- **`hosted` flag is exposed but not yet used by the UI.** I intentionally did not branch the front-end on it in this run — that's a Run #023 concern, where the wizard / "what-do-I-do-now" panel will probably want hosted-specific copy.
+- **Vercel's `process.env.VERCEL`** equals `"1"` in **every** Vercel runtime (build + serverless preview + production). I rely on that contract; if Vercel changes it, the persist + rate-limit hosted-mode flags revert to local-mode behaviour silently. That degrades safely (rate-limit still works, persist would attempt to write to read-only FS and would 500 on the request — visible failure, not silent breakage).
+
+**Decisions**
+- **Vercel over Render / Cloudflare Workers / Fly.io.** Render's free tier cold-start is 30 s — would feel broken to a first-time visitor (the very person we're trying to help). Cloudflare Workers would have required porting Express to Hono / Workers-style handlers — direct violation of the "no architectural rewrite" intent and of CLAUDE.md's "no build step" rule. Fly's setup is heavier than Vercel's. Vercel deploys in 30 s, free tier is generous, no cold-start in production for our traffic shape, Express runs unchanged.
+- **Re-export pattern over forked entry points.** The cleanest hosted/local split is "one Express app, two callers" — `server.js` exports the app, both `npm start` and `api/index.js` consume it. Tried briefly with a separate `createApp()` factory in `src/app.js`; reverted because it added a layer of indirection without behavioural difference. The existing `process.argv[1]` guard already does the right thing.
+- **Rate-limit `/api/generate` and `/api/generate.zip` only.** `/api/preview` is intentionally not rate-limited — it's a debounced live-inference endpoint that fires on every keystroke; gating it with the same limiter would block the typing UX. `/api/preview` is also cheap (no template rendering, no I/O), so the abuse vector is much smaller. `/api/health` and `/api/examples*` are static enough to not warrant a limiter.
+- **30 requests / 60 s as the limit.** At 12 files per generate, a malicious caller could pull ~360 generated files per minute per instance. That's well within Vercel's free function-quota budget for a single run, and high enough that no realistic human user hits it. If the shape of abuse changes (bots scraping the example set), we tighten — but the limit is a knob, not a contract.
+- **No new runtime dependency.** Specifically: no `express-rate-limit`, no `@vercel/edge-config`, no Upstash. CLAUDE.md hard rule #3 stands. The 25-line in-memory limiter is the cost of keeping the dependency tree at two packages.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **Run #023 — Wizard-Onboarding** (4–5 friendly steps replacing the single textarea, in plain language, with live preview), **plus** the one-line follow-up to Run #022 — adding a "Tool starten" button to `docs/index.html` pointing at the live Vercel URL once the owner has clicked Deploy. Subsequent priority: **"Was mache ich jetzt damit?"** post-generate guidance with screenshots → claude.ai upload path. Domain-depth runs (eleventh through ~seventeenth) are **paused** until the reach work is done — a deeper specialisation does not help a user who cannot reach the tool.
+
+---
+
 ## Run #021 — 2026-04-30 — Domain depth: tenth domain (`real estate`) — crosses 50% coverage
 
 **Phase:** Phase 1 — Generation quality (continued)

@@ -61,7 +61,7 @@ function selectFile(i) {
   renderFileList();
 }
 
-function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath }) {
+function renderResult({ projectName: title, meta, files, slug, idea, source, writtenToPath, persistError }) {
   currentFiles = files;
   activeIndex = 0;
   lastIdea = idea;
@@ -70,7 +70,13 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
 
   projectName.textContent = title;
   projectMeta.textContent = meta;
-  writtenTo.textContent = writtenToPath ? `Written to: ${writtenToPath}` : "";
+  if (writtenToPath) {
+    writtenTo.textContent = `Written to: ${writtenToPath}`;
+  } else if (persistError) {
+    writtenTo.textContent = `Note: ${persistError}`;
+  } else {
+    writtenTo.textContent = "";
+  }
   setSourceBadge(source === "example" ? "Example" : "");
   resultEl.hidden = false;
   renderFileList();
@@ -213,7 +219,8 @@ async function runGenerate(idea, { scrollToResult = false } = {}) {
     slug: data.context.slug,
     idea,
     source: "generate",
-    writtenToPath: data.writtenTo
+    writtenToPath: data.writtenTo,
+    persistError: data.persistError
   });
   if (scrollToResult) {
     resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -363,6 +370,28 @@ ideaInput.addEventListener("input", () => {
   }, 350);
 });
 
+// ---- Hosted-mode adaptation ----
+//
+// When the server reports `hosted: true`, the filesystem-persist
+// checkbox is meaningless (no writable disk on serverless). Hide the
+// whole row that contains it and uncheck it so the request body never
+// asks the server to persist.
+async function detectHostedMode() {
+  try {
+    const res = await fetch("/api/health");
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.hosted) {
+      persistInput.checked = false;
+      const persistLabel = persistInput.closest("label.checkbox");
+      if (persistLabel) persistLabel.hidden = true;
+    }
+  } catch {
+    // Health check failed — fall back to local defaults.
+  }
+}
+
 // ---- Bootstrap ----
 
+detectHostedMode();
 loadExamples();
