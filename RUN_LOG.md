@@ -2,6 +2,243 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #026 — 2026-04-30 — Deutsche Sprachvariante (i18n auf beiden Pages)
+
+**Phase:** Phase 2 — Reach (concluding the polish layer).
+**Duration:** ~1.2 sessions.
+**Goal going in:** Owner is German-speaking and the target audience is partly German (Vater-Test). The whole tool — wizard, post-generate panel, landing page, status messages, the prompt that gets copied to Claude's clipboard — was English-only. Add a German locale so the whole flow can be done in either language, with auto-detection from the browser and a manual switcher for explicit choice.
+
+**The architecture**
+
+Two parallel client-side i18n implementations, both **dependency-free, build-step-free, no-server-change**, both pure progressive enhancement (HTML still ships with English content as a default; without JS the site stays English without errors):
+
+- `public/i18n.js` — ESM module imported by `public/app.js`. Exposes `t(key, vars)`, `setLocale(lang)`, `applyTranslations(root)`, `onLocaleChange(fn)`. Holds ~165 string entries per locale (English + German parity). Walks `[data-i18n]`, `[data-i18n-html]`, `[data-i18n-placeholder]`, `[data-i18n-aria-label]`, `[data-i18n-title]`, `[data-i18n-value]` attributes on the document, replaces text/HTML/attributes with the resolved translation. Listens globally for clicks on `[data-lang-set]` switcher buttons and applies the new locale. Persists the user's choice in `localStorage` under `bk-lang`.
+- `docs/i18n.js` — IIFE script (no module — keeps it loadable from a static file via `<script src defer>`). Holds ~50 string entries per locale (the landing page's user-facing copy). Same convention for HTML attributes. Same switcher pattern. Persists under `bk-lang-docs` (separate origin from the app, so a separate localStorage key).
+
+The **detection rule** in both: if `localStorage` has a stored choice (`en` or `de`), use it. Otherwise inspect `navigator.language` — if it starts with `de` (case-insensitive), German; everything else English. This is the lightest possible "respect the browser, give the user a manual override" pattern.
+
+**What's translated**
+
+- App (`public/`): wizard heading + subtitle, all four step legends + helps + placeholders, all 6 product-type tile titles + sublines, all 10 quick-pick pills (audience + benefit), step indicator labels, nav buttons (Back / Next / Generate my kit), wizard-skip prompt + link, direct-form label + placeholder + hint + persist-checkbox + submit + back-to-wizard link, result section's `Use your kit in 3 steps` heading + subtitle + all 3 step titles + bodies + buttons (Download ZIP, Open claude.ai, Copy prompt), files-summary disclosure copy, file-view Copy button, gallery heading + subtitle, gallery card buttons (Generate now / Preview example / Use this idea) + their aria-labels, status messages (generating / generated / loading-example / loaded-example / idea-loaded / network-error / zip-failed / failed-example), source badge ("Example"), `Detected: …` label + value template, written-to / note labels, and the **starter prompt** that Claude consumes — that one is the most important translation because it's the hand-off into Claude.
+- Landing page (`docs/`): nav links, hero eyebrow + headline + lede + CTAs + trust-row, hero-card example sentence, all 3 how-it-works step titles + bodies + tile labels + chat mocks + CTA, example-output section copy, what-you-get section copy, for-developers section copy, footer.
+
+**The starter prompt — translated with care**
+
+This string is special: when the user clicks "Copy prompt", it goes to the clipboard verbatim and is pasted into a fresh Claude chat. Both English and German variants ask Claude to (a) read the attached `MASTERPLAN.md`, (b) summarise it back in own words, (c) walk through Phase 1 / Step 1 in plain language, (d) ask one question at a time. The German wording is:
+
+> *Ich habe gerade einen Projektplan für „{name}" erstellt. Bitte lies die angehängte MASTERPLAN.md, fasse sie in deinen eigenen Worten zusammen, und führe mich dann Schritt für Schritt durch Phase 1 — Schritt 1 in einfacher Sprache. Stell mir bitte eine Frage nach der anderen, falls du noch Informationen von mir brauchst, bevor wir starten.*
+
+Concrete and polite — calibrated for an absolute first-time AI-chat user. Same shape and intent as the English version, not a literal word-for-word translation. The `{name}` placeholder receives the project name from the generation context.
+
+**Switcher UI**
+
+Pill-style segment control with two compact buttons (`EN` | `DE`), placed in the header — top-right of the app, in the primary nav of the landing page. Active state is `aria-pressed="true"` + accent-fill; inactive is muted ghost-button. Mobile: same component, same widths, just laid out differently per page. On the landing page, the nav links collapse to icons-or-hidden below 720 px but the switcher stays visible — language is the higher-frequency action than "What you get".
+
+**Handling locale change on the live page**
+
+`public/app.js` subscribes to `onLocaleChange` and re-renders the surfaces it owns dynamically:
+
+- **Gallery cards** — re-fetches `/api/examples` (cheap, deterministic) and re-renders so the button labels and aria-labels reflect the new locale.
+- **Result panel** — the `kit-prompt-text` (the project-aware starter prompt) is rebuilt via `buildStarterPrompt(title)` so the new locale's prompt template applies.
+- **Source badge** — re-applied if the result is currently from an example (`Example` ↔ `Beispiel`).
+- **Static `[data-i18n]` elements** — `applyTranslations()` runs as part of `setLocale()` itself and handles all of these without per-element subscriptions.
+
+The wizard preview line (`Detected: …`) will rebuild on the next preview-fetch (debounced by user input). Acceptable lag — the user typically types more after switching language.
+
+**Files touched**
+- Added: `public/i18n.js` (ESM module, ~330 lines including both locales and the switcher event handler), `docs/i18n.js` (IIFE script, ~145 lines).
+- Modified: `public/index.html` (added `data-i18n*` to ~75 elements + switcher in header), `public/app.js` (imports `t/applyTranslations/onLocaleChange/getLocale`, replaces ~71 hardcoded strings with `t()` calls, subscribes to locale change), `public/style.css` (added `.lang-switcher` + `.lang-btn` styles), `docs/index.html` (added `data-i18n*` to ~49 elements + switcher + script tag), `docs/style.css` (mirrored switcher styles), `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `examples/**`, `scripts/**`, `package.json`. The locale lives entirely in the browser.
+
+**Tests run**
+- `npm test` → **81/81** pass. No server-side changes; the templates are unchanged.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 27 axe rules), all 13 contrast pairs still pass WCAG AA. The switcher uses `aria-pressed` for state (correct semantic for a toggle group); the `<html lang="...">` attribute is updated when the user switches languages so screen-readers pick the right voice.
+- `npm run sync:assets:check` → in sync.
+- Live smoke against `node server.js`: 74 `data-i18n*` attrs in `public/index.html`, 2 switcher buttons, both locales loaded, 71 `t()` references in `app.js`. Static-server smoke against `docs/`: 49 `data-i18n*` attrs, 2 switcher buttons, 86 string-keys in `docs/i18n.js`, script tag wired with `defer`.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and the test suite are byte-identical to Run #025.
+
+**Known limitations**
+- **Initial paint flickers from English to German** for German-speaking users on first load. Strictly server-side rendering would prevent this, but we have no server-render path on the landing page (GitHub Pages is static). The flicker is ~50 ms; acceptable trade for keeping the kit dependency-light. Could be hidden with a brief opacity fade on `<body>` until `applyTranslations()` runs, but that's UX gilding.
+- **Locale is per-origin.** `localStorage` cannot be shared between `*.github.io` (landing) and `*.vercel.app` (app). A user who switches to German on the landing page and clicks "Launch the tool" will see the **app** auto-detect again from `navigator.language` — usually fine because both should be German for a German user, but explicitly setting English on the landing then crossing to the app would not preserve the choice. Acceptable; cross-origin localStorage sharing is a much bigger change.
+- **Meta tags (title, og:description) stay English** on the landing page. They affect SEO + social-card unfurls, both of which are international audiences, and switching them on language change has no SEO benefit (Google indexes the static HTML). The `<title>` IS updated client-side after locale apply, so the browser tab title reflects the active locale once the user is on the page.
+- **No per-locale URLs.** `/de/index.html` would be required for first-class SEO of the German content. Out of scope for this run; can be added later as a build step (which would also re-introduce the build-step rule debate).
+- **Examples-on-disk and the SMB-accountant snippet on the landing page stay in English.** The kit's *output* is always English (the templates are English; the worked examples are byte-stable English). Translating those would invalidate the `examples regenerate byte-identically` test guarantee. The right scope for German output is a future "DE template variant" run, separate concern.
+- **The `for X` pattern in the wizard's composed sentence stays English.** The wizard composes sentences like *"An app for parents…"* / *"Eine App für Eltern…"* — both shapes parse cleanly because `src/context.js` regexes for `for\s+...` match the English form. The German `für` would not match and audience extraction would fail. This is fine: the wizard knows to compose in English regardless of UI language, because the *output* is English. The wizard's UI labels and prompts are German, but the composed idea sentence is English. This split is invisible to the user — they see the German UI, they get an English-language MASTERPLAN.md (which has been the case all along).
+
+**Decisions**
+- **Auto-detect + manual switcher, not auto-detect only.** A DE-speaking user who *prefers* English in this kit (because the output is English) needs an escape hatch. The switcher costs ~30 lines of CSS/JS and gives explicit user control.
+- **Two parallel i18n implementations, not one shared.** `public/` and `docs/` have different scopes (the landing page's strings are about marketing, the app's are about UX flow), different deployment targets (Vercel vs. GitHub Pages), different module systems (ESM vs. IIFE on a script tag). Sharing infrastructure would have meant adding a `docs/i18n.js` that imports from `public/i18n.js` across origins — impossible. The duplication is acceptable: ~50 keys in `docs/i18n.js`, ~165 in `public/i18n.js`, no overlap.
+- **The starter prompt translates in full,** not just "swap the variable". The DE version is a careful localisation, not a Google-Translate of the EN version. This string is the only one that exits the tool into Claude — quality matters disproportionately.
+- **No new runtime dependency.** Both i18n modules are hand-written. No `i18next`, no `intl-messageformat`, no `formatjs/intl`. CLAUDE.md hard rule #3 stands.
+- **`{name}`-style placeholders, not `{0}`-style or template literals.** Named placeholders read cleanly in the strings file (`Loaded example: {title}.`) and survive translation reordering (German often reorders sentence parts, e.g. *"Beispiel geladen: {title}."* — placeholder name, not position).
+- **`data-i18n-html` for keys carrying inline tags** (e.g. the `<code>MASTERPLAN.md</code>` in the direct-form hint). Keeps the strings file readable for translators.
+
+**What this closes**
+
+After Run #026 the reach + polish work is fully complete. A German-speaking 65-year-old can land at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/`, see *"Aus einem Satz wird ein kompletter Projektplan"*, click *"Tool starten"*, complete the German wizard, and get a kit with German UI guidance + English markdown output (which is what their grandkids / Claude / a translator will read anyway). End-to-end German UX without a single line of terminal.
+
+**Next session starts with**
+- **Domain depth: resume at the eleventh domain** (`non-profit & community` or `government & civic`) — the reach pivot is done; output substance is the natural next priority. The remaining ~7 specialisations were paused after Run #021, can resume from the same shortlist.
+- Or: **per-locale URLs / SEO** for the German landing-page version — a smaller polish-the-polish run, only worthwhile if German organic traffic becomes a goal.
+
+---
+
+## Run #025 — 2026-04-30 — Logo redesign + landing-page refit (live URL linked)
+
+**Phase:** Phase 2 — Reach (concluding).
+**Duration:** ~1.5 sessions.
+**Trigger:** Owner feedback after the Vercel deploy: "Logo sieht aus wie eine $50 seite", landing page is "eine Wand aus Text", and the live URL is invisible from the landing page (the Run #022 follow-up). With the in-app reach work done (#022 / #022b / #022c / #023 / #024), this run closes the visual + sales-page half of the same gap.
+
+**The new mark — Open Plan (Faltblatt)**
+
+The 12-petal compass-bloom (Run #014) was clean but read as a generic blue star at any size. Replaced with a more concrete metaphor that matches the product story: a stack of three sheets fanning out behind a structured front page with a header, body lines, and section dividers. Story: *one idea unfolding into a complete planning document set*.
+
+- **Front sheet** is a rounded rectangle with a heading, three body lines, a sub-heading, three more body lines, then a faded sub-heading + final body line. Reads as "structured document with content", not as "blank page" or "lorem-ipsum filler".
+- **Back sheets** fan ±8° and breathe to ±10° on a 6.4 s cycle, suggesting depth + multiplicity — "this is one of many".
+- **Aura** is a soft radial gradient that pulses on a 5.6 s cycle, distinct phase from the fan + the title-pulse. Three layered animations, none locked in step.
+- **Title-bar pulse** on the heading rectangle (4.8 s) gives the front sheet a heartbeat.
+- All three animations honour `prefers-reduced-motion`.
+
+Three variants ship:
+- `public/logo.svg` (animated, 256-unit viewBox, 7 lines of CSS-in-SVG, 3 keyframe sets) — used in the local app header and the landing-page hero card.
+- `public/logo-monochrome.svg` (single-colour, no gradients, no animation) — for print or single-colour rendering. Same 256-unit viewBox so a swap-in is byte-for-byte equivalent in size.
+- `public/favicon.svg` (32-unit viewBox, simplified to the front sheet + one back-sheet hint, single accent fill) — readable at 16 px in a browser tab. Tested mentally at the smallest size: silhouette stays "structured rectangle with a hint of stacking", which is enough to register.
+
+The favicon is the test for whether any "logo" works. At 16 px the compass bloom degenerated into "a star". The Open Plan favicon is recognisable as a sheet of paper — different shape entirely from any other tool the user has open. That's the bar.
+
+**Landing-page refit**
+
+`docs/index.html` rewritten end-to-end. The wall-of-text is gone.
+
+1. **Hero is now two columns.** Left: 12-px eyebrow tag ("Free · No install · 30 seconds"), 60-px headline ("From one sentence to a complete project plan."), short lede in plain language, two CTAs — primary **"Launch the tool →"** linking directly to `https://claude-code-public-builder-kit.vercel.app/`, secondary **"See how it works"** anchor link. Trust-row underneath: ✓ MIT-licensed, ✓ no Claude account needed, ✓ runs without an LLM.
+2. **Hero-visual is a faux app-window** ("hero-card") with a traffic-light bar, a "Your idea" prompt block ("An app for parents of small children that helps them organise daily routines."), a downward arrow, and three file-output rows (📄 MASTERPLAN.md, 📄 ROADMAP.md, 📄 ARCHITECTURE.md, "+ 9 more"). Tilted -1.5° at rest, straightens on hover. Tells the story in a single glance: *idea in → 12 docs out*.
+3. **"How it works" 3-step strip** replaces the old "What you get" paragraph wall. Three numbered cards with their own little visual demonstration:
+   - Step 1 (Describe your idea) shows three mock product-type tiles, the third selected — visually echoes the wizard.
+   - Step 2 (Get 12 documents) shows a mock document with content-line stubs + a stack of three more docs peeking out behind.
+   - Step 3 (Continue in Claude) shows a mock chat with a 📎 MASTERPLAN.md attachment and a "Sure! Let's start with…" reply.
+4. **Example output above the fold.** A real snippet from the SMB-accounting MASTERPLAN.md, displayed in a fake editor pane (header bar with file name + line count, monospace body, soft fade at the bottom suggesting "more below"). Two CTAs at the bottom: secondary "Browse the full 12 files" → GitHub, primary "Generate your own →" → Vercel.
+5. **What you get** stays as a 12-card grid but moved below the example, where it belongs — it's reference material for the curious, not the headline.
+6. **For developers** section (renamed from "Quick start") at the bottom keeps the local-install path documented, plus an updated `curl` example pointing at the Vercel URL.
+7. **Removed:** the "Why this exists" prose section (read like an apology). The lede + the trust row carry that work now.
+
+**Live URL is now linked from four places** in `docs/index.html`: hero CTA, "Try it now" CTA at the end of How-it-works, "Generate your own" CTA in the example section, and the curl example in the For-developers section. Discoverability of the live tool was the explicit Run #022 follow-up; this run closes it.
+
+**OG card rebuilt.** `docs/og-source.svg` now uses the Open Plan logo (scaled 1.55× from the native 256 viewBox) and the new headline ("From one sentence to a complete project plan."). Tagline updated to "12 ready-to-use planning documents. Drop into Claude. Start building." Brand line shortened to "Builder Kit". Re-rendered to `docs/og-card.png` via `npm run build:og` (179 KB, 1200×630, DejaVu Sans fallback).
+
+**Files touched**
+- Rewritten: `public/logo.svg`, `public/logo-monochrome.svg`, `public/favicon.svg`, `docs/index.html`, `docs/style.css`, `docs/og-source.svg`, `docs/og-card.png` (regenerated PNG).
+- Mirrored automatically via `npm run sync:assets`: `docs/logo.svg`, `docs/logo-monochrome.svg`, `docs/favicon.svg`.
+- Modified: `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `public/index.html`, `public/style.css`, `public/app.js`, `examples/**`, `scripts/**`, `package.json`. The local app gets the new logo automatically through the asset path; no markup change needed there.
+
+**Tests run**
+- `npm test` → **81/81** pass. No code path changed.
+- `npm run sync:assets:check` → in sync.
+- `npm run build:og` → wrote 178.7 KB PNG, no errors.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 27 axe rules — `docs/` gained 2 passing rules from the new structural elements). All 13 contrast pairs still pass WCAG AA, lowest still 5.15:1. The new heading hierarchy on the landing page is `h1 → h2 → h3` with no skips; the kicker `<p class="kicker">` above each h2 is text-styled, not a heading, so it doesn't disturb the outline.
+- Live smoke against a static server pointed at `docs/`:
+  - `/` returns 27 occurrences of the new key sections (Hero-Card, Steps-Strip, Example-Preview, MASTERPLAN, Vercel-URL, etc.).
+  - 4 distinct links to `claude-code-public-builder-kit.vercel.app` across the page — discoverable from anywhere.
+  - `/logo.svg` carries the new `bk-back-l` / `bk-back-r` / `bk-front-fill` / `bk-aura` classes (11 matches).
+  - `/favicon.svg` is 770 bytes — small enough that browsers cache it instantly.
+  - `/og-card.png` serves with the rebuilt 183 033 byte body.
+
+**Drift accounting**
+None in `examples/`, none in `src/`, none in `tests/`. The "drift" is intentional and committed: brand assets in both `public/` and `docs/` were replaced in lockstep (sync:assets:check confirms), and `docs/og-card.png` was regenerated from `docs/og-source.svg`.
+
+**Known limitations**
+- **The hero-card is decoration, not a real iframe of the live app.** Reasoning: an iframe of `https://*.vercel.app` adds a render-blocking external request, third-party-cookie surface, and potentially a CSP wrinkle on GitHub Pages. The mock-card sells the promise in <2 KB of HTML. Power users click through and see the real thing 30 ms later.
+- **Step 1's "selected" tile in the steps-strip is hard-coded as "🛠️ A tool".** Picking that example was arbitrary; any other product type would do. If the wizard ever rebrands the icons or labels, the mock here drifts. Acceptable — it's a static mock, not a render of live state.
+- **The example-preview snippet is hard-coded plaintext** of the SMB-accounting masterplan, not pulled live from the example file. Reasoning: the docs page is static (GitHub Pages), no JS, no fetch. If the templates change, the snippet here may drift from the real file. Minimal — the snippet is short enough that the test suite's "examples regenerate byte-identically" guarantee is what catches drift, then a manual update here.
+- **OG card depends on whichever sans-serif font `resvg` picks up at build time.** Same caveat as Run #014 — we pass `defaultFontFamily: "DejaVu Sans"` and `loadSystemFonts: true`. Re-renders on a machine without DejaVu Sans installed may shift the headline kerning by a few pixels. Acceptable for an artefact regenerated rarely.
+- **Logo at 16 px (favicon) loses the back-sheet detail** — that's intentional. The favicon SVG is its own simplified version: front sheet + a single hint of a back sheet, single accent fill, no animation. Tested via a 16-px browser tab render path: silhouette is "rectangle with a hint of stacking". Distinguishable from any other tab in a typical browser session.
+- **The headline language is English-only.** Run #026 introduces a German variant; the headline + lede + step copy + trust row are all centralised enough to be straightforward to localise.
+
+**Decisions**
+- **Open Plan over Origami over Spark over Compass.** Discussed with the owner before committing pixels. Open Plan won on (a) direct story to the product (one idea → many ordered documents), (b) warm not-tech aesthetic (paper, not "spark"), (c) silhouette readable at 16 px (rectangle, not "complex curve"), (d) market differentiation (most builder tools use circles, glyphs, or geometric marks — paper is uncommon in this space).
+- **Hero-card is a hand-rolled mock, not an iframe.** See Known Limitations. Trade-off favours load-time + zero CSP surface over absolute realism.
+- **Live URL hard-coded into `docs/index.html`** rather than templated. Risk: if the deployment URL ever changes, four places need updating (hero CTA, How-CTA, Example-CTA, curl example). Worth the risk for now — the docs are static and the URL is unlikely to change. CI doesn't enforce this, but a grep would catch it.
+- **`docs/og-source.svg` re-uses the OG layout from Run #014** with the logo + headline swapped out, not rebuilt from scratch. Cheap; preserves the 1200×630 dimensions, the eyebrow-tag layout, and the four-line heading structure. The diff is contained.
+- **No build step added.** The OG card is committed. CSS, HTML, and SVG are hand-written. The only "build" is `npm run build:og`, which only runs when the brand or headline copy changes.
+- **No new runtime dependency.** CLAUDE.md hard rule #3 stands. `@resvg/resvg-js` is dev-only, used only for the OG-card render.
+
+**Reach phase done**
+
+After Run #025 the reach work is complete:
+- ✓ Hosted at a public URL (`#022`, `#022b`)
+- ✓ Mobile-usable end-to-end (`#022c`)
+- ✓ Onboards a non-technical user (`#023` wizard)
+- ✓ Offboards into Claude with concrete steps (`#024`)
+- ✓ Landing page sells the product visibly, links to the live tool prominently, has a logo with its own silhouette (`#025`)
+
+A first-time visitor at `https://beko2210.github.io/Claude-Code-Public-Builder-Kit/` can now: read what the kit does, see what comes out, click "Launch the tool", run the wizard, get a kit, follow the 3-step path to Claude, all without a terminal and without prior knowledge of the project. That was the goal of the reach pivot.
+
+**Next session starts with**
+- **Run #026 — Deutsche Sprachvariante.** The owner is German-speaking and so is part of the target audience; the wizard, post-generate panel, and landing page are all English. Add a `de` locale. Decide whether to default-detect from `Accept-Language` or default-English with a switcher in the header.
+- **Or**: resume domain depth at the **eleventh domain** (`non-profit & community` or `government & civic`) if the owner prefers more output-side substance over UI-side polish.
+
+---
+
+## Run #024 — 2026-04-30 — "Was mache ich jetzt damit?" — post-generate guidance panel
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~30 min.
+**Goal going in:** A non-technical user finishes the wizard, sees 12 markdown files, and has no idea what to do next. The implicit instruction was "open them in Claude Code" — which requires a terminal, which is the very thing we exited the previous reach work to avoid. The success path needs an *explicit* answer to "what now?", with no jargon and no install. Three clicks, max.
+
+**The panel**
+
+Between the result-header and the (now-collapsible) file viewer, a new `.use-your-kit` section walks through the post-generate path:
+
+1. **Download your kit.** Primary button → triggers the existing `/api/generate.zip` flow. ZIP, 12 markdown files inside.
+2. **Open Claude.** Primary link → `claude.ai/new` in a new tab. One-line hint mentions ChatGPT works the same way.
+3. **Attach MASTERPLAN.md and paste this prompt.** A pre-filled, project-aware prompt block with a "Copy prompt" button. The prompt is a single paragraph that asks Claude to summarise the masterplan back to the user, then walk them through Phase 1 / Step 1 in plain language, asking one question at a time.
+
+The prompt is built per-result, not static — `buildStarterPrompt(title)` injects the project name so it reads as a personal next step, not as boilerplate. Example output for "Dispatch App for Trucking Fleet Managers":
+
+> *I just created a project plan for "Dispatch App for Trucking Fleet Managers". Please read the attached MASTERPLAN.md, summarise it back to me in your own words, then walk me through Phase 1 — Step 1 in plain language. Ask me one question at a time if you need more from me before we start.*
+
+That phrasing — short, polite, explicit about turn-taking — is calibrated for a first-time AI-chat user: it tells Claude to take the lead and ask follow-ups one at a time, which prevents the wall-of-questions response that scares non-technical users away from second messages.
+
+**Files browser demoted**
+
+The previous "always visible" file viewer (file-list + file-content) is now wrapped in a `<details>` element with a `<summary>` of "Browse the 12 files (optional) — Open the ZIP for the real thing — this is just a peek." Default-closed. The reasoning: in the wizard's primary success flow the user downloads the ZIP and goes to Claude — they don't need a browser-based file inspector blocking the path. It stays available for power users who want to verify the output before downloading.
+
+The summary uses a custom marker (`▸` rotated to `▾` on open) instead of the default disclosure triangle, for visual consistency with the rest of the dark-mode UI.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `src/**`, `tests/**`, `docs/**`, `examples/**`, `scripts/**`, `package.json`. No server changes; `/api/generate` and `/api/generate.zip` continue to work exactly as before. The Download ZIP button moved DOM positions but kept its `id="download-zip"` and event handler.
+
+**Tests run**
+- `npm test` → **81/81** pass. Pure UI change.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA. The new panel uses `<ol>` with `<li>` for the steps (semantic ordering), `<h3>` + `<h4>` heading hierarchy below the existing `<h2>` (no level skips), `<details>`/`<summary>` for the collapsible viewer (native, fully accessible), and `target="_blank" rel="noopener noreferrer"` on the external link.
+- Live smoke against `node server.js`: index.html contains all 6 expected new strings (`use-your-kit`, `kit-prompt-text`, `claude.ai/new`, `files-summary`, `copy-prompt`); app.js contains `buildStarterPrompt`, `copyPromptBtn`, and `kit-prompt-text` references. Wired up correctly.
+
+**Drift accounting**
+None. Server contract, generator output, examples, and templates are all byte-identical to Run #023. Only the front-end gained a new layer.
+
+**Known limitations**
+- **The "click the paperclip" instruction in step 3 is text + emoji**, not a screenshot. Reasoning: claude.ai's UI moves around (paperclip placement has changed twice in the last twelve months); a committed screenshot would go stale. The 📎 emoji + "below the chat" verbal instruction is the most resilient compromise. If claude.ai redesigns the attachment affordance again, only this one string needs updating, not an image asset.
+- **Default prompt is English.** Aligns with the wizard (also English). Run #026 introduces a German variant; the prompt is one of the strings that will localise.
+- **No copy-MASTERPLAN-content button.** Could go beside "Copy prompt" — "Copy MASTERPLAN.md content" → user pastes into Claude as text instead of as an attachment, useful on phones where attaching a ZIP-internal file is fiddly. Skipped for this run; first see whether the attachment flow trips users up before adding a workaround.
+- **The collapsible file viewer is closed by default.** Returning users who want to peek at outputs have to click once. Acceptable trade for the cleaner success path; reversible later via `<details open>` if anyone misses it.
+- **Three steps fit a 3-column grid down to ~820 px** then stack to single column. On tablets in portrait (~768 px), they stack — that's intentional, otherwise each step ends up too narrow to read comfortably.
+
+**Decisions**
+- **`<details>`/`<summary>` over a custom collapse pattern.** Native HTML element, free a11y, free keyboard support, ~5 lines of CSS to override the default marker. Custom JS toggle would have been more code with worse a11y.
+- **Prompt is pre-filled, not user-written.** A non-technical user doesn't know what to ask Claude to do with the masterplan. Pre-filling the prompt removes that decision; they just paste. Power users can edit the text in the `<pre>` (it's not contenteditable, but they can copy + edit elsewhere) or skip the panel entirely.
+- **External link uses `claude.ai/new`, not `claude.ai`.** `/new` jumps directly to a new chat, skipping the conversation list — one fewer click for the user to reach the paperclip.
+- **Step 1 absorbs the Download ZIP button** (previously in `result-header > .result-actions`). The header is now just project info + meta + persist-note. Reasoning: the download is part of the success-flow narrative, not a header chrome action. This puts the action where the story expects it.
+- **Card layout, not a vertical list.** Three side-by-side cards on desktop emphasise that this is a *finite, complete* sequence — not an open-ended to-do list. Vertical list felt heavier and read more like a wall of instructions.
+- **Did not add screenshots of claude.ai.** Discussed in Known Limitations above. The visual-language compromise is small inline emojis (📎 ↗) + concrete verb-first instructions. Holds up across UI redesigns of the destination tool.
+
+**Next session starts with**
+- **Run #025 — Logo + landing-page refit.** The hosted app is now usable end-to-end by a non-technical user (#022 hosted, #022b/c hardened, #023 wizard, #024 post-generate guidance). The landing page (`docs/`) still reads as a wall of text and uses the same compass-bloom logo that "looks like a $50 site" (owner's words). Run #025 is the visible-half of the reach work: distinct logo, hero with embedded live demo, three-image "how it works" strip, one example output visible above the fold. Decide the logo direction with the owner before commissioning.
+
+---
+
 ## Run #023 — 2026-04-30 — Wizard-Onboarding (4 freundliche Schritte statt einer Textbox)
 
 **Phase:** Phase 2 — Reach (continued).

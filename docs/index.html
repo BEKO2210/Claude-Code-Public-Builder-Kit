@@ -3,41 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Claude Code Public Builder Kit — turn one sentence into a planning foundation</title>
-    <meta name="description" content="An open-source tool that turns a one-line project idea into 12 substantive Markdown files: vision, roadmap, acceptance criteria, architecture, and Claude Code prompts. Local-first. No build step. MIT licensed." />
+    <title>Builder Kit — turn one sentence into a complete project plan</title>
+    <meta name="description" content="From one idea to 12 ready-to-use planning documents in under a minute. Free, no install. Drop the masterplan into Claude or ChatGPT and start building." />
     <meta name="color-scheme" content="dark" />
-    <meta property="og:title" content="Claude Code Public Builder Kit" />
-    <meta property="og:description" content="Turn a one-line project idea into 12 substantive Markdown files. Local-first. No build step. MIT." />
+    <meta property="og:title" content="Builder Kit — one sentence in, complete project plan out" />
+    <meta property="og:description" content="From one idea to 12 ready-to-use planning documents in under a minute. Free, no install." />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="./og-card.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:image" content="./og-card.png" />
-    <meta name="twitter:title" content="Claude Code Public Builder Kit" />
-    <meta name="twitter:description" content="Turn a one-line project idea into 12 substantive Markdown files. Local-first. No build step. MIT." />
+    <meta name="twitter:title" content="Builder Kit" />
+    <meta name="twitter:description" content="From one idea to 12 ready-to-use planning documents in under a minute. Free, no install." />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <a class="skip-link" href="#main">Skip to main content</a>
+    <a class="skip-link" href="#main" data-i18n="skip-link">Skip to main content</a>
 
     <header class="site-header">
       <div class="container header-row">
-        <a class="brand" href="#top" aria-label="Claude Code Public Builder Kit — home">
+        <a class="brand" href="#top" aria-label="Builder Kit — home">
           <img class="brand-logo" src="./logo.svg" alt="" aria-hidden="true" width="40" height="40" />
           <span class="brand-name">Builder Kit</span>
         </a>
         <nav class="primary-nav" aria-label="Primary">
-          <a href="#what-you-get">What you get</a>
-          <a href="#quick-start">Quick start</a>
-          <a href="#examples">Examples</a>
-          <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">GitHub</a>
+          <a href="#how" data-i18n="nav.how">How it works</a>
+          <a href="#example" data-i18n="nav.example">Example</a>
+          <a href="#what-you-get" data-i18n="nav.what">What you get</a>
+          <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener" data-i18n="nav.github">GitHub</a>
+          <span class="lang-switcher" role="group" data-i18n-aria-label="lang.aria" aria-label="Language">
+            <button type="button" class="lang-btn" data-lang-set="en" aria-pressed="false">EN</button>
+            <button type="button" class="lang-btn" data-lang-set="de" aria-pressed="false">DE</button>
+          </span>
         </nav>
       </div>
     </header>
 
     <main id="main" tabindex="-1">
+      <!-- ─────────── HERO ─────────── -->
       <section id="top" class="hero">
         <div class="aurora" aria-hidden="true">
           <span class="aurora-blob a1"></span>
@@ -46,173 +51,207 @@
         </div>
         <div class="container hero-grid">
           <div class="hero-copy">
-            <p class="eyebrow">Open-source · MIT · Node ≥ 18</p>
-            <h1>Turn one sentence into a planning foundation.</h1>
-            <p class="lede">
-              The Claude Code Public Builder Kit takes a one-line project idea —
-              <em>"a SaaS dashboard for small business accountants"</em> — and produces
-              <strong>12 substantive Markdown files</strong>: vision, roadmap, acceptance
-              criteria, architecture, and ready-to-paste Claude Code prompts. Locally,
-              in a few seconds, with no cloud account and no LLM dependency.
+            <p class="eyebrow" data-i18n="hero.eyebrow">Free · No install · 30 seconds</p>
+            <h1 data-i18n-html="hero.h1.html">From one&nbsp;sentence to a&nbsp;complete <span class="accent">project&nbsp;plan</span>.</h1>
+            <p class="lede" data-i18n="hero.lede">
+              Tell us your idea in plain language. Get back twelve ready-to-use
+              planning documents — vision, roadmap, risks, architecture, and a
+              starter prompt for Claude or ChatGPT. No terminal, no setup, no
+              cloud account.
             </p>
             <div class="hero-actions">
-              <a class="cta primary" href="#quick-start">Get started locally</a>
-              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">View on GitHub</a>
+              <a class="cta primary cta-lg" href="https://claude-code-public-builder-kit.vercel.app/">
+                <span data-i18n="hero.cta.primary">Launch the tool</span>
+                <span class="cta-ico" aria-hidden="true">→</span>
+              </a>
+              <a class="cta secondary" href="#how" data-i18n="hero.cta.secondary">See how it works</a>
             </div>
-            <p class="hero-meta">
-              Local-first · No build step · Two runtime dependencies · Deterministic output
+            <p class="hero-trust">
+              <span data-i18n="hero.trust.1">✓ MIT-licensed open source</span>
+              <span data-i18n="hero.trust.2">✓ Works without a Claude account</span>
+              <span data-i18n="hero.trust.3">✓ Built by humans, runs without an LLM</span>
             </p>
           </div>
           <div class="hero-visual" aria-hidden="true">
-            <img class="hero-logo" src="./logo.svg" alt="" width="280" height="280" />
+            <div class="hero-card">
+              <div class="hero-card-bar">
+                <span class="dot dot-r"></span><span class="dot dot-y"></span><span class="dot dot-g"></span>
+              </div>
+              <div class="hero-card-body">
+                <div class="hero-prompt">
+                  <span class="hero-prompt-label" data-i18n="hero.card.label">Your idea</span>
+                  <span class="hero-prompt-text" data-i18n="hero.card.idea">An app for parents of small children that helps them organise daily routines.</span>
+                </div>
+                <div class="hero-arrow" aria-hidden="true">↓</div>
+                <div class="hero-output">
+                  <span class="hero-output-row"><span class="hero-out-ico">📄</span>MASTERPLAN.md</span>
+                  <span class="hero-output-row"><span class="hero-out-ico">📄</span>ROADMAP.md</span>
+                  <span class="hero-output-row"><span class="hero-out-ico">📄</span>ARCHITECTURE.md</span>
+                  <span class="hero-output-row hero-output-more" data-i18n="hero.card.more">+ 9 more</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
+      <!-- ─────────── HOW IT WORKS ─────────── -->
+      <section id="how" class="section">
+        <div class="container">
+          <header class="section-head">
+            <p class="kicker" data-i18n="how.kicker">How it works</p>
+            <h2 data-i18n="how.h2">Three steps. No technical background needed.</h2>
+            <p data-i18n="how.subtitle">The tool runs in your browser. The output drops straight into Claude or ChatGPT — they take it from there.</p>
+          </header>
+          <ol class="steps-strip">
+            <li class="step">
+              <div class="step-num">1</div>
+              <h3 data-i18n="how.s1.title">Describe your idea</h3>
+              <p data-i18n="how.s1.body">A guided wizard asks four short questions: what you want to build, who it's for, what it should do, and that's it. Plain language, no jargon.</p>
+              <div class="step-visual" aria-hidden="true">
+                <div class="mock-tile">📱<span data-i18n="how.s1.tile1">An app</span></div>
+                <div class="mock-tile">🌐<span data-i18n="how.s1.tile2">A website</span></div>
+                <div class="mock-tile sel">🛠️<span data-i18n="how.s1.tile3">A tool</span></div>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-num">2</div>
+              <h3 data-i18n="how.s2.title">Get 12 documents</h3>
+              <p data-i18n="how.s2.body">Vision, roadmap, risks, architecture, marketing brief, and a starter prompt for Claude. Substantial content, no placeholder text.</p>
+              <div class="step-visual" aria-hidden="true">
+                <div class="mock-doc">
+                  <div class="mock-line w70"></div>
+                  <div class="mock-line w50"></div>
+                  <div class="mock-line w65"></div>
+                  <div class="mock-line w40"></div>
+                </div>
+                <div class="mock-doc-stack" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </li>
+            <li class="step">
+              <div class="step-num">3</div>
+              <h3 data-i18n="how.s3.title">Continue in Claude</h3>
+              <p data-i18n-html="how.s3.body.html">Drop <code>MASTERPLAN.md</code> into a free claude.ai chat with the prepared prompt. Claude walks you through Step&nbsp;1 in plain language, one question at a time.</p>
+              <div class="step-visual" aria-hidden="true">
+                <div class="mock-chat">
+                  <div class="mock-chat-msg" data-i18n="how.s3.chat-msg">📎 MASTERPLAN.md</div>
+                  <div class="mock-chat-reply" data-i18n="how.s3.chat-reply">Sure! Let's start with…</div>
+                </div>
+              </div>
+            </li>
+          </ol>
+          <div class="how-cta">
+            <a class="cta primary cta-lg" href="https://claude-code-public-builder-kit.vercel.app/">
+              <span data-i18n="how.cta.primary">Try it now</span>
+              <span class="cta-ico" aria-hidden="true">→</span>
+            </a>
+            <p class="muted small" data-i18n="how.cta.note">Free. Works in any modern browser.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────── EXAMPLE OUTPUT ─────────── -->
+      <section id="example" class="section section-alt">
+        <div class="container">
+          <header class="section-head">
+            <p class="kicker" data-i18n="ex.kicker">Real output</p>
+            <h2 data-i18n="ex.h2">This is what the kit gives you.</h2>
+            <p data-i18n-html="ex.subtitle.html">One snippet from a real generated <code>MASTERPLAN.md</code> for the idea <em>"A SaaS dashboard for small business accountants"</em>. Browse the full 12-file output on GitHub.</p>
+          </header>
+          <article class="example-preview">
+            <header class="example-preview-head">
+              <span class="example-tag" data-i18n="ex.tag">MASTERPLAN.md</span>
+              <span class="example-meta muted" data-i18n="ex.meta">~280 lines · 1 of 12 files</span>
+            </header>
+            <pre class="example-preview-body"><code>## 1. One-line summary
+
+A SaaS dashboard for small business accountants who need to see month-end
+status across all their clients without bouncing between five tools.
+
+## 2. Audience
+
+Small business accountants — typically firms of 1–10 partners managing
+30–200 clients each. They are domain experts, not power users; first-run
+flow has to make the daily core action obvious in under three minutes.
+
+## 3. Domain-specific risks (professional services)
+
+- Trust and credibility: a single embarrassing output destroys word-of-mouth.
+  Slow rollout and a supervised mode beat a fast generic launch.
+- Client-data privacy: assume PII and privileged information will end up
+  in the system. No third-party logging, conservative retention, clear
+  export + delete on request.
+- Liability and expectation management: the product assists, it does not
+  give legal / financial / tax / strategic advice…</code><span class="example-fade" aria-hidden="true"></span></pre>
+            <footer class="example-preview-foot">
+              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/tree/main/examples/smb-accounting-saas-dashboard" rel="noopener" data-i18n="ex.foot.browse">Browse the full 12 files →</a>
+              <a class="cta primary" href="https://claude-code-public-builder-kit.vercel.app/" data-i18n="ex.foot.generate">Generate your own →</a>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <!-- ─────────── WHAT YOU GET ─────────── -->
       <section id="what-you-get" class="section">
         <div class="container">
           <header class="section-head">
-            <h2>What you get</h2>
-            <p>For every idea you enter, the kit produces the same twelve files. Substantial content; no orphan <code>TODO</code> stubs (the test suite enforces it).</p>
+            <p class="kicker" data-i18n="wyg.kicker">Inside every kit</p>
+            <h2 data-i18n="wyg.h2">Twelve files, every time.</h2>
+            <p data-i18n-html="wyg.subtitle.html">Substantial content; no orphan <code>TODO</code> stubs (the test suite enforces that).</p>
           </header>
-
           <div class="files-grid">
-            <article class="file-card">
-              <h3>README.md</h3>
-              <p>Project entry point with quick start and structure.</p>
-            </article>
-            <article class="file-card">
-              <h3>CLAUDE.md</h3>
-              <p>Operating rules for any Claude Code session in your repo.</p>
-            </article>
-            <article class="file-card">
-              <h3>MASTERPLAN.md</h3>
-              <p>Vision, scope, success metrics — the single source of truth.</p>
-            </article>
-            <article class="file-card">
-              <h3>ROADMAP.md</h3>
-              <p>Five phases from foundation to scale, each with an exit gate.</p>
-            </article>
-            <article class="file-card">
-              <h3>RUN_LOG.md</h3>
-              <p>Append-only session journal, seeded with Run #001.</p>
-            </article>
-            <article class="file-card">
-              <h3>ACCEPTANCE_CRITERIA.md</h3>
-              <p>Phase-tied checklists of what "done" actually means.</p>
-            </article>
-            <article class="file-card">
-              <h3>ARCHITECTURE.md</h3>
-              <p>Recommended starting architecture and open questions.</p>
-            </article>
-            <article class="file-card">
-              <h3>PROMPTS/initial-prompt.md</h3>
-              <p>A drop-in first prompt to start your Phase 0 session.</p>
-            </article>
-            <article class="file-card">
-              <h3>PROMPTS/run-plan-20-sessions.md</h3>
-              <p>A 20-session execution plan from empty repo to product.</p>
-            </article>
-            <article class="file-card">
-              <h3>DOCS/product-brief.md</h3>
-              <p>Audience, jobs-to-be-done, top user stories.</p>
-            </article>
-            <article class="file-card">
-              <h3>DOCS/market-positioning.md</h3>
-              <p>Positioning statement and competitive frame.</p>
-            </article>
-            <article class="file-card">
-              <h3>DOCS/technical-decisions.md</h3>
-              <p>Stack candidates and an ADR template for the decisions you make.</p>
-            </article>
+            <article class="file-card"><h3>MASTERPLAN.md</h3><p>Vision, scope, success metrics — single source of truth.</p></article>
+            <article class="file-card"><h3>ROADMAP.md</h3><p>Five phases from foundation to scale, each with an exit gate.</p></article>
+            <article class="file-card"><h3>ARCHITECTURE.md</h3><p>Recommended starting architecture and open questions.</p></article>
+            <article class="file-card"><h3>ACCEPTANCE_CRITERIA.md</h3><p>Phase-tied checklists of what "done" actually means.</p></article>
+            <article class="file-card"><h3>DOCS/product-brief.md</h3><p>Audience, jobs-to-be-done, top user stories.</p></article>
+            <article class="file-card"><h3>DOCS/market-positioning.md</h3><p>Positioning statement and competitive frame.</p></article>
+            <article class="file-card"><h3>DOCS/technical-decisions.md</h3><p>Stack candidates and an ADR template.</p></article>
+            <article class="file-card"><h3>PROMPTS/initial-prompt.md</h3><p>A drop-in first prompt to start your Phase 0 chat.</p></article>
+            <article class="file-card"><h3>PROMPTS/run-plan-20-sessions.md</h3><p>A 20-session execution plan from empty repo to product.</p></article>
+            <article class="file-card"><h3>README.md</h3><p>Project entry point with quick start and structure.</p></article>
+            <article class="file-card"><h3>CLAUDE.md</h3><p>Operating rules for any Claude Code session in your repo.</p></article>
+            <article class="file-card"><h3>RUN_LOG.md</h3><p>Append-only session journal, seeded with Run #001.</p></article>
           </div>
         </div>
       </section>
 
-      <section id="quick-start" class="section section-alt">
-        <div class="container">
+      <!-- ─────────── DEVS / LOCAL ─────────── -->
+      <section id="devs" class="section section-alt">
+        <div class="container narrow">
           <header class="section-head">
-            <h2>Quick start</h2>
-            <p>Anything with Node 18+ runs this. No accounts. No build step.</p>
+            <p class="kicker" data-i18n="dev.kicker">For developers</p>
+            <h2 data-i18n="dev.h2">Or run it locally.</h2>
+            <p data-i18n="dev.subtitle">Same tool, your machine. Two runtime dependencies (Express + archiver), no build step, MIT licensed.</p>
           </header>
           <pre class="codeblock"><code>git clone https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit
 cd Claude-Code-Public-Builder-Kit
 npm install
 npm start
 # open http://localhost:5173</code></pre>
-          <p class="muted">
-            From the UI you can generate a kit, copy any of the 12 files, or
-            download the whole bundle as a ZIP. Generated kits land in
-            <code>output/&lt;slug&gt;/</code> on disk.
+          <p class="muted" data-i18n="dev.api-hint">
+            Or hit the API directly:
           </p>
-          <h3>Use the API directly</h3>
-          <pre class="codeblock"><code>curl -s -X POST http://localhost:5173/api/generate.zip \
+          <pre class="codeblock"><code>curl -s -X POST https://claude-code-public-builder-kit.vercel.app/api/generate.zip \
   -H 'Content-Type: application/json' \
   -d '{"idea":"A SaaS dashboard for small business accountants"}' \
   -o kit.zip</code></pre>
-        </div>
-      </section>
-
-      <section id="examples" class="section">
-        <div class="container">
-          <header class="section-head">
-            <h2>Worked examples</h2>
-            <p>Real kits produced by the same generator. Browse the actual 12 files on GitHub.</p>
-          </header>
-          <div class="example-cards">
-            <article class="example-card">
-              <h3>Small Business Website System</h3>
-              <p class="card-idea">"A website system for small local businesses"</p>
-              <p>A focused website system that local shops, cafes, and service businesses can run themselves — get found, take bookings, update hours, no developer required.</p>
-              <p class="card-meta">12 files · slug: <code>website-system-for-small-local-businesses</code></p>
-              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/tree/main/examples/small-business-website-system" rel="noopener">Browse on GitHub</a>
-            </article>
-            <article class="example-card">
-              <h3>SMB Accounting SaaS Dashboard</h3>
-              <p class="card-idea">"A SaaS dashboard for small business accountants"</p>
-              <p>A SaaS dashboard built for accountants serving small business clients — month-end status at a glance, client requests in one place, and a clear answer to "what do I work on next?".</p>
-              <p class="card-meta">12 files · slug: <code>saas-dashboard-for-small-business-accountants</code></p>
-              <a class="cta secondary" href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/tree/main/examples/smb-accounting-saas-dashboard" rel="noopener">Browse on GitHub</a>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section id="why" class="section section-alt">
-        <div class="container narrow">
-          <header class="section-head">
-            <h2>Why this exists</h2>
-          </header>
-          <p>
-            The hardest part of starting a project isn't writing code — it's
-            answering "what am I actually building?" without spending two weeks
-            on a wiki nobody reads.
-          </p>
-          <p>
-            This kit collapses that gap. Twelve files, opinionated where it
-            helps, explicit about its assumptions where it can't know. You sharpen
-            them in <code>MASTERPLAN.md</code>, drop the initial prompt into Claude
-            Code, and start building from a clear starting line.
-          </p>
-          <p>
-            Nothing is hidden. The generator is a few hundred lines of plain
-            Node.js, deterministic, with a 24-test suite and CI that fails if a
-            worked example drifts. There is no telemetry, no LLM call, no cloud
-            dependency.
-          </p>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <div class="container footer-row">
-        <p>
+        <p data-i18n-html="footer.line1.html">
           MIT licensed · <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit" rel="noopener">Source on GitHub</a> · <a href="https://github.com/BEKO2210/Claude-Code-Public-Builder-Kit/blob/main/LICENSE" rel="noopener">LICENSE</a>
         </p>
-        <p class="muted small">
-          This page is a static site published from <code>/docs</code> via GitHub Pages. No tracking. No JavaScript required.
+        <p class="muted small" data-i18n-html="footer.line2.html">
+          Static site published from <code>/docs</code> via GitHub Pages. No tracking. No JavaScript required.
         </p>
       </div>
     </footer>
+    <script src="./i18n.js" defer></script>
   </body>
 </html>
