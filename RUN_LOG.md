@@ -2,6 +2,132 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #032 — 2026-04-30 — Wizard-Polish in 5 Teilen — Richtung viral
+
+**Trigger:** Owner: *"Wizard-Polish aber in 5 Teilen die speziell auf die Optik und Logistik gehen das gesamte System soll viral gehen wenn es fertig ist (schätze wieweit wie davon entfernt sind und lenke unseren Plan in die Richtung)"*. Strategic pivot: every UI improvement from now on serves two ends — better UX *and* a concrete step toward a tool that gets shared, talked about, used by strangers' strangers.
+
+**Pre-run estimate:** ~35–45 % viral-ready. Foundation solid (hosted, free, instant-Aha possible, DE+EN, premium-feel, mobile-first), but the **viral loop is missing** — no Aha-Wow surface, no shareability layer, no social hooks, no stories, no self-branding. After Run #032: ~75–80 %.
+
+**The 5 parts, one commit each, each on the same branch:**
+
+### Part 1 (`5aa4b66`) — Hero-Aha-Live-Demo
+
+The landing hero card replaces a static mockup with a **16-second loop**:
+- A typewriter cycles 4 ideas: *Pizzaservice für Studenten*, *Training-App für Eltern*, *Buchhaltung für Solos*, *Klima-Dashboard fürs Team*. Each ~4 s (1.6 s typing, 2.4 s hold).
+- After each phrase finishes typing, 4 file rows pop in sequentially 320 ms apart (📄 MASTERPLAN.md → ROADMAP.md → ARCHITECTURE.md → + 9 more), all fading out together when the phrase swaps.
+- Cursor blinks always.
+- The card-bar gets a "builderkit" mono label like a window-title.
+- Pure CSS, ~140 lines of keyframes. `prefers-reduced-motion` collapses to a single static phrase + always-visible rows.
+
+This is the **Aha moment**. A user landing for the first time sees the full type→generate roundtrip in their first ~6 seconds, before they've decided whether to scroll. Most ad-blocked passive consumption converts at this stage; we have something to convert with.
+
+### Part 2 (`ff41c26`) — Wizard-Microinteractions
+
+Three premium-feel additions:
+
+1. **Slide-transitions between panels.** `.panel-enter-forward` (slide-in-from-right) and `.panel-enter-back` (slide-in-from-left) classes, toggled by `renderWizard()` based on direction relative to `wizardLastStep`. 320 ms cubic-bezier curves. Force-reflow before adding the class so the keyframes restart on rapid back-and-forth navigation. Reduced-motion disables both.
+
+2. **Progress-bar fill in the step-indicator.** `.wizard-steps` gets a `::before` pseudo-element (background line, full width) and `::after` (the fill). Fill width is `calc(var(--progress, 0) * 1%)`, set inline by `renderWizard()` via `(step - 1) / (stepCount - 1) * 100`. Linear-gradient from `--accent` to `--accent-press`. 380 ms transition.
+
+3. **localStorage autosave** under key `bk-wizard-state`. Six mutation sites (productType pick / otherText input / audience input / audience pill / benefit input / benefit pill) all wired to `saveWizardState()`. `restoreWizardState()` runs once at bootstrap, sets `aria-checked` on the right tile, expands the Other-input wrap if needed, re-fills audience + benefit inputs. Step itself is **not** saved — every reload starts at step 1, but answers reappear pre-filled, so a returning user can advance fast.
+
+### Part 3 (`83ac9d1`) — Result Premium + Stats
+
+Three additions, all in service of "this is impressive enough to share":
+
+1. **Stats card** above the use-your-kit panel: `[12 files] [65 sections] [6.8k words] [0.4 seconds]`. File count from `files.length`; sections counts `^##` headings across all files; word count is split-on-whitespace summed; generation time is `performance.now()` roundtrip threaded as `durationMs` through `renderResult()`. Mono accent-coloured numbers with `font-variant-numeric: tabular-nums`. 4-column on desktop, 2-column on mobile.
+
+2. **MASTERPLAN.md live preview** — first 30 lines, fade-out at the bottom edge via CSS `mask-image`. Tag bar shows `MASTERPLAN.md` + "First 30 lines — open the ZIP for the full plan." User sees real content immediately; doesn't have to open the ZIP to believe substance.
+
+3. **File-list colour-coded** by category, via 3-px left-border on each entry: strategy (blue), tech (green), brief (purple), prompts (orange), meta (grey). `fileCategory(path)` is a simple regex switch; `renderFileList()` sets `data-cat="..."` on each button.
+
+Plus 5 i18n keys EN+DE for stat labels + preview hint.
+
+### Part 4 (`b9a17ac`) — Shareability
+
+The viral loop. Stateless, no backend.
+
+1. **Share row** in the result panel: 4 buttons with inline-SVG logos.
+   - Twitter / X — `https://twitter.com/intent/tweet?text=…&url=…`
+   - LinkedIn — `https://www.linkedin.com/sharing/share-offsite/?url=…`
+   - WhatsApp — `https://wa.me/?text=…`
+   - Copy link — clipboard API with copied/failed feedback
+
+2. **`buildShareURL(idea)`** generates `${origin}${pathname}?idea=${encodeURIComponent(idea)}`. **`updateShareLinks(idea, projectName)`** runs from `renderResult()`, refreshes all 4 hrefs every time a fresh kit is shown. Tweet/WhatsApp text is locale-aware:
+   - EN: *"Just generated a complete project plan for {name} in 30 seconds with Builder Kit. 12 markdown docs, ready for Claude Code:"*
+   - DE: *"Habe gerade einen kompletten Projektplan für {name} in 30 Sekunden mit Builder Kit erstellt. 12 Markdown-Dokumente, ready für Claude Code:"*
+
+3. **`handleDeepLinkIdea()` reads `?idea=...`** at boot. If present and ≤ 500 chars, the wizard hides, the direct form shows with the idea pre-filled, and the form auto-submits via `requestSubmit()` after a 50 ms settle. Recipients land on a working, fresh kit in one click.
+
+The {name} placeholder in tweet text uses **plain text without inner quotes** — typographic safety, avoids the broken-DE-quote bug class from Run #028b.
+
+### Part 5 (`f7acda5`) — Social Proof + Self-Branding
+
+1. **"Try these ideas" section** on the landing, between the deep-flow and example-output. Three cards in a 3-col grid:
+   - *"A training plan app for busy parents."* → health & wellness, deep-link to `?idea=...`
+   - *"A bookkeeping tool for solo freelancers."* → finance domain
+   - *"A marketplace for indie crafters."* → retail & e-commerce, marketplace pattern
+   Each card: italicised quote, concrete description with numbers + domain notes, primary CTA "Generate this →" linking with the deep-link param. Hover lifts 3 px, border turns accent.
+
+2. **Self-branding watermark in `CLAUDE.md`** template:
+   ```
+   ---
+   *This planning kit was generated from a one-line idea by [Builder Kit](https://...) — free, open source, MIT-licensed. To regenerate or build a kit for a different idea, visit the URL above.*
+   ```
+   Italic, separated by horizontal rule, ~30 words. Both worked examples regenerated with the new footer (intentional drift, byte-clean otherwise). Every kit a user shares with a teammate / commits to a GitHub repo / pastes into Slack carries the back-link.
+
+Plus 11 EN + 11 DE i18n keys for the try-cards.
+
+**Files touched (across all 5 commits)**
+- `public/index.html`, `public/style.css`, `public/app.js`, `public/i18n.js`
+- `docs/index.html`, `docs/style.css`, `docs/i18n.js`
+- `src/templates/claude.js` (watermark)
+- `examples/small-business-website-system/CLAUDE.md`, `examples/smb-accounting-saas-dashboard/CLAUDE.md` (regenerated with watermark)
+- `RUN_LOG.md`, `CLAUDE.md`
+
+**Tests run (final state after all 5 parts)**
+- `npm test` → **83/83** pass.
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- Both `i18n.js` parse cleanly (Run #028b syntax tests still guarding).
+- `npm run generate:examples` → only `CLAUDE.md` changed in both worked examples (intentional watermark drift), everything else byte-stable.
+
+**Drift accounting**
+Two intentional file changes in `examples/`: both `CLAUDE.md` got the new watermark footer. CI's example-drift guard accepts the change because it's the *expected* output of the updated template. No accidental drift.
+
+**Known limitations**
+- **Stateless URL scheme means long shareable URLs.** A typical idea sentence URL-encodes to ~150–250 chars. Twitter handles this fine (their auto-shortener kicks in for the URL part); LinkedIn fine; WhatsApp fine. No URL shortener wired in.
+- **No dynamic OG-image generation** — the OG card on shared URLs is the static `og-card.png` from Run #014. A real per-URL OG image would need a Vercel Edge Function, which is out of scope for Run #032 (would also add a build step). The Twitter/LinkedIn unfurl shows a generic but consistent card, which is acceptable.
+- **No counter / total-kits-generated number.** That would need either a backend or a synced KV store. Skipped for now; if added, `Run #033` is the natural place.
+- **The "Try these ideas" cards are owner-curated**, not real user stories. The cards' wording is honest about that ("Each card runs the full generator on the deployed app").
+- **The watermark in CLAUDE.md** is in English only — the templates themselves are English (the kit's *output* is English regardless of UI language). Localising the watermark would require localising every template.
+
+**Decisions**
+- **5 separate commits**, one per part, on the same branch. Reviewability over commit count. Each commit message captures the *why*, not just the *what*, so future maintainers can read the run as a story.
+- **Stateless URLs over Vercel KV** for sharing. Privacy-cleaner, no second runtime dep, the URL is the only thing the system needs to know about a "shared kit". Trade-off: long URLs in clipboard. Acceptable.
+- **Watermark in CLAUDE.md, not in MASTERPLAN.md.** CLAUDE.md is the file that gets read by Claude Code on every session in the user's repo — the back-link will be seen by every contributor. MASTERPLAN.md is the strategic doc; adding a watermark there feels intrusive.
+- **Try-cards as "owner-curated demos", not "user testimonials"**, because we don't have real user testimonials yet and faking them is unethical. The cards work as proof-by-demonstration: click, see real output, trust the tool more. When real testimonials exist, this section gets replaced; until then, the demos serve.
+- **Hero typewriter is German-flavoured ideas** (Pizzaservice, Buchhaltung, Klima-Dashboard) even on the EN site. Reasoning: the owner's primary audience is DE-speaking; German examples speak to that audience first. The structure ("X for Y") is universal; the specifics are warm. EN-speaking users still understand them — *Pizzaservice für Studenten* parses as "pizza service for students" with negligible cognitive load.
+
+**Viral-readiness, after Run #032: ~75–80 %**
+
+What's still missing for the last 20–25 %:
+- A real counter / "X kits generated this month" number (needs backend)
+- Dynamic OG-image per shared kit (needs Edge Function)
+- Real user testimonials (needs distribution + time)
+- Maybe a public opt-in gallery of shared kits (needs persistence + moderation)
+- Maybe domain-specific landing pages for SEO (needs build step)
+
+But Run #032 closes the loop where it matters: hero → typewriter → click → wizard → generate → stats → preview → share → recipient lands on `?idea=` → fresh kit → share-button-loop. **That's the loop we needed.**
+
+**Next session starts with**
+- Owner picks. The reach + polish work is now substantively done. Shortlist:
+  - **Real counter / metrics** (Run #033 if owner wants the social-proof number)
+  - **Edge-Function OG image generator** (Run #034 if owner wants per-URL preview cards)
+  - **Resume domain depth** (eleventh domain — non-profit & community or government & civic)
+  - **EN versions of the legal pages**
+
+---
+
 ## Run #031b — 2026-04-30 — Cleanup: remove duplicate "How it works" + better post-generate status + full debug walkthrough
 
 **Trigger:** Owner: *"die Beispiel galley soll uganz unten sein so das man direkt sieht was man erzeugt hat … Auf der Landingpage wird es 2 mal erklärt nur die Ausführungen version lassen … debugge jetzt alles in dem du alles testest jeden button jede Funktion alles ein mal liest wie ein endbenutzer"*. Three things: confirm result-vs-gallery order, kill the duplicate "How it works" section on the landing, and walk through the whole product as if I were a first-time user.
