@@ -34,7 +34,13 @@ The output is opinionated, generic where it has to be, and explicit about what's
 
 No other system dependencies. No build step.
 
-## Install
+## Hosted version (no install)
+
+The same generator runs in the browser at the deployed URL — no terminal, no `npm`. Tip an idea, click **Generate**, download the ZIP. Filesystem persistence is automatically disabled in hosted mode (no writable disk on serverless); everything else behaves identically to the local app.
+
+The hosted version is deployed via [Vercel](https://vercel.com): Import the repo, no build settings to change, deploy. `vercel.json` ships in the repo and points all requests at `api/index.js`, which re-exports the same Express app `npm start` uses locally — so the hosted and local code paths never drift.
+
+## Install (local, optional)
 
 ```bash
 git clone <this-repo>
@@ -223,7 +229,10 @@ npm run build:og
 .
 ├── .github/workflows/ci.yml  # GitHub Actions: tests + example reproducibility
 ├── server.js                 # Express: /api/health, /api/generate, /api/generate.zip,
-│                             #          /api/examples, /api/examples/:id
+│                             #          /api/examples, /api/examples/:id, /api/preview.
+│                             #          Exports the app; only listens when run as CLI.
+├── api/index.js              # Vercel Serverless entry — re-exports the same Express app.
+├── vercel.json               # Vercel config — catch-all rewrite to /api.
 ├── package.json
 ├── LICENSE                   # MIT
 ├── docs/                     # Public landing page, deployed via GitHub Pages

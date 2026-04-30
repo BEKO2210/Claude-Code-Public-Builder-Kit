@@ -11,17 +11,56 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5173;
 const OUTPUT_DIR = resolve(__dirname, "output");
 
+// `process.env.VERCEL` is "1" on every Vercel runtime (build + serverless).
+// We use it to disable filesystem-persist (no writable disk on serverless)
+// and to surface a "hosted" flag for the UI if it ever needs to differ.
+const IS_HOSTED = process.env.VERCEL === "1";
+
+// In-memory rate limiter for the heavy endpoints (`/api/generate`,
+// `/api/generate.zip`). Each Vercel function instance has its own Map;
+// the limiter is best-effort on serverless but still raises the cost of
+// abuse meaningfully because Vercel keeps warm instances long enough that
+// a single bad actor lands on the same instance repeatedly. Locally it
+// behaves identically. Tests stay well under the limit (≤6 calls per
+// run on rate-limited endpoints).
+const RL_WINDOW_MS = 60_000;
+const RL_MAX = 30;
+const rateLimitBuckets = new Map();
+
+function rateLimit(req, res, next) {
+  const fwd = req.headers["x-forwarded-for"];
+  const ip = (typeof fwd === "string" ? fwd.split(",")[0].trim() : "")
+    || req.socket?.remoteAddress
+    || "unknown";
+  const now = Date.now();
+  const entry = rateLimitBuckets.get(ip);
+  if (!entry || entry.resetAt <= now) {
+    rateLimitBuckets.set(ip, { count: 1, resetAt: now + RL_WINDOW_MS });
+    return next();
+  }
+  if (entry.count >= RL_MAX) {
+    res.setHeader("Retry-After", Math.ceil((entry.resetAt - now) / 1000));
+    return res.status(429).json({ error: "Too many requests. Please slow down and try again in a minute." });
+  }
+  entry.count += 1;
+  next();
+}
+
 const app = express();
 app.use(express.json({ limit: "64kb" }));
 app.use(express.static(resolve(__dirname, "public")));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: true, hosted: IS_HOSTED });
 });
 
-app.post("/api/generate", async (req, res) => {
+app.post("/api/generate", rateLimit, async (req, res) => {
   const idea = typeof req.body?.idea === "string" ? req.body.idea.trim() : "";
-  const persist = req.body?.persist !== false;
+  // Locally the user can opt in to filesystem persistence. On hosted we
+  // ignore the flag — there is no writable disk, and even if there were,
+  // we don't want one user's slug to collide with the next.
+  const wantsPersist = req.body?.persist !== false;
+  const persist = wantsPersist && !IS_HOSTED;
 
   if (!idea) {
     return res.status(400).json({ error: "Field 'idea' is required." });
@@ -42,7 +81,7 @@ app.post("/api/generate", async (req, res) => {
       await writeKit(files, target);
       writtenTo = target;
     }
-    res.json({ context, files, writtenTo });
+    res.json({ context, files, writtenTo, hosted: IS_HOSTED });
   } catch (err) {
     res.status(500).json({ error: err.message || "Generation failed." });
   }
@@ -92,7 +131,7 @@ app.get("/api/examples/:id", (req, res) => {
   });
 });
 
-app.post("/api/generate.zip", async (req, res) => {
+app.post("/api/generate.zip", rateLimit, async (req, res) => {
   const parsed = readIdea(req);
   if (parsed.error) return res.status(400).json({ error: parsed.error });
   try {
