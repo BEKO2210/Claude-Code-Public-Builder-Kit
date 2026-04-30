@@ -149,7 +149,7 @@ function renderExampleCards(examples) {
 
     const meta = document.createElement("p");
     meta.className = "card-meta";
-    meta.textContent = `${ex.fileCount} files · slug: ${ex.slug}`;
+    meta.textContent = t("card.meta", { count: ex.fileCount, slug: ex.slug });
 
     const actions = document.createElement("div");
     actions.className = "card-actions";
@@ -210,7 +210,7 @@ async function previewExample(id, triggerBtn) {
     if (!res.ok) throw new Error(data.error || t("status.failed-example"));
     renderResult({
       projectName: data.context.projectName,
-      meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
+      meta: t("result.meta", { type: data.context.productType, audience: data.context.audience, domain: data.context.domain, slug: data.context.slug }),
       files: data.files,
       slug: data.context.slug,
       idea: data.idea,
@@ -252,7 +252,7 @@ async function runGenerate(idea, { scrollToResult = false, persist = false } = {
   }
   renderResult({
     projectName: data.context.projectName,
-    meta: `${data.context.productType} · ${data.context.audience} · ${data.context.domain} · slug: ${data.context.slug}`,
+    meta: t("result.meta", { type: data.context.productType, audience: data.context.audience, domain: data.context.domain, slug: data.context.slug }),
     files: data.files,
     slug: data.context.slug,
     idea,

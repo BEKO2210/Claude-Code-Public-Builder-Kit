@@ -64,7 +64,7 @@ const STRINGS = {
 
     "step4.question": "Here's your idea — does this look right?",
     "step4.help": "If anything is off, go back and edit. Otherwise, generate your kit.",
-    "step4.persist.html": "Also write files to <code>output/&lt;slug&gt;/</code> (local only)",
+    "step4.persist": "Save a copy on my computer (local only)",
 
     "nav.back": "← Back",
     "nav.next": "Next →",
@@ -76,7 +76,7 @@ const STRINGS = {
     "direct.label": "Your project idea",
     "direct.placeholder": "e.g. I want to build an app for small restaurants",
     "direct.hint.html": "One sentence is enough. The kit infers product type, audience, and domain — you sharpen the rest in <code>MASTERPLAN.md</code>.",
-    "direct.persist.html": "Also write files to <code>output/&lt;slug&gt;/</code>",
+    "direct.persist": "Save a copy on my computer",
     "direct.submit": "Generate kit",
 
     "result.use.heading": "Use your kit in 3 steps",
@@ -113,6 +113,8 @@ const STRINGS = {
     "card.aria.generate-now": "Generate kit from idea: {idea}",
     "card.aria.preview": "Preview example: {title}",
     "card.aria.use-idea": "Use this idea as input: {idea}",
+    "card.meta": "{count} files · slug: {slug}",
+    "result.meta": "{type} · for {audience} · in {domain} · slug: {slug}",
 
     "footer.text.html": "MIT licensed. Generated docs are yours — edit them freely. See <code>CLAUDE.md</code> for how to drive subsequent Claude Code sessions inside a generated kit.",
 
@@ -190,7 +192,7 @@ const STRINGS = {
 
     "step4.question": "Hier ist deine Idee — passt das so?",
     "step4.help": "Wenn etwas nicht stimmt, geh zurück und ändere es. Sonst los: Kit erzeugen.",
-    "step4.persist.html": "Dateien zusätzlich nach <code>output/&lt;slug&gt;/</code> schreiben (nur lokal)",
+    "step4.persist": "Eine Kopie auf meinem Computer speichern (nur lokal)",
 
     "nav.back": "← Zurück",
     "nav.next": "Weiter →",
@@ -202,7 +204,7 @@ const STRINGS = {
     "direct.label": "Deine Projektidee",
     "direct.placeholder": "z.B. Ich möchte eine App für kleine Restaurants bauen",
     "direct.hint.html": "Ein Satz reicht. Das Kit erkennt Produkttyp, Zielgruppe und Bereich — den Rest schärfst du in <code>MASTERPLAN.md</code>.",
-    "direct.persist.html": "Dateien zusätzlich nach <code>output/&lt;slug&gt;/</code> schreiben",
+    "direct.persist": "Eine Kopie auf meinem Computer speichern",
     "direct.submit": "Kit erzeugen",
 
     "result.use.heading": "Dein Kit in 3 Schritten nutzen",
@@ -239,6 +241,8 @@ const STRINGS = {
     "card.aria.generate-now": "Kit aus dieser Idee erzeugen: {idea}",
     "card.aria.preview": "Beispiel-Vorschau: {title}",
     "card.aria.use-idea": "Diese Idee als Eingabe verwenden: {idea}",
+    "card.meta": "{count} Dateien · Slug: {slug}",
+    "result.meta": "{type} · für {audience} · im Bereich {domain} · Slug: {slug}",
 
     "footer.text.html": "MIT-lizenziert. Die erzeugten Dokumente gehören dir — ändere sie nach Belieben. <code>CLAUDE.md</code> erklärt, wie du folgende Claude-Code-Sessions in einem erzeugten Kit steuerst.",
 
@@ -341,6 +345,8 @@ export function applyTranslations(root = document) {
 }
 
 // Hook the switcher buttons globally so HTML doesn't need its own JS.
+// Apply translations as soon as the DOM is ready — defending against any
+// caller that forgets to call applyTranslations() on its own. Idempotent.
 if (typeof document !== "undefined") {
   document.addEventListener("click", (e) => {
     const btn = e.target.closest?.("[data-lang-set]");
@@ -349,4 +355,9 @@ if (typeof document !== "undefined") {
       setLocale(btn.getAttribute("data-lang-set"));
     }
   });
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => applyTranslations());
+  } else {
+    applyTranslations();
+  }
 }
