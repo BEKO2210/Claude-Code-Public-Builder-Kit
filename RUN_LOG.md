@@ -2,6 +2,69 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #022c — 2026-04-30 — Mobile UX bug + styling refresh
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~30 min.
+**Trigger:** Owner-reported on mobile after the Vercel deploy: "die erzeugten daten müssen direkt darunter sein sonst merkt man am Handy nichts ich hab es zufällig gesehen als ich gescrollt habe". Plus a general "checke alles auf styling, lesen im internet wie Webseiten und mach es besser". Two distinct concerns, addressed in one commit because they're tightly coupled (the styling fixes the perception of "nothing happened" that the layout bug created).
+
+**The bug**
+On a phone, after tapping **Generate kit**, the result section was rendered far below the visible viewport (below the entire example gallery), and the form-submit handler did *not* auto-scroll to it. The "card" path (Run #016) had `scrollToResult: true` but the form path was deliberately set to `false` — my Run #016 RUN_LOG note said "the scroll would feel jumpy on desktop", which was Desktop-thinking. On mobile the result was multiple screen-heights down. The owner only saw the output by accident while scrolling.
+
+**Fixes in this run**
+
+1. **Section reorder** in `public/index.html` — `<section id="result">` now sits between the form and the gallery, not after it. When `result.hidden=true` (initial state), the gallery flows up naturally; nothing lost. When the result is shown, it lands right below the form. This is the durable fix; auto-scroll is the belt to the suspenders.
+2. **Auto-scroll on form submit** — the form path now passes `scrollToResult: true`. Same path as the gallery cards. Reasoning in #016 was wrong for mobile.
+3. **Skeleton/loading state** — `result-skeleton` block (shimmering placeholder rows) shows immediately when `Generate` is clicked, **before** the API responds. The user sees something happen at the moment they tap, not 1–2 s later. Driven by a `data-loading="true"` attribute on `#result`; CSS hides the real content while loading is true. `showSkeleton()` / `hideSkeleton()` / `clearResult()` helpers in `app.js`.
+4. **Status banner upgraded from one-liner to prominent** — `setStatus(message, kind)` where `kind ∈ {"" | "busy" | "error"}`. The "busy" variant shows a pulsing dot before the text and an accent-coloured bordered banner; the "error" variant is danger-bordered. Empty status collapses to nothing (no decoration).
+
+**Styling refresh (the broader concern)**
+
+Read modern web-app patterns (Stripe, Linear, Vercel itself, Tailwind UI showcases) and applied the high-impact changes:
+
+- **Touch targets ≥ 44 px** on all buttons (WCAG 2.5.5 + Apple HIG). On mobile, the **Generate kit** button is now full-width with 48 px height, large 16 px font, clear "this is the action" weight.
+- **Inputs at 16 px font** to prevent iOS zoom-on-focus (the textarea was 15 px, which triggers it).
+- **Typography hierarchy** scaled up: H1 uses `clamp(24px, 4vw, 34px)` so it grows on desktop without being huge on mobile; H2s use `clamp(18px, 2.5vw, 22px)`; tighter letter-spacing on display text.
+- **Soft hero gradient** in `.site-header` — a very subtle radial-gradient using `--accent-soft` makes the top of the page feel less flat without screaming "look at me".
+- **Form glow on focus-within** — the entire form card gets a 3-px accent ring when any of its inputs has focus. Subtle but communicates "this is your active workspace".
+- **Smooth scroll** globally (`html { scroll-behavior: smooth }`), with a `prefers-reduced-motion` override to fully disable animations + smooth scroll for users who request it.
+- **Reveal animation** on `.result` — 320 ms `revealIn` keyframe (8 px slide + fade) when the section first appears.
+- **Skeleton shimmer** — `.sk-row / .sk-line / .sk-block` use a 200 %-wide gradient and an animated background-position for a soft shimmer.
+- **Card hover state** on example cards — 2 px lift + soft shadow + border-strong on hover. Feels alive on desktop, harmless on touch.
+- **Spacing system** unified to `--radius-sm/md/lg`, `--shadow-sm/md`, and timing tokens `--t-fast/med` so future polish edits stay consistent.
+- **Result section layout** on mobile: file-list stops being a sidebar and becomes a 240 px tall horizontal-flow nav above the file content, sticky border instead of side-divider; result-header collapses to vertical with the action row below the title.
+- **Download ZIP button** promoted from `.secondary` to `.primary` with a subtle accent shadow — it's the main thing a hosted user is going to do.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** server.js, src/**, tests/**, docs/**, examples/**, scripts/**, package.json. (Static-asset audit flagged below.)
+
+**Tests run**
+- `npm test` → **81/81** pass. UI changes are static-DOM + CSS + client JS; no server contract changes.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA, lowest still 5.15 : 1.
+- Live smoke against `node server.js`: index.html now has the skeleton block, section order verified `#result` (line 55) before `.gallery` (line 102), CSS contains all expected new tokens (`revealIn`, `shimmer`, `data-loading`, `status.busy`, `prefers-reduced-motion`), app.js has `showSkeleton` and the `scrollToResult: true` on form submit.
+
+**Drift accounting**
+None. The static-asset audit (`docs/` mirror) is **untouched** — `docs/style.css` is a separate file with the landing-page styles, not the app's styles. The brand assets (logo, favicon, monochrome) are also untouched. CI's `sync:assets:check` only audits the SVG mirror and continues to pass.
+
+**Known limitations**
+- The styling refresh only touches the **app** (`public/`). The **landing page** (`docs/`) still uses its own CSS and looks the same as before — that's intentional, the landing page polish is Run #025's scope (logo redesign + landing rebuild). Doing both at once would have been a hard-to-review monster commit.
+- The skeleton's grid is a 2-column layout that mirrors the desktop file-list + file-content split. On the narrowest mobile widths it stacks (via `.sk-grid` mobile media query) but stays decorative; it's not a 1:1 representation of the real layout. Acceptable — it's a "loading state" cue, not a content placeholder.
+- `prefers-reduced-motion` collapses *all* animations to 0.001 ms (nuclear option). That's the right default — users who turn this on do so for vestibular reasons or low-end hardware and prefer "nothing animates". A future run can opt back in to non-vestibular animations if anyone complains.
+- The hero radial gradient is rendered with a `radial-gradient(ellipse 80% 100% at 50% 0%, ...)` that's GPU-cheap on modern browsers but does another full-width paint on resize. Not worth optimising; resizes are rare.
+
+**Decisions**
+- **Section reorder + auto-scroll, not just one.** Auto-scroll alone fixes the immediate visual but breaks down if the user scrolls back up to tweak the form and clicks again. Section reorder makes the result *spatially close* to the action, regardless of scroll behaviour. Both together is the durable fix.
+- **Skeleton over spinner.** A spinner pulls focus away from the location where the result will appear; a skeleton occupies that location, so the eye is pre-cued before the data lands. Modern apps (Linear, Notion, Vercel dashboard) all use skeleton patterns for this reason.
+- **No new dependencies for animation or styling.** Tailwind, Framer Motion, Stitches, etc. all considered and rejected — the existing CSS-only approach gets us 95 % of the visual quality at 0 KB of new dependency cost. CLAUDE.md hard rule #3 stands.
+- **Landing-page styling deliberately deferred.** Keeping `public/` and `docs/` styles separate for this run keeps the diff readable. Run #025 will unify them with the new logo.
+- **Sections reordered without breaking the a11y heading hierarchy.** Heading order is still h1 (header) → h2 (form, hidden) → h2 (result-heading) → h2 (gallery). axe is happy.
+
+**Next session starts with**
+- **Run #023 — Wizard-Onboarding** (next commit on this branch). The textarea-only entry point is fine for users who already know what to type ("Eine App für kleine Restaurants"). It is **not** fine for the user-archetype the kit is now targeting — the 65-year-old who types "Kindergarten" and gets `Detected: product · for early adopters in your target segment · in general`. The wizard turns that single textbox into 4 friendly prompts that compose into a richer sentence the inference can actually grip onto.
+
+---
+
 ## Run #022b — 2026-04-30 — Hotfix: ENOENT on Vercel persist write
 
 **Phase:** Phase 2 — Reach (continued from #022).

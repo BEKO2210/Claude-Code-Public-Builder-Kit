@@ -22,9 +22,31 @@ let lastIdea = "";
 let lastSlug = "";
 let resultSource = null; // "generate" | "example" | null
 
-function setStatus(message, isError = false) {
+function setStatus(message, kind = "") {
+  // kind: "" (info) | "error" | "busy" | "success"
   statusEl.textContent = message;
-  statusEl.classList.toggle("error", isError);
+  statusEl.classList.toggle("error", kind === "error");
+  statusEl.classList.toggle("busy", kind === "busy");
+}
+
+function showSkeleton({ scrollIntoView = false } = {}) {
+  resultEl.hidden = false;
+  resultEl.setAttribute("data-loading", "true");
+  if (scrollIntoView) {
+    // rAF + small delay so the layout settles before the smooth scroll fires.
+    requestAnimationFrame(() => {
+      setTimeout(() => resultEl.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    });
+  }
+}
+
+function hideSkeleton() {
+  resultEl.removeAttribute("data-loading");
+}
+
+function clearResult() {
+  resultEl.hidden = true;
+  resultEl.removeAttribute("data-loading");
 }
 
 function setSourceBadge(label) {
@@ -79,6 +101,7 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   }
   setSourceBadge(source === "example" ? "Example" : "");
   resultEl.hidden = false;
+  hideSkeleton();
   renderFileList();
   selectFile(0);
 }
@@ -166,7 +189,8 @@ async function previewExample(id, triggerBtn) {
     triggerBtn.disabled = true;
     triggerBtn.textContent = "Loading…";
   }
-  setStatus("Loading example…");
+  setStatus("Loading example…", "busy");
+  showSkeleton({ scrollIntoView: true });
   try {
     const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
     const data = await res.json();
@@ -181,9 +205,9 @@ async function previewExample(id, triggerBtn) {
       writtenToPath: null
     });
     setStatus(`Loaded example: ${data.title}.`);
-    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
-    setStatus(err.message || "Failed to load example.", true);
+    clearResult();
+    setStatus(err.message || "Failed to load example.", "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -203,6 +227,7 @@ function useIdea(idea) {
 // ---- Generate flow ----
 
 async function runGenerate(idea, { scrollToResult = false } = {}) {
+  showSkeleton({ scrollIntoView: scrollToResult });
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -222,9 +247,6 @@ async function runGenerate(idea, { scrollToResult = false } = {}) {
     writtenToPath: data.writtenTo,
     persistError: data.persistError
   });
-  if (scrollToResult) {
-    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
   return data;
 }
 
@@ -232,18 +254,19 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const idea = ideaInput.value.trim();
   if (!idea) {
-    setStatus("Enter an idea first.", true);
+    setStatus("Enter an idea first.", "error");
     ideaInput.focus();
     return;
   }
   submitBtn.disabled = true;
-  setStatus("Generating…");
+  setStatus("Generating your kit…", "busy");
 
   try {
-    const data = await runGenerate(idea);
-    setStatus(`Generated ${data.files.length} files.`);
+    const data = await runGenerate(idea, { scrollToResult: true });
+    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
   } catch (err) {
-    setStatus(err.message || "Network error.", true);
+    clearResult();
+    setStatus(err.message || "Network error.", "error");
   } finally {
     submitBtn.disabled = false;
   }
@@ -257,12 +280,13 @@ async function generateFromCard(idea, triggerBtn) {
   }
   ideaInput.value = idea;
   ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
-  setStatus("Generating…");
+  setStatus("Generating your kit…", "busy");
   try {
     const data = await runGenerate(idea, { scrollToResult: true });
-    setStatus(`Generated ${data.files.length} files.`);
+    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
   } catch (err) {
-    setStatus(err.message || "Network error.", true);
+    clearResult();
+    setStatus(err.message || "Network error.", "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -313,7 +337,7 @@ downloadZipBtn.addEventListener("click", async () => {
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } catch (err) {
     downloadZipBtn.textContent = "Failed";
-    setStatus(err.message || "ZIP download failed.", true);
+    setStatus(err.message || "ZIP download failed.", "error");
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } finally {
     downloadZipBtn.disabled = false;

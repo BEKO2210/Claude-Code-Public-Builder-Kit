@@ -52,6 +52,53 @@
         </form>
       </section>
 
+      <section id="result" class="result" aria-labelledby="result-heading" hidden>
+        <div class="result-skeleton" aria-hidden="true">
+          <div class="sk-row sk-row-title"></div>
+          <div class="sk-row sk-row-meta"></div>
+          <div class="sk-grid">
+            <div class="sk-col">
+              <div class="sk-line"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line"></div>
+              <div class="sk-line"></div>
+            </div>
+            <div class="sk-col sk-col-content">
+              <div class="sk-line sk-w-90"></div>
+              <div class="sk-line sk-w-70"></div>
+              <div class="sk-line sk-w-95"></div>
+              <div class="sk-line sk-w-60"></div>
+              <div class="sk-line sk-w-85"></div>
+              <div class="sk-line sk-w-75"></div>
+            </div>
+          </div>
+        </div>
+        <header class="result-header">
+          <div>
+            <h2 id="result-heading" class="result-title">
+              <span id="project-name"></span>
+              <span id="result-source-badge" class="badge" hidden></span>
+            </h2>
+            <p id="project-meta" class="muted"></p>
+          </div>
+          <div class="result-actions">
+            <button id="download-zip" type="button" class="primary">Download ZIP</button>
+            <p id="written-to" class="muted" role="status" aria-live="polite"></p>
+          </div>
+        </header>
+        <div class="result-body">
+          <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
+          <article class="file-view" aria-labelledby="active-path">
+            <header class="file-view-header">
+              <span id="active-path" class="path"></span>
+              <button id="copy" type="button" class="secondary">Copy</button>
+            </header>
+            <pre id="file-content" class="file-content" tabindex="0"></pre>
+          </article>
+        </div>
+      </section>
+
       <section class="gallery" aria-labelledby="gallery-heading">
         <header class="section-header">
           <h2 id="gallery-heading">Example gallery</h2>
@@ -62,32 +109,6 @@
         <ul id="example-cards" class="example-cards" aria-live="polite" aria-busy="true">
           <li class="example-card placeholder">Loading examples…</li>
         </ul>
-      </section>
-
-      <section id="result" class="result" aria-labelledby="result-heading" hidden>
-        <header class="result-header">
-          <div>
-            <h2 id="result-heading" class="result-title">
-              <span id="project-name"></span>
-              <span id="result-source-badge" class="badge" hidden></span>
-            </h2>
-            <p id="project-meta" class="muted"></p>
-          </div>
-          <div class="result-actions">
-            <button id="download-zip" type="button" class="secondary">Download ZIP</button>
-            <p id="written-to" class="muted" role="status" aria-live="polite"></p>
-          </div>
-        </header>
-        <div class="result-body">
-          <nav id="file-list" class="file-list" aria-label="Generated files"></nav>
-          <article class="file-view" aria-labelledby="active-path">
-            <header class="file-view-header">
-              <span id="active-path" class="path"></span>
-              <button id="copy" type="button">Copy</button>
-            </header>
-            <pre id="file-content" class="file-content" tabindex="0"></pre>
-          </article>
-        </div>
       </section>
     </main>
 
