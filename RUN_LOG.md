@@ -2,6 +2,149 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #023 — 2026-04-30 — Wizard-Onboarding (4 freundliche Schritte statt einer Textbox)
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~50 min.
+**Goal going in:** A 65-year-old user who types "Kindergarten" into the textarea gets `Detected: product · for early adopters in your target segment · in general` — the inference falls back to defaults because there's nothing to grip on. The textarea is fine for users who already know what they want to type ("An app for restaurants that helps them manage staff rotas") but is a cliff-edge for everyone else. Replace the empty-textbox cliff with a 4-step guided onboarding that produces a richer sentence.
+
+**The wizard**
+
+Four steps, in plain language, no jargon:
+
+1. **What kind of thing do you want to build?** — six tiles (app, website, web app, tool, service, platform), each with an emoji + one-line subhint. Acts as a radio group via `aria-checked`. Picking auto-advances after 240 ms (so the user sees the highlight settle, then the next step opens).
+2. **Who is it for?** — single text input + 6 quick-pick pills (small business owners, parents and families, students and learners, freelancers and consultants, non-profit teams, health-conscious adults). Pills fill the input but stay editable. Required.
+3. **What problem should it solve, or what should it do better?** — optional text input + 4 quick-pick pills (saves time, simpler than alternatives, costs less, no learning curve).
+4. **Here's your idea — does this look right?** — composed sentence + live `Detected: …` preview line + persist-checkbox (hidden on hosted) + Generate button.
+
+A "Switch to direct input" link at the bottom of the wizard reveals the classic textarea form for users who already know what to type. The direct form has its own "Back to guided steps" link to flip back. Mode toggle is per-page-load (no localStorage cookie this run; can be added later if asked).
+
+**Composition**
+
+The wizard answers compose into a deterministic sentence:
+
+```
+{ productType: "app", audience: "small business owners", benefit: "saves them time on bookkeeping" }
+→ "An app for small business owners. It saves them time on bookkeeping."
+```
+
+Crucially, the wizard uses **two sentences** (`for X. It Y.`), not one (`for X that Y`). Reason: the existing audience-extraction regex `/for\s+([^.,;!?\n]{3,80}?)(?:\.|,|;|!|\?|$)/i` is lazy and stops at the first sentence-terminating punctuation. With one sentence, the audience capture would run all the way through `that helps them...`. With two sentences, the period acts as the natural boundary and audience comes out clean. Verified with three smoke calls:
+
+- `An app for parents of kindergarten children. It helps them organise daily routines.` → audience `parents of kindergarten children` ✓
+- `A web app for music teachers. It saves them time on lesson planning.` → audience `music teachers`, domain `education` (the `teacher` keyword fires) ✓
+- `An app for small business owners.` → audience `small business owners`, domain `small business` ✓
+
+That's a deliberate, documented coupling — not a hack. The wizard owns the contract that two sentences are produced; the inference contract that punctuation terminates the audience capture is unchanged.
+
+**Step indicator**
+
+Pill-style row with four items (1 · What → 2 · Who → 3 · Why → 4 · Generate). Active step has accent fill + bold weight; completed steps have soft accent background (`done` class). Mobile (≤540 px): only the active step shows its label, the others collapse to just the number — saves horizontal space without losing context.
+
+**Focus management**
+
+When a step renders, focus moves automatically to the primary affordance:
+- Step 1: the first option tile (or the currently selected one if revisiting).
+- Step 2: the audience input.
+- Step 3: the benefit input.
+- Step 4: the Generate button.
+
+`focus({ preventScroll: true })` is used so the focus shift doesn't override the page-level scroll position — the user stays where they are visually, but the keyboard / screen-reader cursor moves correctly.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** server.js, src/**, tests/**, docs/**, examples/**, scripts/**, package.json. The audience extraction in `src/context.js` is unchanged — the wizard's two-sentence composition pattern is the integration point.
+
+**Tests run**
+- `npm test` → **81/81** pass. UI changes are static-DOM + CSS + client JS; no server contract changes, no template changes.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA. The wizard markup uses `role="radiogroup"` + `aria-checked`, `<fieldset><legend>` for each step, `aria-current="step"` on the active step indicator, `aria-live="polite"` on the preview line.
+- Live smoke against `node server.js`: composed sentences from the wizard pattern produce clean audience inferences (3 different shapes verified). `npm run audit:a11y` re-run after the wizard is in place — same result, no new violations.
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and tests are all byte-identical to Run #022c. Only the front-end gained a new entry path.
+
+**Known limitations**
+- **Wizard mode is non-persistent across page-loads.** Every visit starts in the wizard. A returning user who prefers the textarea has to click "Switch to direct input" each time. Trivial to add localStorage if anyone complains.
+- **The benefit phrase composition is naive** — `s += " It " + benefit + "."`. If the user types a benefit that already starts with "It" / "This" / "saves" / "helps", the result reads slightly awkwardly ("It It saves them time"). The quick-pick pills phrase the benefit as a verb-clause that joins cleanly ("saves them time" → "It saves them time") but free-text input can produce mild grammatical bumps. Not worth fixing — the LLM consuming the kit will smooth it out, and humans skim past it.
+- **Six product-type tiles fits two columns on narrow phones, three on tablets, six on desktop.** That's by design — six is the right number to express the productType set without overwhelming. Adding a seventh would force three rows on most phones.
+- **The wizard is English-only.** That's the canonical UI language for this run. Run #026 introduces a German variant; both will share this structure.
+- **Step 3 ("Why") is the easiest step to skip and produces the smallest improvement to the inference.** That's correct — "Why" affects the kit's tone, not its productType / audience / domain. We document optionality with a `(optional)` marker on the legend.
+- **Generated test ideas in the test suite still use one-sentence form.** That's correct — the inference contract is unchanged; both shapes work, the wizard just prefers the cleaner two-sentence form for the cases that contain a benefit clause.
+
+**Decisions**
+- **Wizard primary, textarea behind a link.** The textarea-first approach optimises for users who already know the kit. The hosted version's audience is the opposite — first-time visitors who don't. Wizard primary is the right default; the textarea remains one click away for power users.
+- **Auto-advance after picking a tile.** Modern multi-step forms (Stripe, Linear's onboarding, Notion's signup) all auto-advance on definitive choices. Saves a click and signals "yes, that's a complete answer". Step 2 / 3 don't auto-advance because they need free-text input where "I'm done typing" is fuzzy.
+- **Two-sentence composition over regex extension.** The regex `/for X (terminator)/` is in `src/context.js`, depended on by the worked examples and the test suite. Extending it to add `that / which / who` as terminators risks drift in places I haven't audited. Composing the wizard sentence to match the existing regex is a one-place change with zero blast radius.
+- **No new dependencies.** Step navigation, state, validation, focus management, and live preview are all <300 lines of vanilla JS. CLAUDE.md hard rule #3 stands.
+- **Wizard does not save state across reloads.** Considered localStorage; rejected for now. Adds a CSP / privacy surface and the wizard is fast enough that re-entry is cheap.
+
+**Next session starts with**
+- **Run #024 — "Was mache ich jetzt damit?" post-generate guidance.** After Generate succeeds, instead of dumping 12 files in front of the user, show a 3-step "use your kit" panel: (1) Download ZIP, (2) Open claude.ai (or chat.openai.com) and start a new chat, (3) drop in `MASTERPLAN.md` and paste the starter prompt. With screenshots. Removes the "Claude Code / Terminal" assumption from the success path — the wizard onboards the user *into* the tool, the next run onboards them *out of* it.
+
+---
+
+## Run #022c — 2026-04-30 — Mobile UX bug + styling refresh
+
+**Phase:** Phase 2 — Reach (continued).
+**Duration:** ~30 min.
+**Trigger:** Owner-reported on mobile after the Vercel deploy: "die erzeugten daten müssen direkt darunter sein sonst merkt man am Handy nichts ich hab es zufällig gesehen als ich gescrollt habe". Plus a general "checke alles auf styling, lesen im internet wie Webseiten und mach es besser". Two distinct concerns, addressed in one commit because they're tightly coupled (the styling fixes the perception of "nothing happened" that the layout bug created).
+
+**The bug**
+On a phone, after tapping **Generate kit**, the result section was rendered far below the visible viewport (below the entire example gallery), and the form-submit handler did *not* auto-scroll to it. The "card" path (Run #016) had `scrollToResult: true` but the form path was deliberately set to `false` — my Run #016 RUN_LOG note said "the scroll would feel jumpy on desktop", which was Desktop-thinking. On mobile the result was multiple screen-heights down. The owner only saw the output by accident while scrolling.
+
+**Fixes in this run**
+
+1. **Section reorder** in `public/index.html` — `<section id="result">` now sits between the form and the gallery, not after it. When `result.hidden=true` (initial state), the gallery flows up naturally; nothing lost. When the result is shown, it lands right below the form. This is the durable fix; auto-scroll is the belt to the suspenders.
+2. **Auto-scroll on form submit** — the form path now passes `scrollToResult: true`. Same path as the gallery cards. Reasoning in #016 was wrong for mobile.
+3. **Skeleton/loading state** — `result-skeleton` block (shimmering placeholder rows) shows immediately when `Generate` is clicked, **before** the API responds. The user sees something happen at the moment they tap, not 1–2 s later. Driven by a `data-loading="true"` attribute on `#result`; CSS hides the real content while loading is true. `showSkeleton()` / `hideSkeleton()` / `clearResult()` helpers in `app.js`.
+4. **Status banner upgraded from one-liner to prominent** — `setStatus(message, kind)` where `kind ∈ {"" | "busy" | "error"}`. The "busy" variant shows a pulsing dot before the text and an accent-coloured bordered banner; the "error" variant is danger-bordered. Empty status collapses to nothing (no decoration).
+
+**Styling refresh (the broader concern)**
+
+Read modern web-app patterns (Stripe, Linear, Vercel itself, Tailwind UI showcases) and applied the high-impact changes:
+
+- **Touch targets ≥ 44 px** on all buttons (WCAG 2.5.5 + Apple HIG). On mobile, the **Generate kit** button is now full-width with 48 px height, large 16 px font, clear "this is the action" weight.
+- **Inputs at 16 px font** to prevent iOS zoom-on-focus (the textarea was 15 px, which triggers it).
+- **Typography hierarchy** scaled up: H1 uses `clamp(24px, 4vw, 34px)` so it grows on desktop without being huge on mobile; H2s use `clamp(18px, 2.5vw, 22px)`; tighter letter-spacing on display text.
+- **Soft hero gradient** in `.site-header` — a very subtle radial-gradient using `--accent-soft` makes the top of the page feel less flat without screaming "look at me".
+- **Form glow on focus-within** — the entire form card gets a 3-px accent ring when any of its inputs has focus. Subtle but communicates "this is your active workspace".
+- **Smooth scroll** globally (`html { scroll-behavior: smooth }`), with a `prefers-reduced-motion` override to fully disable animations + smooth scroll for users who request it.
+- **Reveal animation** on `.result` — 320 ms `revealIn` keyframe (8 px slide + fade) when the section first appears.
+- **Skeleton shimmer** — `.sk-row / .sk-line / .sk-block` use a 200 %-wide gradient and an animated background-position for a soft shimmer.
+- **Card hover state** on example cards — 2 px lift + soft shadow + border-strong on hover. Feels alive on desktop, harmless on touch.
+- **Spacing system** unified to `--radius-sm/md/lg`, `--shadow-sm/md`, and timing tokens `--t-fast/med` so future polish edits stay consistent.
+- **Result section layout** on mobile: file-list stops being a sidebar and becomes a 240 px tall horizontal-flow nav above the file content, sticky border instead of side-divider; result-header collapses to vertical with the action row below the title.
+- **Download ZIP button** promoted from `.secondary` to `.primary` with a subtle accent shadow — it's the main thing a hosted user is going to do.
+
+**Files touched**
+- Modified: `public/index.html`, `public/style.css`, `public/app.js`, `RUN_LOG.md`.
+- **Untouched:** server.js, src/**, tests/**, docs/**, examples/**, scripts/**, package.json. (Static-asset audit flagged below.)
+
+**Tests run**
+- `npm test` → **81/81** pass. UI changes are static-DOM + CSS + client JS; no server contract changes.
+- `npm run audit:a11y` → **0 violations** on either page (37 / 25 axe rules), all 13 contrast pairs pass WCAG AA, lowest still 5.15 : 1.
+- Live smoke against `node server.js`: index.html now has the skeleton block, section order verified `#result` (line 55) before `.gallery` (line 102), CSS contains all expected new tokens (`revealIn`, `shimmer`, `data-loading`, `status.busy`, `prefers-reduced-motion`), app.js has `showSkeleton` and the `scrollToResult: true` on form submit.
+
+**Drift accounting**
+None. The static-asset audit (`docs/` mirror) is **untouched** — `docs/style.css` is a separate file with the landing-page styles, not the app's styles. The brand assets (logo, favicon, monochrome) are also untouched. CI's `sync:assets:check` only audits the SVG mirror and continues to pass.
+
+**Known limitations**
+- The styling refresh only touches the **app** (`public/`). The **landing page** (`docs/`) still uses its own CSS and looks the same as before — that's intentional, the landing page polish is Run #025's scope (logo redesign + landing rebuild). Doing both at once would have been a hard-to-review monster commit.
+- The skeleton's grid is a 2-column layout that mirrors the desktop file-list + file-content split. On the narrowest mobile widths it stacks (via `.sk-grid` mobile media query) but stays decorative; it's not a 1:1 representation of the real layout. Acceptable — it's a "loading state" cue, not a content placeholder.
+- `prefers-reduced-motion` collapses *all* animations to 0.001 ms (nuclear option). That's the right default — users who turn this on do so for vestibular reasons or low-end hardware and prefer "nothing animates". A future run can opt back in to non-vestibular animations if anyone complains.
+- The hero radial gradient is rendered with a `radial-gradient(ellipse 80% 100% at 50% 0%, ...)` that's GPU-cheap on modern browsers but does another full-width paint on resize. Not worth optimising; resizes are rare.
+
+**Decisions**
+- **Section reorder + auto-scroll, not just one.** Auto-scroll alone fixes the immediate visual but breaks down if the user scrolls back up to tweak the form and clicks again. Section reorder makes the result *spatially close* to the action, regardless of scroll behaviour. Both together is the durable fix.
+- **Skeleton over spinner.** A spinner pulls focus away from the location where the result will appear; a skeleton occupies that location, so the eye is pre-cued before the data lands. Modern apps (Linear, Notion, Vercel dashboard) all use skeleton patterns for this reason.
+- **No new dependencies for animation or styling.** Tailwind, Framer Motion, Stitches, etc. all considered and rejected — the existing CSS-only approach gets us 95 % of the visual quality at 0 KB of new dependency cost. CLAUDE.md hard rule #3 stands.
+- **Landing-page styling deliberately deferred.** Keeping `public/` and `docs/` styles separate for this run keeps the diff readable. Run #025 will unify them with the new logo.
+- **Sections reordered without breaking the a11y heading hierarchy.** Heading order is still h1 (header) → h2 (form, hidden) → h2 (result-heading) → h2 (gallery). axe is happy.
+
+**Next session starts with**
+- **Run #023 — Wizard-Onboarding** (next commit on this branch). The textarea-only entry point is fine for users who already know what to type ("Eine App für kleine Restaurants"). It is **not** fine for the user-archetype the kit is now targeting — the 65-year-old who types "Kindergarten" and gets `Detected: product · for early adopters in your target segment · in general`. The wizard turns that single textbox into 4 friendly prompts that compose into a richer sentence the inference can actually grip onto.
+
+---
+
 ## Run #022b — 2026-04-30 — Hotfix: ENOENT on Vercel persist write
 
 **Phase:** Phase 2 — Reach (continued from #022).

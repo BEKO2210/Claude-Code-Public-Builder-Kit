@@ -1,6 +1,7 @@
 const form = document.getElementById("generate-form");
 const ideaInput = document.getElementById("idea");
-const persistInput = document.getElementById("persist");
+const persistInput = document.getElementById("persist");           // wizard step-4 checkbox
+const persistInputDirect = document.getElementById("persist-direct"); // direct-form checkbox
 const submitBtn = document.getElementById("submit");
 const statusEl = document.getElementById("status");
 const resultEl = document.getElementById("result");
@@ -22,9 +23,31 @@ let lastIdea = "";
 let lastSlug = "";
 let resultSource = null; // "generate" | "example" | null
 
-function setStatus(message, isError = false) {
+function setStatus(message, kind = "") {
+  // kind: "" (info) | "error" | "busy" | "success"
   statusEl.textContent = message;
-  statusEl.classList.toggle("error", isError);
+  statusEl.classList.toggle("error", kind === "error");
+  statusEl.classList.toggle("busy", kind === "busy");
+}
+
+function showSkeleton({ scrollIntoView = false } = {}) {
+  resultEl.hidden = false;
+  resultEl.setAttribute("data-loading", "true");
+  if (scrollIntoView) {
+    // rAF + small delay so the layout settles before the smooth scroll fires.
+    requestAnimationFrame(() => {
+      setTimeout(() => resultEl.scrollIntoView({ behavior: "smooth", block: "start" }), 30);
+    });
+  }
+}
+
+function hideSkeleton() {
+  resultEl.removeAttribute("data-loading");
+}
+
+function clearResult() {
+  resultEl.hidden = true;
+  resultEl.removeAttribute("data-loading");
 }
 
 function setSourceBadge(label) {
@@ -79,6 +102,7 @@ function renderResult({ projectName: title, meta, files, slug, idea, source, wri
   }
   setSourceBadge(source === "example" ? "Example" : "");
   resultEl.hidden = false;
+  hideSkeleton();
   renderFileList();
   selectFile(0);
 }
@@ -166,7 +190,8 @@ async function previewExample(id, triggerBtn) {
     triggerBtn.disabled = true;
     triggerBtn.textContent = "Loading…";
   }
-  setStatus("Loading example…");
+  setStatus("Loading example…", "busy");
+  showSkeleton({ scrollIntoView: true });
   try {
     const res = await fetch(`/api/examples/${encodeURIComponent(id)}`);
     const data = await res.json();
@@ -181,9 +206,9 @@ async function previewExample(id, triggerBtn) {
       writtenToPath: null
     });
     setStatus(`Loaded example: ${data.title}.`);
-    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
-    setStatus(err.message || "Failed to load example.", true);
+    clearResult();
+    setStatus(err.message || "Failed to load example.", "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -202,11 +227,12 @@ function useIdea(idea) {
 
 // ---- Generate flow ----
 
-async function runGenerate(idea, { scrollToResult = false } = {}) {
+async function runGenerate(idea, { scrollToResult = false, persist = false } = {}) {
+  showSkeleton({ scrollIntoView: scrollToResult });
   const res = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idea, persist: persistInput.checked })
+    body: JSON.stringify({ idea, persist })
   });
   const data = await res.json();
   if (!res.ok) {
@@ -222,9 +248,6 @@ async function runGenerate(idea, { scrollToResult = false } = {}) {
     writtenToPath: data.writtenTo,
     persistError: data.persistError
   });
-  if (scrollToResult) {
-    resultEl.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
   return data;
 }
 
@@ -232,18 +255,22 @@ form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const idea = ideaInput.value.trim();
   if (!idea) {
-    setStatus("Enter an idea first.", true);
+    setStatus("Enter an idea first.", "error");
     ideaInput.focus();
     return;
   }
   submitBtn.disabled = true;
-  setStatus("Generating…");
+  setStatus("Generating your kit…", "busy");
 
   try {
-    const data = await runGenerate(idea);
-    setStatus(`Generated ${data.files.length} files.`);
+    const data = await runGenerate(idea, {
+      scrollToResult: true,
+      persist: persistInputDirect?.checked === true
+    });
+    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
   } catch (err) {
-    setStatus(err.message || "Network error.", true);
+    clearResult();
+    setStatus(err.message || "Network error.", "error");
   } finally {
     submitBtn.disabled = false;
   }
@@ -257,12 +284,15 @@ async function generateFromCard(idea, triggerBtn) {
   }
   ideaInput.value = idea;
   ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
-  setStatus("Generating…");
+  setStatus("Generating your kit…", "busy");
   try {
-    const data = await runGenerate(idea, { scrollToResult: true });
-    setStatus(`Generated ${data.files.length} files.`);
+    // Card-driven generates never persist — the user didn't ask for it,
+    // and on hosted there's no disk anyway.
+    const data = await runGenerate(idea, { scrollToResult: true, persist: false });
+    setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
   } catch (err) {
-    setStatus(err.message || "Network error.", true);
+    clearResult();
+    setStatus(err.message || "Network error.", "error");
   } finally {
     if (triggerBtn) {
       triggerBtn.disabled = false;
@@ -313,7 +343,7 @@ downloadZipBtn.addEventListener("click", async () => {
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } catch (err) {
     downloadZipBtn.textContent = "Failed";
-    setStatus(err.message || "ZIP download failed.", true);
+    setStatus(err.message || "ZIP download failed.", "error");
     setTimeout(() => { downloadZipBtn.textContent = originalLabel; }, 1500);
   } finally {
     downloadZipBtn.disabled = false;
@@ -382,16 +412,223 @@ async function detectHostedMode() {
     if (!res.ok) return;
     const data = await res.json();
     if (data.hosted) {
-      persistInput.checked = false;
-      const persistLabel = persistInput.closest("label.checkbox");
-      if (persistLabel) persistLabel.hidden = true;
+      // Uncheck and hide every persist checkbox in the document. Both the
+      // wizard step-4 checkbox and the direct-form checkbox should disappear
+      // on hosted — there is no writable disk.
+      for (const el of document.querySelectorAll('input[id^="persist"]')) {
+        el.checked = false;
+        const row = el.closest("label.checkbox");
+        if (row) row.hidden = true;
+      }
     }
   } catch {
     // Health check failed — fall back to local defaults.
   }
 }
 
+// ---- Wizard ----
+//
+// 4-step guided onboarding that composes the user's answers into a single
+// natural-language sentence and feeds that to /api/generate. The classic
+// textarea form stays available behind the "Switch to direct input" link.
+
+const wizardSection = document.getElementById("wizard");
+const generatorSection = document.getElementById("generator");
+const wzSteps = wizardSection?.querySelectorAll(".wizard-steps li") ?? [];
+const wzPanels = wizardSection?.querySelectorAll(".wizard-panel") ?? [];
+const wzBack = document.getElementById("wz-back");
+const wzNext = document.getElementById("wz-next");
+const wzGenerate = document.getElementById("wz-generate");
+const wzSkip = document.getElementById("wz-skip");
+const wzBackToWizard = document.getElementById("wz-back-to-wizard");
+const wzAudienceInput = document.getElementById("wz-audience");
+const wzBenefitInput = document.getElementById("wz-benefit");
+const wzSummary = document.getElementById("wz-summary");
+const wzPreview = document.getElementById("wz-preview");
+
+const productPhrases = {
+  "app": "An app",
+  "website": "A website",
+  "web app": "A web app",
+  "tool": "A tool",
+  "service": "A service",
+  "platform": "A platform"
+};
+
+const wizardState = { step: 1, productType: null, audience: "", benefit: "" };
+
+function composeWizardIdea() {
+  let s = productPhrases[wizardState.productType] || "A product";
+  const audience = wizardState.audience.trim();
+  const benefit = wizardState.benefit.trim();
+  if (audience) s += ` for ${audience}`;
+  s += ".";
+  // Two sentences — keeps the audience phrase from running into the
+  // benefit clause when the inference parses `for X` against punctuation.
+  if (benefit) s += ` It ${benefit}.`;
+  return s;
+}
+
+function isWizardStepValid(step) {
+  if (step === 1) return wizardState.productType !== null;
+  if (step === 2) return wizardState.audience.trim().length > 0;
+  if (step === 3) return true;  // optional
+  if (step === 4) return true;  // ready to generate
+  return false;
+}
+
+function renderWizard() {
+  wzSteps.forEach((li) => {
+    const n = Number(li.dataset.step);
+    li.classList.toggle("active", n === wizardState.step);
+    li.classList.toggle("done", n < wizardState.step);
+    if (n === wizardState.step) li.setAttribute("aria-current", "step");
+    else li.removeAttribute("aria-current");
+  });
+  wzPanels.forEach((p) => {
+    p.hidden = Number(p.dataset.step) !== wizardState.step;
+  });
+  wzBack.disabled = wizardState.step === 1;
+  if (wizardState.step === 4) {
+    wzNext.hidden = true;
+    wzGenerate.hidden = false;
+  } else {
+    wzNext.hidden = false;
+    wzGenerate.hidden = true;
+    wzNext.disabled = !isWizardStepValid(wizardState.step);
+  }
+  if (wizardState.step === 4) {
+    wzSummary.textContent = composeWizardIdea();
+    refreshWizardPreview();
+  }
+  // Move focus to the primary affordance of the new step.
+  if (wizardState.step === 1) {
+    const sel = wizardSection.querySelector(".wz-option[aria-checked='true']")
+      || wizardSection.querySelector(".wz-option");
+    sel?.focus({ preventScroll: true });
+  } else if (wizardState.step === 2) {
+    wzAudienceInput.focus({ preventScroll: true });
+  } else if (wizardState.step === 3) {
+    wzBenefitInput.focus({ preventScroll: true });
+  } else if (wizardState.step === 4) {
+    wzGenerate.focus({ preventScroll: true });
+  }
+}
+
+function gotoWizardStep(n) {
+  wizardState.step = Math.max(1, Math.min(4, n));
+  renderWizard();
+}
+
+// Step 1 — option picker (acts as a radio group)
+if (wizardSection) {
+  wizardSection.querySelectorAll(".wz-option").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      wizardState.productType = btn.dataset.productType;
+      wizardSection.querySelectorAll(".wz-option").forEach((b) => {
+        b.setAttribute("aria-checked", b === btn ? "true" : "false");
+      });
+      wzNext.disabled = false;
+      // Auto-advance briefly after the visual selection so the user sees the highlight.
+      setTimeout(() => gotoWizardStep(2), 240);
+    });
+  });
+
+  wzAudienceInput.addEventListener("input", () => {
+    wizardState.audience = wzAudienceInput.value;
+    wzNext.disabled = !isWizardStepValid(wizardState.step);
+  });
+  wizardSection.querySelectorAll("[data-fill-audience]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      wzAudienceInput.value = btn.dataset.fillAudience;
+      wizardState.audience = wzAudienceInput.value;
+      wzNext.disabled = false;
+      wzAudienceInput.focus();
+    });
+  });
+
+  wzBenefitInput.addEventListener("input", () => {
+    wizardState.benefit = wzBenefitInput.value;
+  });
+  wizardSection.querySelectorAll("[data-fill-benefit]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      wzBenefitInput.value = btn.dataset.fillBenefit;
+      wizardState.benefit = wzBenefitInput.value;
+      wzBenefitInput.focus();
+    });
+  });
+
+  wzBack.addEventListener("click", () => gotoWizardStep(wizardState.step - 1));
+  wzNext.addEventListener("click", () => {
+    if (isWizardStepValid(wizardState.step)) gotoWizardStep(wizardState.step + 1);
+  });
+
+  wzGenerate.addEventListener("click", async () => {
+    const idea = composeWizardIdea();
+    wzGenerate.disabled = true;
+    setStatus("Generating your kit…", "busy");
+    try {
+      const data = await runGenerate(idea, {
+        scrollToResult: true,
+        persist: persistInput?.checked === true
+      });
+      // Mirror the composed idea into the textarea so a returning user
+      // sees what was sent and can tweak from the direct form.
+      ideaInput.value = idea;
+      ideaInput.dispatchEvent(new Event("input", { bubbles: true }));
+      setStatus(`Generated ${data.files.length} files. Scroll the file list to explore, or download as ZIP.`);
+    } catch (err) {
+      clearResult();
+      setStatus(err.message || "Network error.", "error");
+    } finally {
+      wzGenerate.disabled = false;
+    }
+  });
+
+  wzSkip.addEventListener("click", () => {
+    wizardSection.hidden = true;
+    generatorSection.hidden = false;
+    ideaInput.focus();
+  });
+  wzBackToWizard?.addEventListener("click", () => {
+    generatorSection.hidden = true;
+    wizardSection.hidden = false;
+    renderWizard();
+  });
+}
+
+let wzPreviewTimer = null;
+function refreshWizardPreview() {
+  clearTimeout(wzPreviewTimer);
+  if (!wzPreview) return;
+  const idea = composeWizardIdea();
+  wzPreviewTimer = setTimeout(async () => {
+    try {
+      const res = await fetch("/api/preview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea })
+      });
+      if (!res.ok) { wzPreview.textContent = ""; return; }
+      const data = await res.json();
+      if (data.context) {
+        wzPreview.innerHTML = "";
+        const label = document.createElement("span");
+        label.className = "pv-label";
+        label.textContent = "Detected: ";
+        const value = document.createElement("span");
+        value.className = "pv-value";
+        value.textContent = `${data.context.productType} · for ${data.context.audience} · in ${data.context.domain}`;
+        wzPreview.append(label, value);
+      }
+    } catch {
+      wzPreview.textContent = "";
+    }
+  }, 250);
+}
+
 // ---- Bootstrap ----
 
 detectHostedMode();
 loadExamples();
+if (wizardSection) renderWizard();
