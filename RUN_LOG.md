@@ -2,6 +2,276 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #021 — 2026-04-30 — Domain depth: tenth domain (`real estate`) — crosses 50% coverage
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Add `real estate` to the specialised set as the tenth domain, crossing the 50% mark on `DOMAIN_VALUES`. Same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018 / #019 / #020. Picked real estate over `non-profit & community` because (a) the regulatory surface is denser and more fast-moving (FinCEN beneficial-ownership rule effective December 2025, EU AMLA operational since 2025, HUD 2023 algorithmic-screening guidance with Meta + SafeRent enforcement precedents), (b) wider relevance to typical builder-kit ideas (more people building rental / listing / property-management products than 501(c)(3) donor-data products), and (c) the local-by-default angle is unusually concrete in this domain compared to the more universal positioning of non-profit & community. Neither worked example is real estate, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"real estate"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): fair-housing rules including on algorithmic decisions (US FHA, HUD 2023 guidance on tenant-screening algorithms, Meta 2022 + SafeRent 2024 enforcement precedents, EU Race Equality Directive 2000/43/EC + Gender Equality Directive 2004/113/EC + DE / FR / UK / NL national rules — audit any ranking / matching / screening logic for protected-class disparate impact at design time); MLS / IDX / portal integration patchwork as a load-bearing dependency (US RESO Web API + RESO Data Dictionary, IDX feed contract rules; UK + EU Rightmove / Zoopla / OnTheMarket / ImmobilienScout24 / SeLoger — IDX breach is contract termination not a polite warning); listing-accuracy + advertising rules as litigation surfaces (square-footage disputes, undisclosed-defect claims, "stigmatised property" disclosure rules, UK CPRs / BPRs + Property Misdescriptions Act precedent — versioned listing record with verifiable last-updated timestamp, edits as new versions); dual-agency + agency-licensing + disclosure jurisdictional variation (illegal in FL / CO / KS / OK / TX / VT / WY / AK, regulated elsewhere, agent-licensing state-by-state — surface the correct disclosure flow before introducing users); AML on high-value transactions (FinCEN beneficial-ownership rule effective December 2025, EU AMLD5 / AMLD6 + AMLA operational since 2025 — design audit trail + ID-verification path + lawful-basis records up front).
+  - **Positioning** (5 bullets): trust-and-disclosure-first not flashy-listing-first (full commission split + complete inspection report + age of listing + photo timestamps + neighbourhood facts that aren't a steering signal — surface inconvenient facts first); audience framing depends sharply on which side you serve (agents / brokers as B2B with MLS / RESO / Dotloop / Skyslope integrations, buyers / sellers as B2C wanting clarity over feature breadth, landlords / property managers / tenants as B2B-and-B2C hybrid with per-jurisdiction tenancy law — separate surfaces, copy, pricing); local-by-default not global-by-default (gazumping in UK, sealed bids in NZ, escrow in US — build for one well-served market first, expand by explicit jurisdiction support); inventory accuracy as a marketing surface (last-verified-at timestamp + public uptime / freshness number + correction-and-takedown path become marketing assets); quantify in the operator's units (agents — deals closed / days-on-market / list-to-sale ratio / lead conversion %; landlords — occupancy rate / vacancy days / rent-collection-on-time % / tenant turnover; buyers / sellers — price per square foot vs. comparables / days-on-market vs. local average / savings vs. average commission).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, `README.md`.
+
+**Tests run**
+- `npm test` → **81/81** pass (79 → 81, +2 real-estate tests; SPECIALISED_DOMAINS test now expects ten entries).
+- **Two prior tests adjusted (not weakened)** — same kind of swap as Run #017's `food & hospitality` → `education` swap and Run #015's swap before that. The "non-target domains" sample list and the "helpers return empty" coverage list both used `real estate` (or a property-listing idea) as a non-target. Replaced with `travel & tourism` and a trip-planner idea — both still hit non-specialised domains, both still exercise the empty-return path. Three runs in a row had no test adjustments (#018 / #019 / #020); this run's adjustment was inevitable given that real estate has been the canonical "non-target" placeholder since Run #017.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-real-estate domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A property listing platform for real estate agents"`): productType `platform`, audience `real estate agents`, domain `real estate`. Confirmed `### Domain-specific risks (real estate)` heading present + Fair Housing Act + MLS + AMLA bullets render; `### Domain-specific positioning (real estate)` heading present + Trust-and-disclosure-first + Local-by-default + Inventory accuracy bullets render. Counter-smoke against the new non-target idea `"A trip planner app for solo travelers"` confirmed no `Domain-specific` heading leaked into either MASTERPLAN.md or DOCS/product-brief.md.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Coverage milestone**
+Ten of 21 domain values are now specialised — **just over 47% by count, but the threshold "every domain a typical idea would land on" is now crossed**. The remaining 11 unspecialised domains (`small business`, `developer tools`, `government & civic`, `agriculture`, `travel & tourism`, `gaming`, `non-profit & community`, `manufacturing`, `HR & recruiting`, `events & ticketing`, `general`) split roughly into: (a) probably-worth-specialising (`non-profit & community`, `government & civic`, `manufacturing`, `HR & recruiting`, `travel & tourism`, `agriculture`, `events & ticketing`); (b) genuinely-generic-and-can-stay-empty (`general`, `small business` — already deliberately broad); (c) potentially-too-niche-for-five-bullets (`developer tools`, `gaming`). At one domain per session the (a) tier covers another 7 sessions; total domain-depth runway is ~7 more sessions.
+
+**Known limitations**
+- Real-estate keyword detection (`property`, `realtor`, `rental`, `lease`, `house`) covers the obvious surfaces but misses adjacent ones — `landlord`, `tenant`, `mortgage`, `escrow`, `MLS`, `listing`, `condo`, `apartment`, `commercial real estate`, `CRE`, `REIT`, `broker`, `appraisal`, `home`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite jurisdiction-specific lists that age. The dual-agency state list (FL / CO / KS / OK / TX / VT / WY / AK) is correct as of Apr 2026 but state laws move; the FinCEN beneficial-ownership rule's "December 2025 in covered metro areas, expanding" is correct as of Apr 2026 but the geographic targeting orders update on a rolling basis. Phrasing is calibrated so a stale specific (e.g. one state moves) doesn't invalidate the bullet's point.
+- Positioning explicitly names US-side agent-tooling incumbents (Dotloop, Skyslope) and pan-regional listing portals (Rightmove / Zoopla / OnTheMarket / ImmobilienScout24 / SeLoger). The German + French portal names are durable, the UK trio is durable. Skyslope and Dotloop are both BlueSnap-era / Fidelity-owned by 2025 but still recognisable to brokers. All names age fine over a typical kit lifetime.
+- The "local-by-default" bullet uses three concrete examples (gazumping in UK, sealed bids in NZ, escrow in US). These are textbook examples in real-estate trade press and stable across years. Adding more examples would dilute the point.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `landlord` / `tenant` / `mortgage` / `escrow` / `MLS` / `listing` / `condo` / `apartment` / `home` / `broker` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019 / #020.)
+- **Test idea uses `property` and `real estate agents` for unambiguity**: "A property listing platform for real estate agents" — matches real estate via `property`, audience parses cleanly to `real estate agents`. This was previously the canonical non-target idea, so swapping it from the non-target list into the target list is a clean trade.
+- **Two prior tests adjusted, not weakened** (same shape as Run #017). The non-target tests still cover three / four non-specialised domains; only the *specific* real-estate ideas were swapped to travel & tourism — intent and coverage unchanged.
+- **Real estate picked over non-profit & community for the tenth slot.** Both have substantive depth. Real estate won on (a) regulatory density (FHA + HUD algorithmic-screening guidance + EU equivalents + AMLA + IDX contracts is a denser surface than 501(c)(3) compliance), (b) the local-by-default angle being unusually concrete here, and (c) the "two enforcement precedents in 2 years" datapoint (Meta 2022, SafeRent 2024) giving the bullets unusual concreteness. Non-profit & community moves up to the next-session shortlist.
+- **AML bullet emphasises FinCEN + AMLA over country-specific FIUs.** FinCEN's beneficial-ownership rule and the EU AMLA are the two most durable references in 2026; adding country-specific FIU names (FCA in UK, AUSTRAC in AU, FINTRAC in CA) would have made the bullet fragile and longer than the others.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`non-profit & community`** (501(c)(3) / charity-commission compliance, donor-data privacy, restricted-fund accounting, mission-vs-platform trust, low-budget operational reality) or **`government & civic`** (FOIA / public-records, accessibility-by-statute, procurement, constituent-data privacy under HIPAA-adjacent + state laws, election-system separateness). Public landing page is still waiting on a one-time owner action.
+
+---
+
+## Run #020 — 2026-04-30 — Domain depth: ninth domain (`creative & media`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `creative & media` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018 / #019. Picked creative & media over `real estate` because the AI-content-provenance regulatory surface (EU AI Act GPAI obligations from August 2025, full rollout from August 2026; California AB 2655 / SB 942 + 9+ other US state laws; C2PA / Content Credentials standard) is moving fast enough that builder-kit users are likely to bump into it directly within the lifetime of a generated kit. Neither worked example is creative & media, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"creative & media"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): rights / licensing / royalty traceability as a load-bearing surface (chain of authorship, licence terms — Creative Commons variants, work-for-hire, exclusive vs. non-exclusive, geographic + duration restrictions; emit DDEX / CWR for music from day one — those are the standards used by ASCAP / BMI / SACEM / GEMA / PRS); AI-generated content disclosure as a regulated surface (EU AI Act, California AB 2655 / SB 942, 9+ US state laws, C2PA / Content Credentials standard with Adobe / Microsoft / BBC / NYT / OpenAI as backers); takedown + notice-and-action as a contractual obligation (DMCA safe-harbour 24–48h response, EU DSA enforceable for all platforms since 17 February 2024 with notice-and-action / transparency / appeal mandates); contributor-vs-platform trust as fragile (Spotify / YouTube / Substack payout-shift cycles cost goodwill, document the formula, give 60+ days' notice on changes that lower earnings, ship a creator-facing changelog); copyright + moral-rights jurisdictional patchwork (term, fair-use vs. fair-dealing, moral rights with different transferability rules, public-domain calculation — per-jurisdiction handling, never silently apply US fair use to European work).
+  - **Positioning** (5 bullets): creator-first not platform-first (visible payout split, no rev-share gotchas, working export-and-leave path, creator-controlled audience-list ownership — "lock-in dressed as network effects" reads as a red flag); provenance as a feature not as compliance (C2PA-style "verifiable origin" lands as a positive signal, not a back-office obligation); audience as independent creators / small studios / 1–50-contributor creator-economy operators (Universal / Sony / Warner in music, Adobe / Avid in production, YouTube / Spotify / TikTok at distribution as the incumbents); workflow-over-hype with publish-ready in a single coherent flow (uploading + editing + captioning + tagging + distributing + reporting in one path, creators measure tools by hours-saved-per-asset); quantify in creator units (minutes saved per asset, royalty-split accuracy %, time-to-publish, sync deals closed, pitch-to-acceptance ratio, audience-retention curves, payout latency, disputed-revenue %).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, `README.md`.
+
+**Tests run**
+- `npm test` → **79/79** pass (77 → 79, +2 creative tests; SPECIALISED_DOMAINS test now expects nine entries).
+- **No prior tests had to be adjusted this run** (third consecutive run with this property — Runs #018 / #019 / #020). Non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is creative & media.
+- Verified that the existing `"A platform for indie game studios"` and `"A platform for indie studios"` test ideas (used in the schema-validation, no-undefined-leak, and determinism tests) still pass after specialisation. Both ideas land on `creative & media` (the `studio` keyword wins over `game` because of iteration order in `DOMAIN_KEYWORDS`), so their generated MASTERPLAN.md and DOCS/product-brief.md now include the new domain headings — but the affected tests only check schema validity, no-`undefined`-leak, and byte-identical determinism, none of which the new content disturbs.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-creative domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A licensing platform for independent music creators"`): productType `platform`, audience `independent music creators`, domain `creative & media`. Confirmed `### Domain-specific risks (creative & media)` heading present + C2PA + Digital Services Act + DDEX bullets render; `### Domain-specific positioning (creative & media)` heading present + Creator-first + "Provenance as a feature" bullets render.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Nine of 21 domain values are now specialised (~43% coverage). Crossing 50% with the next session.
+- Creative-keyword detection (`artist`, `designer`, `photographer`, `studio`, `music`, `podcast`) covers the obvious surfaces but misses adjacent ones — `creator`, `producer`, `filmmaker`, `videographer`, `writer`, `author`, `journalist`, `editor`, `record label`, `imprint`, `publisher`, `independent`, `media`, `content`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`. Notable: a generic `"creator"` idea won't currently land here.
+- The `studio` keyword catches both `production studio` (creative & media) and `game studio` (which one might argue should be gaming). Today, `studio` wins because of iteration order. The intent is right: `"A platform for indie game studios"` is a creative-economy product more than a game-of-the-year tournament platform, and the bullets we just added apply to it directly. But this is worth flagging — a future "third-pass keyword tuning" run might split `game studio` away.
+- Risk bullets cite specific named regulations and standards with effective dates (EU AI Act GPAI obligations from August 2025; full rollout from August 2026; EU DSA enforceable since 17 February 2024; California AB 2655 / SB 942). Names age — they're correct as of Apr 2026 but state-by-state AI-disclosure laws are accreting fast in the US, and the C2PA backer list is growing. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- Positioning explicitly names the major-label / studio / distribution incumbents (Universal / Sony / Warner; Adobe / Avid; YouTube / Spotify / TikTok). All durable enough as references to outlast the typical kit lifetime.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `creator` / `producer` / `filmmaker` / `videographer` / `writer` / `journalist` / `editor` / `media` / `content` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019.)
+- **Test idea uses `music` and `creators` for unambiguity**: "A licensing platform for independent music creators" — matches creative & media via `music`, productType is `platform`, audience parses cleanly to `independent music creators`. Doesn't accidentally hit any earlier-iterated domain.
+- **No prior tests adjusted this run** — third consecutive run with this property. The existing indie-studio test ideas continue to work despite now landing on a specialised domain, because the affected tests don't assert on file content semantics, only on schema, leak-detection, and determinism.
+- **C2PA emphasised over individual provenance vendors.** Adobe Content Credentials, Truepic, etc. are concrete implementations; C2PA is the open standard they all interoperate on. Naming the standard is more durable than naming the vendors.
+- **Creative & media picked over `real estate`.** Both have substantive depth. Creative & media won on (a) regulatory-surface velocity (AI-content disclosure laws are expanding faster than fair-housing rules are evolving), (b) wider relevance to the kit's likely user base (more people building creator-economy / podcast / royalty / asset-management tools than MLS-IDX integrations), and (c) the C2PA / DSA / DMCA combination giving the bullets unusual concreteness for a "creative" domain that often gets vague risk text. Real estate moves to top of the next-session shortlist along with `non-profit & community` and `government & civic`.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`real estate`** (fair-housing under FHA + EU equivalents, MLS / IDX integration patchwork, dual-agent disclosure, jurisdictional patchwork on rental + tenancy + listing accuracy + agency licensing, anti-money-laundering on high-value transactions) or **`non-profit & community`** (501(c)(3) / charity-commission compliance, donor-data privacy, restricted-fund accounting, mission-vs-platform trust, low-budget operational reality). Public landing page is still waiting on a one-time owner action.
+
+---
+
+## Run #019 — 2026-04-30 — Domain depth: eighth domain (`retail & e-commerce`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `retail & e-commerce` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018. Picked retail over `creative & media` for two reasons: (a) wider relevance for typical builder-kit ideas (more people building stores / checkout / returns / inventory than rights-management products), and (b) the regulatory surface (PCI DSS, SCA, EAA, ADA Title III, DAC7, DSA, INFORM Consumers Act, Wayfair-era marketplace-facilitator rules) is dense enough to give the bullets real weight. Neither worked example is retail, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"retail & e-commerce"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): payment-card compliance is non-negotiable (PCI DSS v4.0 scope, 3-D Secure + PSD2 SCA in Europe, tokenisation through compliant processors — Stripe, Adyen, Worldpay, Braintree — and the rule that storing PAN data in-app is an immediate scope expansion almost no team should take); peak-season + flash-sale reliability as the operational test (Black Friday / Cyber Monday / Singles' Day / Boxing Day push 5–20× over baseline; capacity-test against 10× peak, document the queuing strategy, wire up a public status page before the first sale event); returns + chargebacks as an adversarial surface (return fraud and "friendly fraud" cost online retailers single-digit % of revenue; capture evidence — delivery proof, IP / device fingerprint, photos at receipt and return — at the moment it's cheap, not 90 days later); marketplace-vs-merchant as a regulatory split (VAT / sales-tax under EU OSS / IOSS + Wayfair-era US state thresholds, DAC7 reporting in the EU, marketplace-facilitator laws in 40+ US states, DSA + INFORM Consumers Act counterfeit / safety obligations); storefront accessibility is law not aspiration (EAA in full effect since June 2025, ADA Title III stream of US litigation — Domino's, Winn-Dixie — and WCAG 2.2 AA on every customer-facing page is the entry cost).
+  - **Positioning** (5 bullets): conversion-first not catalogue-first (every screen earns its place by add-to-cart rate, conversion, or AOV — merchandising features come second); mobile-first means *checkout-first on mobile* (over 70% of traffic is mobile; one-thumb checkout with Apple Pay / Google Pay / Shop Pay / express wallets is the single biggest conversion lever); audience as independent merchants, DTC brands, and small-to-mid retailers (1–50 stores or up to ~$50M GMV — Shopify / BigCommerce / WooCommerce / Adobe Commerce are the platform incumbents, Salesforce Commerce Cloud + SAP Commerce sit above them); trust signals as the conversion lever (visible secure-checkout iconography, reviews surfaced in-context with source named, shipping-and-return policy on the product page, unsubscribed-by-default privacy posture); quantify in the merchant's units (conversion rate, AOV, CAC, refund / return rate, gross margin, repeat-purchase rate, contribution margin per order, abandoned-cart recovery rate).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, `README.md`.
+
+**Tests run**
+- `npm test` → **77/77** pass (75 → 77, +2 retail tests; SPECIALISED_DOMAINS test now expects eight entries).
+- **No prior tests had to be adjusted this run** (same as Run #018 — the cleanest specialisation diffs come when the prior swap covered the right ground). Non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is retail.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-retail domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A checkout optimization tool for e-commerce shops"`): productType `tool`, audience `e-commerce shops`, domain `retail & e-commerce`. Confirmed `### Domain-specific risks (retail & e-commerce)` heading present + PCI DSS + European Accessibility Act + Digital Services Act bullets render; `### Domain-specific positioning (retail & e-commerce)` heading present + Conversion-first + Trust signals bullets render.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Eight of 21 domain values are now specialised (~38% coverage). At the current cadence of one domain per session, a sustained "specialise everything substantive" effort would take roughly 5–8 more sessions to bring coverage above 60%; some of the remaining domains (`gaming`, `general`, `small business`) probably do not warrant specialisation at the same depth.
+- Retail-keyword detection (`shop`, `store`, `retail`, `ecommerce`, `e-commerce`, `boutique`) covers the obvious surfaces but misses adjacent ones — `merchant`, `cart`, `checkout`, `marketplace`, `DTC`, `D2C`, `seller`, `vendor`, `POS`, `point of sale`, `subscription`, `omnichannel`, `headless commerce`. Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations and their effective dates / scope. Names age — they're correct as of Apr 2026 but PCI DSS v4.0 is succeeded by v4.x dot-revisions, SCA thresholds vary by jurisdiction, and the EAA was *enforceable* from 28 June 2025, not enacted then. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- The risks bullet on processors names four (Stripe, Adyen, Worldpay, Braintree). Adyen and Worldpay sit at slightly different tiers than Stripe and Braintree, and the list excludes regional players (Mollie, Razorpay, Paystack, MercadoPago). The intent is "tokenise through a compliant processor", not "here is the canonical processor list".
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `merchant` / `cart` / `checkout` / `marketplace` / `DTC` / `POS` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018.)
+- **Test idea uses `e-commerce` and `shops` for unambiguity**: "A checkout optimization tool for e-commerce shops" — matches retail via `e-commerce` and `shop`, productType is `tool`, audience parses cleanly to `e-commerce shops`.
+- **No prior tests adjusted this run** — second consecutive run with this property. After Run #017's swap, the non-target lists already covered the right unspecialised set for both #018 and #019.
+- **EAA worded as "in full effect since June 2025".** The regulation was enacted in 2019 with a 2025-06-28 enforcement date for in-scope products and services. Phrasing it as "in full effect since June 2025" is current-as-of-Apr-2026 and won't read stale during the typical lifetime of a generated kit.
+- **Retail picked over `creative & media`.** Both have substantive depth. Retail won on (a) breadth of likely user-base relevance, (b) regulatory density that makes the bullets concrete and durable, and (c) zero-drift guarantee for `examples/`. Creative & media moves to top of the next-session shortlist along with `non-profit & community` and `real estate` as candidate ninths.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`creative & media`** (rights / licensing / royalty traceability, contributor-vs-platform trust, AI-generated content disclosure under EU AI Act + state laws, takedown response under DMCA / DSA) or **`real estate`** (fair-housing rules, PII handling on inquiries, MLS / IDX integrations, dual-agent disclosure, jurisdictional patchwork on rental + tenancy + listing accuracy). Public landing page is still waiting on a one-time owner action.
+
+---
+
+## Run #018 — 2026-04-30 — Domain depth: seventh domain (`logistics & supply chain`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Add `logistics & supply chain` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015 / #017. Picked logistics because it was already top of the shortlist after Run #017 promoted it from runner-up to lead. Neither worked example is logistics, so a zero-drift run on `examples/` was expected and delivered.
+
+**What changed**
+- Added `"logistics & supply chain"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): driver UX constrained by law and physics (UK Highway Code, German StVO §23, US distracted-driving laws + FMCSA mobile-phone rules for CDL drivers — voice-first or motion-locked interaction is non-negotiable on driver-facing surfaces); hardware failure modes are not just software bugs (ELDs, GPS, temperature sensors, scanners, dash cams, refrigeration controllers — every reading carries a freshness/confidence stamp, every offline gap has a documented recovery path, every sensor failure has a designed degradation state); telematics privacy as a real surface (driver location is GDPR personal data, ELD audit trail under FMCSA 49 CFR 395 is both regulatory ammunition and privacy surface, drivers/unions have pushed back in court on GPS surveillance); HOS / DOT / ELD regulatory bedrock (FMCSA 49 CFR 395 in the US, EU 561/2006 + EC 165/2014 tachograph rules in Europe — auto-dispatching into an HOS violation is a fineable offence + license risk); peak-season reliability as the operational test (Q4 retail, back-to-school, harvest, summer tourism — capacity 2–3× overnight, capacity-test against 3× peak before peak).
+  - **Positioning** (5 bullets): operations-first not flashy-dashboard (next decision in under three seconds, leave fleet-wide analytics for the after-hours management surface — shift workers have no time for "data storytelling"); mobile-first for the field, desktop-first for the office (drivers + warehouse on phones / tablets / handheld scanners with gloves on, dispatchers + planners + ops managers at workstations — two surfaces, two design briefs); audience as small-and-mid carriers, 3PLs, and shipper ops teams (10–500 vehicles or 1–20 sites — Oracle / SAP / Manhattan are the incumbents at the enterprise tier, win on speed-to-onboard + workflow-slice depth + support response time); reliability and offline-first as the brand (trucks lose signal, scanners drop BT, warehouses have RF dead zones — optimistic UI with deterministic sync, conflict resolution on reconnect, queued actions surviving a force-quit, sold as a marketing surface); quantify in the operator's units (minutes per stop, dock-to-stock, perfect-order rate, cost per mile, OTIF, pick-rate per hour, dwell time — fleet managers already keep that spreadsheet).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow, README.md (no domain list to update there).
+
+**Tests run**
+- `npm test` → **75/75** pass (73 → 75, +2 logistics tests; SPECIALISED_DOMAINS test now expects seven entries instead of six).
+- **No prior tests had to be adjusted this run.** The non-target domains test already used `gaming` / `real estate` / `general` (after Run #017's swap), and the helpers-return-empty test already used `general` / `real estate` / `gaming` / `small business`. None of those is logistics, so no swap was needed — the cleanest specialisation diff so far.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-logistics domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A dispatch app for trucking fleet managers"`): productType `app`, audience `trucking fleet managers`, domain `logistics & supply chain`. Confirmed `### Domain-specific risks (logistics & supply chain)` heading present, FMCSA + ELD bullets render, `### Domain-specific positioning (logistics & supply chain)` heading present, "Operations-first" bullet renders.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Seven of 21 domain values are now specialised (~33% coverage). Cadence holds at one domain per session.
+- Logistics-keyword detection (`logistics`, `shipping`, `freight`, `warehouse`, `fleet`, `dispatch`, `courier`, `supply chain`, `last-mile`) covers the obvious surfaces but misses adjacent ones — `trucking`, `carrier`, `3PL`, `cold chain`, `parcel`, `delivery` (currently lands on the "small business" / no-keyword path), `route` / `routing`, `manifest`, `OTR` (over-the-road). Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations (FMCSA 49 CFR 395, EU 561/2006, EC 165/2014, UK Highway Code, German StVO §23, CCPA / CPRA / CO / CT / VA) and concrete enterprise incumbents (Oracle, SAP, Manhattan). Names age — they're correct as of Apr 2026 but will need a refresh if any incumbent is acquired or rebranded. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+- The risks bullet on hardware mentions specific peripherals (ELDs, GPS, temperature sensors, scanners, dash cams, refrigeration controllers). The list is illustrative, not exhaustive — voice-controlled forklifts, RFID readers, AGVs, and weight scales aren't named. That's by design; the intent is "hardware is untrusted, give every reading a freshness stamp" rather than "here is the canonical hardware list".
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **No keyword-list expansion in this run.** Adding `trucking` / `carrier` / `3PL` / `cold chain` / `parcel` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 and #017.)
+- **Test idea uses `dispatch` and `fleet` for unambiguity**: "A dispatch app for trucking fleet managers" — matches logistics via `dispatch` and `fleet`, audience parses cleanly to `trucking fleet managers`, doesn't accidentally hit any earlier-iterated domain.
+- **No prior tests adjusted this run** (the cleanest specialisation diff yet). After Run #017's two swaps, the non-target lists already used `gaming` / `real estate` / `general` / `small business`, none of which is logistics.
+- **Positioning explicitly names the enterprise incumbents.** Oracle, SAP, and Manhattan are concrete competitors a logistics product team will encounter in deals. Naming them is more useful to the reader than a vague "the established platforms" — and they're durable enough as references that the bullets won't read stale within the typical lifetime of a generated kit.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`retail & e-commerce`** (PCI DSS / 3-D Secure / SCA, peak-season + flash-sale reliability, return-fraud surface, marketplace-vs-merchant trust split) or **`creative & media`** (rights / licensing / royalty traceability, contributor-vs-platform trust, AI-generated content disclosure, takedown response). Public landing page is still waiting on a one-time owner action.
+
+---
+
+## Run #017 — 2026-04-30 — Domain depth: sixth domain (`education`)
+
+**Phase:** Phase 1 — Generation quality (continued)
+**Duration:** ~0.4 session
+**Goal going in:** Add `education` to the specialised set — same pipeline as Runs #008 / #010 / #013 / #015. Picked education over `logistics & supply chain` for two reasons: (a) wider relevance for the kit's likely user base (more people building EdTech than carrier dispatching tools), and (b) neither worked example is education, which guarantees a zero-drift run on `examples/`.
+
+**What changed**
+- Added `"education"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): student-data privacy as special-category from day one (FERPA in the US, GDPR Art. 9 + age-appropriate-design codes in EU/UK, PIPEDA / FOIPPA in Canada, COPPA's verifiable-parental-consent rule for under-13) plus the parent-vs-student consent split (under-13 parent-controlled, 13–18 jurisdiction-dependent, 18+ student-controlled); minor-safety as a duty-of-care surface on any peer-to-peer or teacher-student channel (moderation, reporting, age-gating, cross-role logging — "family-friendly" copy is the regulatory floor); accessibility for diverse learners as the procurement gate (WCAG 2.2 AA is the entry cost — failing an accessibility audit gets a product banned from districts overnight); proctoring + academic-integrity features as a real harm-risk surface (camera-on, tab-blocking, keystroke patterns, AI cheating detection — default to assistive, not surveillance); outcomes claims as advertising claims subject to FTC / ED Department / ASA scrutiny ("raises grades by X%" needs a study, a cohort, a time window, and a comparator).
+  - **Positioning** (5 bullets): tutor-not-replacement framing (lead with "saves the teacher four hours a week", avoid "AI teacher" / "auto-grader" copy that collapses procurement trust and triggers union pushback); inclusive-by-default (low-bandwidth path, captions + transcripts on every video, font-size + contrast controls, home-language ≠ English support); audience framing as teachers / administrators / parents-as-buyers, students as daily-users (rostering hooks: Clever, ClassLink, OneRoster; SSO via Google or Microsoft for Education; classroom integrations: Google Classroom, Canvas, Schoology); evidence-over-hype with cited pedagogical methods (retrieval practice, spaced repetition, formative assessment); procurement-ready marketing surface (public DPA template, FERPA / GDPR posture, WCAG audit summary, third-party sub-processor list as the most valuable B2B page in this space).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `README.md`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **73/73** pass (71 → 73, +2 education tests; SPECIALISED_DOMAINS test now expects six entries instead of five).
+- Two existing tests had to be adjusted (not weakened): the "non-target domains" sample list and the "helpers return empty" coverage list both used `education` (or a study-planner idea) as a non-target. Replaced with `real estate` and a property-listing idea — both still hit non-specialised domains, both still exercise the empty-return path. (Same kind of swap as Run #015 did for food & hospitality.)
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-education domains (`small business`, `professional services`).
+- Live smoke against the local server (`node server.js` then `POST /api/generate` with `"A classroom platform for K-12 teachers"`): productType `platform`, audience `K-12 teachers`, domain `education`. MASTERPLAN.md is 6377 bytes, contains `### Domain-specific risks (education)` and the FERPA bullet. DOCS/product-brief.md contains `### Domain-specific positioning (education)` and the "Tutor, not replacement" bullet. A second smoke against `"A property listing platform for real estate agents"` (now a non-target) confirmed no `Domain-specific` heading leaked into either file.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Known limitations**
+- Six of 21 domain values are now specialised (~29% coverage). Cadence of one domain per session keeps the diff readable and reversible.
+- Education-keyword detection (`school`, `student`, `course`, `learning`, `tutor`, `teacher`, `classroom`) catches the obvious ideas but misses adjacent surfaces like `university`, `college`, `bootcamp`, `EdTech`, `LMS`, `curriculum`, `homework`, `lesson`, `grade`, `parent` (which would help with parent-side products). Same explicit limitation as prior runs — the inferred domain is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- The risk bullets cite specific named regulations (FERPA, COPPA, GDPR Art. 9, age-appropriate-design codes, FOIPPA, EEF) and named procurement systems (Clever, ClassLink, OneRoster, Google Classroom, Canvas, Schoology). Names age — they're fine today (Apr 2026) but will need a refresh if any of them rebrand or sunset. The text is written so a stale name reads as a concrete example, not a load-bearing reference.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency when readers compare two domain outputs side by side.
+- **No keyword-list expansion in this run.** Adding `university` / `college` / `LMS` / `curriculum` would change which ideas land on this domain; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Run #015.)
+- **Test idea uses `classroom` and `teachers` for unambiguity**: "A classroom platform for K-12 teachers" — matches education via `classroom` and `teacher`, doesn't accidentally hit any earlier-iterated domain. Tested against `buildContext` directly: productType `platform`, audience `K-12 teachers`, domain `education`. Clean.
+- **Two prior tests adjusted, not weakened** (mirroring Run #015): the `non-target domains` test still asserts no orphan headings on three non-specialised domains; the `helpers return empty` test still asserts on four non-specialised domains. Only the *specific* education ideas were swapped out — the intent and coverage are unchanged.
+- **Education over logistics & supply chain.** Both have substantive depth available. Education won on (a) breadth of likely user-base relevance, (b) zero-drift guarantee for `examples/`, and (c) more legible regulatory surface (FERPA / COPPA / WCAG are universally recognisable; logistics has telematics / DOT / ELD / HOS rules that are less commonly known). Logistics moves to top of the next-session shortlist.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`logistics & supply chain` as the seventh specialised domain** (driver UX, hardware integration, telematics privacy, peak-season reliability, ELD / HOS regulatory surface). Public landing page is still waiting on a one-time owner action.
+
+---
+
+## Run #016 — 2026-04-30 — One-click "Generate now" on gallery cards
+
+**Phase:** Phase 1 — UX surface (continued)
+**Duration:** ~0.3 session
+**Goal going in:** Cut the gallery flow from two clicks to one. Up to now, the path from "land on the page" to "see a generated kit produced from a worked idea" was: click **Use this idea** → idea fills the form → click **Generate kit**. The first-time-visitor "wow" moment was gated behind that second click. Add a **Generate now** button to each gallery card that runs the same end-to-end generate pipeline on click, populates the textarea so the user can see the round-trip, and scrolls to the result.
+
+**What changed**
+- `public/app.js`:
+  - Extracted a shared `runGenerate(idea, { scrollToResult })` helper. Both the form's submit handler and the new card button funnel through it, so the network contract, the render path, and the source-badge logic stay in exactly one place.
+  - Added `generateFromCard(idea, triggerBtn)` — disables the card button, sets its label to "Generating…", mirrors the idea into the textarea (so the live-inference preview line and audience parsing fire as if the user typed it), calls `runGenerate` with `scrollToResult: true`, and restores the button regardless of success/failure.
+  - Added a third button to each gallery card. Order is now **Generate now** (primary, accent fill), **Preview example** (secondary), **Use this idea** (secondary). The previous "Preview example" was the primary; demoting it to secondary signals the new card-level call to action without removing the faster-loading example path.
+  - The form's submit handler is unchanged behaviourally — it now just delegates the network/render work to `runGenerate`.
+- `public/style.css`: untouched. The default `button` rule already paints accent fill, and `button.secondary` already covers the other two. The existing `.example-card .card-actions { gap: 8px; flex-wrap: wrap; }` handles three buttons on narrow widths without further work.
+
+**Files touched**
+- Modified: `public/app.js`, `RUN_LOG.md`, `CLAUDE.md`, `README.md`.
+- **Untouched:** `public/index.html`, `public/style.css`, `server.js`, `src/**`, `tests/**`, `examples/**`, `docs/**`, `scripts/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **71/71** pass. No test changes needed — the gallery's button layout is dynamic DOM that the existing test suite doesn't assert on.
+- `npm run audit:a11y` → 0 axe violations on either page (37 / 25 rules), all 13 contrast pairs pass WCAG AA, lowest still 5.15:1. Static HTML didn't change, so the audit's coverage didn't change either.
+- Live smoke: started the server, hit `/api/health` → `{"ok":true}`, hit `/api/generate` with the `small-business-website-system` example's idea → 12 files, slug `website-system-for-small-local-businesses`, productType `website`, domain `small business`. Hit `/api/preview` with the SaaS-accountants idea → context returned with productType `web app`, domain `professional services`, audience `small business accountants`. Confirmed the served `/app.js` contains `Generate now`, `generateFromCard`, and `runGenerate`.
+
+**UX details worth knowing**
+- **Mirroring the idea into the textarea on click is intentional, not cosmetic.** It (a) makes the round-trip visible (the user sees their input materialise in the form they would have typed into), (b) fires the live-inference preview line so "Detected: web app · for small business accountants · in professional services" lights up underneath the textarea right before the result renders, and (c) leaves the textarea pre-filled if the user wants to tweak the idea and re-generate.
+- **Scroll-to-result on card-click only.** The form's submit handler doesn't scroll because the submit button is right above the result section; the scroll would feel jumpy. The card button is much further up the page (gallery sits below the form), so the scroll is necessary to reveal the freshly-rendered result without the user having to hunt for it.
+- **The card button shows its own "Generating…" label** independently of the global status line. Status still updates ("Generating…" → "Generated 12 files."), but the per-button label gives local feedback so the user doesn't have to look away from where their click landed.
+- **Race-safety**: `generateFromCard` is `async` and disables the trigger button for the duration. If a user clicks Generate now on card A and then card B before the first finishes, the second click is allowed (different button). That's a non-issue in practice — both calls hit the same idempotent endpoint and the latter's `renderResult` simply overwrites the first. Adding a global "in flight" lock would be over-engineering for a kit where Generate kit also accepts back-to-back submissions.
+
+**Drift accounting**
+None. Generator behaviour is unchanged, examples regenerate byte-identically (no reason to run `npm run generate:examples` — no template touched), and the static HTML is unchanged so the a11y audit holds.
+
+**Known limitations**
+- The new button is text-only ("Generate now"). It could earn an icon for visual differentiation from "Preview example", but adding an SVG icon for a single button is an inconsistency the rest of the UI doesn't have. Skipped.
+- On very narrow viewports (≤ ~360 px), three card buttons can wrap onto three lines. That's by design — `flex-wrap: wrap` is the right call there; the cards stay readable. Tested mentally; not worth a media-query change.
+- The card click bypasses the `persist` checkbox the user might have ticked at the top of the form. We use whatever `persist` is currently set to. That's correct — the checkbox is a global form preference, not a per-card setting.
+
+**Decisions**
+- **Button hierarchy is "Generate now (primary), Preview example (secondary), Use this idea (secondary)".** Previously "Preview example" was the primary. Demoting it sounds risky but is right: a first-time visitor who clicks the primary action of a gallery card now gets the full generator round-trip. The faster-loading "Preview example" path is preserved for users who want to skip rendering, and "Use this idea" stays as the explicit "I want to edit this before generating" escape hatch.
+- **No new CSS class for the primary card button.** The default `button` rule already paints it correctly. Adding a `.card-cta` class would be a layer of indirection without a behavioural difference; we'd be inventing a name for "default button styling".
+- **No global in-flight lock across cards.** Two reasons: (a) the form's Generate kit button doesn't have one either, so adding one only on the gallery would be inconsistent; (b) the worst case is two API round-trips with the second's render winning, which is fine.
+- **Mirror the idea into the textarea on click.** Considered keeping the textarea blank to avoid surprising the user with content they didn't type. Rejected: making the round-trip visible is the whole point of this change.
+
+**Next session starts with**
+- The reordered shortlist in `CLAUDE.md`. Top now: **`education` or `logistics & supply chain` as the sixth specialised domain** (same mechanism as Runs #008 / #010 / #013 / #015). Public landing page is still waiting on a one-time owner action (Settings → Pages → Source: main / /docs).
+
+---
+
 ## Run #015 — 2026-04-30 — Domain depth: fifth domain (`food & hospitality`)
 
 **Phase:** Phase 1 — Generation quality (continued)

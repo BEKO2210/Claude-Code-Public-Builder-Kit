@@ -75,10 +75,11 @@ The archive contains all 12 generated files nested under a single root folder na
 
 ## Example gallery
 
-The UI shows an **Example gallery** beneath the input form. Each card lists the example title, the original idea, a short description, and the file count. Two actions:
+The UI shows an **Example gallery** beneath the input form. Each card lists the example title, the original idea, a short description, and the file count. Three actions:
 
-- **Preview example** — loads all 12 generated files into the same viewer the generate flow uses, with an "Example" badge so you know it isn't your own kit.
-- **Use this idea** — drops the example idea into the input field so you can generate (and download) a fresh kit from it.
+- **Generate now** — one-click end-to-end: the example idea is mirrored into the input field and the kit is generated immediately, then the page scrolls to the freshly-rendered result. Best for first-time visitors who want to see the round-trip.
+- **Preview example** — loads all 12 pre-built files into the same viewer the generate flow uses, with an "Example" badge so you know it isn't your own kit. Faster than generating from scratch.
+- **Use this idea** — drops the example idea into the input field without generating, so you can edit it first and then click **Generate kit**.
 
 The examples are served from a registry in `src/examples.js`, which is also the source of truth for `scripts/build-example.js` and the test suite — there is no duplicated list.
 
@@ -235,7 +236,7 @@ npm run build:og
 ├── public/                   # Vanilla HTML/CSS/JS frontend (the local app)
 │   ├── index.html            # Form + Example gallery + file viewer
 │   ├── style.css
-│   ├── app.js                # Generate / Preview / Use this idea / Copy / Download ZIP
+│   ├── app.js                # Generate / Generate now / Preview / Use this idea / Copy / Download ZIP
 │   ├── logo.svg              # Animated star (used by the local app header)
 │   ├── logo-monochrome.svg
 │   └── favicon.svg

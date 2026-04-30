@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the five expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the ten expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "finance", "food & hospitality", "health & wellness", "professional services"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -279,6 +279,86 @@ test("domain depth: food & hospitality — DOCS/product-brief.md has the positio
   assert.match(md, /Reliability as the brand/);
 });
 
+test("domain depth: education — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A classroom platform for K-12 teachers", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(education\)/);
+  assert.match(md, /FERPA/);
+  assert.match(md, /Accessibility/);
+  assert.match(md, /Proctoring/);
+});
+
+test("domain depth: education — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A classroom platform for K-12 teachers", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(education\)/);
+  assert.match(md, /Tutor, not replacement/);
+  assert.match(md, /Inclusive by default/);
+  assert.match(md, /Procurement-ready/);
+});
+
+test("domain depth: logistics & supply chain — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A dispatch app for trucking fleet managers", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(logistics & supply chain\)/);
+  assert.match(md, /Driver UX/);
+  assert.match(md, /Telematics privacy/);
+  assert.match(md, /Hours-of-Service/);
+});
+
+test("domain depth: logistics & supply chain — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A dispatch app for trucking fleet managers", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(logistics & supply chain\)/);
+  assert.match(md, /Operations-first/);
+  assert.match(md, /Mobile-first for the field/);
+  assert.match(md, /Reliability and offline-first/);
+});
+
+test("domain depth: retail & e-commerce — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A checkout optimization tool for e-commerce shops", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(retail & e-commerce\)/);
+  assert.match(md, /PCI DSS/);
+  assert.match(md, /chargeback/);
+  assert.match(md, /European Accessibility Act/);
+});
+
+test("domain depth: retail & e-commerce — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A checkout optimization tool for e-commerce shops", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(retail & e-commerce\)/);
+  assert.match(md, /Conversion-first/);
+  assert.match(md, /checkout-first on mobile/);
+  assert.match(md, /Trust signals/);
+});
+
+test("domain depth: creative & media — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A licensing platform for independent music creators", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(creative & media\)/);
+  assert.match(md, /Rights, licensing/);
+  assert.match(md, /C2PA/);
+  assert.match(md, /Digital Services Act/);
+});
+
+test("domain depth: creative & media — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A licensing platform for independent music creators", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(creative & media\)/);
+  assert.match(md, /Creator-first/);
+  assert.match(md, /Provenance as a feature/);
+  assert.match(md, /Workflow over hype/);
+});
+
+test("domain depth: real estate — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A property listing platform for real estate agents", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(real estate\)/);
+  assert.match(md, /Fair[- ]housing/);
+  assert.match(md, /MLS/);
+  assert.match(md, /Anti-money-laundering/);
+});
+
+test("domain depth: real estate — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A property listing platform for real estate agents", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(real estate\)/);
+  assert.match(md, /Trust-and-disclosure-first/);
+  assert.match(md, /Local-by-default/);
+  assert.match(md, /Inventory accuracy/);
+});
+
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {
   // small business — already a worked example; must not regress.
   const sbMaster = fileFromKit("A website system for small local businesses", "MASTERPLAN.md", { now: "2026-04-29T00:00:00Z" });
@@ -286,10 +366,10 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
   assert.doesNotMatch(sbMaster, /Domain-specific risks/);
   assert.doesNotMatch(sbBrief, /Domain-specific positioning/);
 
-  // gaming, education, general — sample three more non-target domains.
+  // gaming, travel & tourism, general — sample three more non-target domains.
   for (const idea of [
     "A matchmaking server for online multiplayer indie game lobbies",
-    "A study planner app for students preparing for exams",
+    "A trip planner app for solo travelers",
     "Just a tool for keeping track of stuff"
   ]) {
     const m = fileFromKit(idea, "MASTERPLAN.md");
@@ -307,7 +387,7 @@ test("domain depth: non-target domains get no domain-specific subsection (no orp
 test("domain depth: helpers return empty string for unspecialised domains", () => {
   for (const ctx of [
     { domain: "general" },
-    { domain: "education" },
+    { domain: "travel & tourism" },
     { domain: "gaming" },
     { domain: "small business" }
   ]) {
