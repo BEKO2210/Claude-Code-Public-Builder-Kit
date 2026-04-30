@@ -29,6 +29,7 @@
           <span class="brand-name">Builder Kit</span>
         </a>
         <nav class="primary-nav" aria-label="Primary">
+          <a href="#flow" data-i18n="nav.flow">The full picture</a>
           <a href="#how" data-i18n="nav.how">How it works</a>
           <a href="#example" data-i18n="nav.example">Example</a>
           <a href="#what-you-get" data-i18n="nav.what">What you get</a>
@@ -91,6 +92,104 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─────────── HOW IT REALLY WORKS (5-stage deep flow) ─────────── -->
+      <section id="flow" class="section section-flow">
+        <div class="container">
+          <header class="section-head">
+            <p class="kicker" data-i18n="flow.kicker">The full picture</p>
+            <h2 data-i18n="flow.h2">From one word to a working project.</h2>
+            <p data-i18n="flow.subtitle">The wizard is just the entry door. Here is what actually happens between "I have an idea" and "Claude is shipping code for me".</p>
+          </header>
+
+          <ol class="deep-flow">
+            <li class="deep-stage" data-stage="1">
+              <div class="deep-step">
+                <span class="deep-step-num">1</span>
+                <h3 data-i18n="flow.s1.title">One word in.</h3>
+                <p data-i18n="flow.s1.body">You type something short — even a single phrase like <em>"Training Plan App"</em>. No essay required, no forms to fill out, no jargon expected.</p>
+              </div>
+              <div class="deep-anim deep-anim-typing" aria-hidden="true">
+                <div class="anim-input">
+                  <span class="anim-typed" data-i18n="flow.s1.demo">Training Plan App</span><span class="anim-cursor"></span>
+                </div>
+              </div>
+            </li>
+
+            <li class="deep-stage" data-stage="2">
+              <div class="deep-step">
+                <span class="deep-step-num">2</span>
+                <h3 data-i18n="flow.s2.title">The wizard sharpens it.</h3>
+                <p data-i18n="flow.s2.body">Three short follow-up questions: who's it for, what should it do better, and is anything sparse — then a one-glance summary before generating. If you only typed one word, the wizard nudges you to add a little more.</p>
+              </div>
+              <div class="deep-anim deep-anim-pills" aria-hidden="true">
+                <div class="anim-pill anim-pill-1" data-i18n="flow.s2.pill1">📱 An app</div>
+                <div class="anim-pill anim-pill-2" data-i18n="flow.s2.pill2">For busy parents</div>
+                <div class="anim-pill anim-pill-3" data-i18n="flow.s2.pill3">Saves time on planning</div>
+                <div class="anim-checkmark">✓</div>
+              </div>
+            </li>
+
+            <li class="deep-stage" data-stage="3">
+              <div class="deep-step">
+                <span class="deep-step-num">3</span>
+                <h3 data-i18n="flow.s3.title">12 documents are generated.</h3>
+                <p data-i18n="flow.s3.body">Vision, roadmap, risks, architecture, marketing brief, prompts — all consistent with each other, all immediately useful. No <code>TODO</code> stubs, no placeholder paragraphs.</p>
+              </div>
+              <div class="deep-anim deep-anim-files" aria-hidden="true">
+                <div class="anim-file anim-file-1">📄 MASTERPLAN.md</div>
+                <div class="anim-file anim-file-2">📄 ROADMAP.md</div>
+                <div class="anim-file anim-file-3">📄 ARCHITECTURE.md</div>
+                <div class="anim-file anim-file-4">📄 PROMPTS/initial.md</div>
+                <div class="anim-file anim-file-5 anim-file-more" data-i18n="flow.s3.more">+ 8 more</div>
+              </div>
+            </li>
+
+            <li class="deep-stage" data-stage="4">
+              <div class="deep-step">
+                <span class="deep-step-num">4</span>
+                <h3 data-i18n="flow.s4.title">You sharpen the plan with Claude.</h3>
+                <p data-i18n="flow.s4.body">Drop the masterplan into a free claude.ai chat with the prepared starter prompt. Each session iterates on a piece of the plan — Phase 1 / Step 1, then Step 2, then a risk you want to dig into. The plan stops being a generated stub and becomes the spec your project actually runs on.</p>
+              </div>
+              <div class="deep-anim deep-anim-chat" aria-hidden="true">
+                <div class="anim-bubble anim-bubble-user" data-i18n="flow.s4.msg1">📎 MASTERPLAN.md</div>
+                <div class="anim-bubble anim-bubble-ai" data-i18n="flow.s4.msg2">Got it. Want to start with Phase 1 / Step 1?</div>
+                <div class="anim-bubble anim-bubble-user anim-bubble-2" data-i18n="flow.s4.msg3">Yes. What's the first decision?</div>
+                <div class="anim-bubble anim-bubble-ai anim-bubble-2" data-i18n="flow.s4.msg4">Are users tracking the same plan or each their own?</div>
+              </div>
+            </li>
+
+            <li class="deep-stage" data-stage="5">
+              <div class="deep-step">
+                <span class="deep-step-num">5</span>
+                <h3 data-i18n="flow.s5.title">Claude builds autonomously.</h3>
+                <p data-i18n="flow.s5.body">Once the plan is sharp, Claude executes against it — writes the code, runs the tests, reports back. You stay in the loop only on decisions, not on every line. The masterplan is the contract; Claude works it down phase by phase.</p>
+              </div>
+              <div class="deep-anim deep-anim-code" aria-hidden="true">
+                <div class="anim-code-bar">
+                  <span class="anim-code-dot anim-code-dot-r"></span>
+                  <span class="anim-code-dot anim-code-dot-y"></span>
+                  <span class="anim-code-dot anim-code-dot-g"></span>
+                  <span class="anim-code-title">claude</span>
+                </div>
+                <div class="anim-code-body">
+                  <div class="anim-code-line"><span class="ac-prompt">›</span> <span class="ac-text" data-i18n="flow.s5.code1">Reading MASTERPLAN.md…</span></div>
+                  <div class="anim-code-line"><span class="ac-prompt">›</span> <span class="ac-text" data-i18n="flow.s5.code2">Implementing Phase 1 / Step 2: data model.</span></div>
+                  <div class="anim-code-line"><span class="ac-prompt ac-ok">✓</span> <span class="ac-text ac-text-ok" data-i18n="flow.s5.code3">User entity + tests added (12 passing).</span></div>
+                  <div class="anim-code-line"><span class="ac-prompt ac-ok">✓</span> <span class="ac-text ac-text-ok" data-i18n="flow.s5.code4">Committed: feat(data) - user entity</span></div>
+                </div>
+              </div>
+            </li>
+          </ol>
+
+          <div class="flow-cta">
+            <a class="cta primary cta-lg" href="https://claude-code-public-builder-kit.vercel.app/">
+              <span data-i18n="flow.cta">Start with one word</span>
+              <span class="cta-ico" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </section>

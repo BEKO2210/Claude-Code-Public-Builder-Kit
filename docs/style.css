@@ -472,6 +472,287 @@ main:focus { outline: none; }
 }
 .codeblock code { background: transparent; padding: 0; font-size: inherit; color: var(--text); }
 
+/* ─────────── Deep flow ("From one word to a working project") ─────────── */
+
+.section-flow {
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 10%, rgba(138, 180, 255, 0.06), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 90%, rgba(108, 155, 255, 0.05), transparent 60%);
+  position: relative;
+  overflow: hidden;
+}
+
+.deep-flow {
+  list-style: none; padding: 0; margin: 0 0 36px;
+  position: relative;
+  display: flex; flex-direction: column;
+  gap: 32px;
+}
+
+/* Vertical connecting line behind the stages — desktop only */
+.deep-flow::before {
+  content: "";
+  position: absolute;
+  left: 36px;
+  top: 24px;
+  bottom: 24px;
+  width: 2px;
+  background: linear-gradient(180deg,
+    rgba(138, 180, 255, 0.5) 0%,
+    rgba(138, 180, 255, 0.2) 50%,
+    rgba(138, 180, 255, 0.5) 100%);
+  z-index: 0;
+}
+@media (max-width: 820px) { .deep-flow::before { display: none; } }
+
+.deep-stage {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 380px);
+  gap: 28px;
+  align-items: center;
+  padding: 24px 24px 24px 88px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+.deep-stage.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+@media (max-width: 820px) {
+  .deep-stage {
+    grid-template-columns: 1fr;
+    padding: 22px 22px 22px 22px;
+    gap: 18px;
+  }
+}
+
+/* Stage number bubble */
+.deep-step-num {
+  position: absolute;
+  left: 16px;
+  top: 22px;
+  width: 40px; height: 40px;
+  background: var(--accent); color: #0b0f18;
+  border-radius: 50%;
+  font-weight: 700; font-size: 15px;
+  display: inline-flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(138, 180, 255, 0.42);
+  z-index: 1;
+}
+@media (max-width: 820px) {
+  .deep-step-num {
+    position: relative; left: 0; top: 0;
+    margin-bottom: 4px;
+  }
+}
+
+.deep-step h3 {
+  margin: 0 0 8px;
+  font-size: clamp(18px, 2.5vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.deep-step p { margin: 0; color: var(--text); font-size: 15px; line-height: 1.6; }
+.deep-step p em { color: var(--accent); font-style: normal; font-weight: 600; }
+.deep-step p code {
+  font-family: var(--mono); font-size: 0.92em;
+  background: var(--panel-2); color: var(--accent);
+  padding: 1px 6px; border-radius: 4px;
+}
+
+/* Animation panels */
+.deep-anim {
+  position: relative;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  min-height: 140px;
+  overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center;
+}
+
+/* Stage 1 — typing animation */
+.deep-anim-typing { font-family: var(--mono); }
+.anim-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 14px 16px;
+  font-size: 15px;
+  display: flex; align-items: center;
+  min-height: 56px;
+}
+.anim-typed { color: var(--text); }
+.anim-cursor {
+  display: inline-block;
+  width: 2px; height: 18px;
+  background: var(--accent);
+  margin-left: 2px;
+  animation: anim-blink 1s steps(2) infinite;
+}
+@keyframes anim-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+.deep-stage.is-visible .anim-typed {
+  display: inline-block;
+  overflow: hidden; white-space: nowrap;
+  width: 0;
+  animation: anim-type 1.6s steps(20, end) 0.3s forwards;
+}
+@keyframes anim-type {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+/* Stage 2 — pills appearing */
+.deep-anim-pills { gap: 8px; }
+.anim-pill {
+  display: inline-flex;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text);
+  width: fit-content;
+  opacity: 0;
+  transform: translateX(-8px);
+}
+.deep-stage.is-visible .anim-pill-1 { animation: anim-pill-in 400ms ease-out 0.3s forwards; }
+.deep-stage.is-visible .anim-pill-2 { animation: anim-pill-in 400ms ease-out 0.7s forwards; }
+.deep-stage.is-visible .anim-pill-3 { animation: anim-pill-in 400ms ease-out 1.1s forwards; }
+@keyframes anim-pill-in {
+  to { opacity: 1; transform: translateX(0); }
+}
+.anim-checkmark {
+  position: absolute;
+  bottom: 14px; right: 14px;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--success); color: #0b0f18;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px;
+  opacity: 0; transform: scale(0.5);
+}
+.deep-stage.is-visible .anim-checkmark { animation: anim-check-in 400ms cubic-bezier(0.5, 1.6, 0.6, 1) 1.5s forwards; }
+@keyframes anim-check-in {
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Stage 3 — file icons appearing in a stack */
+.deep-anim-files { gap: 6px; padding: 14px; }
+.anim-file {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: var(--mono); font-size: 12.5px;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(8px);
+}
+.anim-file-more { color: var(--muted); font-style: italic; border-style: dashed; }
+.deep-stage.is-visible .anim-file-1 { animation: anim-file-in 360ms ease-out 0.2s forwards; }
+.deep-stage.is-visible .anim-file-2 { animation: anim-file-in 360ms ease-out 0.4s forwards; }
+.deep-stage.is-visible .anim-file-3 { animation: anim-file-in 360ms ease-out 0.6s forwards; }
+.deep-stage.is-visible .anim-file-4 { animation: anim-file-in 360ms ease-out 0.8s forwards; }
+.deep-stage.is-visible .anim-file-5 { animation: anim-file-in 360ms ease-out 1.0s forwards; }
+@keyframes anim-file-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stage 4 — chat bubbles back-and-forth */
+.deep-anim-chat { gap: 8px; }
+.anim-bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  opacity: 0;
+  transform: translateY(6px);
+}
+.anim-bubble-user {
+  align-self: flex-end;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid rgba(138, 180, 255, 0.3);
+}
+.anim-bubble-ai {
+  align-self: flex-start;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.deep-stage.is-visible .anim-bubble:nth-child(1) { animation: anim-bubble-in 380ms ease-out 0.2s forwards; }
+.deep-stage.is-visible .anim-bubble:nth-child(2) { animation: anim-bubble-in 380ms ease-out 0.7s forwards; }
+.deep-stage.is-visible .anim-bubble:nth-child(3) { animation: anim-bubble-in 380ms ease-out 1.2s forwards; }
+.deep-stage.is-visible .anim-bubble:nth-child(4) { animation: anim-bubble-in 380ms ease-out 1.7s forwards; }
+@keyframes anim-bubble-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stage 5 — code editor / terminal */
+.deep-anim-code { padding: 0; overflow: hidden; }
+.anim-code-bar {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 12px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.anim-code-dot { width: 9px; height: 9px; border-radius: 50%; }
+.anim-code-dot-r { background: #ff6b6b; }
+.anim-code-dot-y { background: #ffd166; }
+.anim-code-dot-g { background: #6dd6a3; }
+.anim-code-title {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--muted);
+  margin-left: 6px;
+}
+.anim-code-body {
+  padding: 12px 14px;
+  font-family: var(--mono); font-size: 12.5px;
+  display: flex; flex-direction: column; gap: 4px;
+  color: var(--text);
+  background: var(--panel-2);
+}
+.anim-code-line {
+  opacity: 0;
+  transform: translateY(4px);
+  display: flex; gap: 8px;
+}
+.ac-prompt { color: var(--muted); flex-shrink: 0; }
+.ac-prompt.ac-ok { color: var(--success); }
+.ac-text-ok { color: var(--success); }
+.deep-stage.is-visible .anim-code-line:nth-child(1) { animation: anim-code-in 320ms ease-out 0.3s forwards; }
+.deep-stage.is-visible .anim-code-line:nth-child(2) { animation: anim-code-in 320ms ease-out 0.9s forwards; }
+.deep-stage.is-visible .anim-code-line:nth-child(3) { animation: anim-code-in 320ms ease-out 1.5s forwards; }
+.deep-stage.is-visible .anim-code-line:nth-child(4) { animation: anim-code-in 320ms ease-out 2.0s forwards; }
+@keyframes anim-code-in {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.flow-cta {
+  display: flex; flex-direction: column; align-items: center;
+  margin-top: 8px;
+}
+
+/* Reduced motion — show all animation states immediately, no transitions */
+@media (prefers-reduced-motion: reduce) {
+  .deep-stage { opacity: 1; transform: none; transition: none; }
+  .anim-typed { width: 100% !important; animation: none !important; white-space: normal !important; }
+  .anim-cursor { animation: none; }
+  .anim-pill, .anim-bubble, .anim-file, .anim-code-line, .anim-checkmark {
+    opacity: 1 !important; transform: none !important; animation: none !important;
+  }
+}
+
 /* ─────────── Footer ─────────── */
 
 .site-footer { border-top: 1px solid var(--border); padding: 36px 0; margin-top: 32px; }
