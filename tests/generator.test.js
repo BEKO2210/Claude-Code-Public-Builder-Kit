@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the ten expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the eleven expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "professional services", "real estate", "retail & e-commerce"]
+    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "health & wellness", "logistics & supply chain", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -357,6 +357,22 @@ test("domain depth: real estate — DOCS/product-brief.md has the positioning su
   assert.match(md, /Trust-and-disclosure-first/);
   assert.match(md, /Local-by-default/);
   assert.match(md, /Inventory accuracy/);
+});
+
+test("domain depth: non-profit & community — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A volunteer coordination platform for non-profit organisations", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(non-profit & community\)/);
+  assert.match(md, /Charity registration/);
+  assert.match(md, /Donor-data privacy/);
+  assert.match(md, /Restricted vs\. unrestricted funds/);
+});
+
+test("domain depth: non-profit & community — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A volunteer coordination platform for non-profit organisations", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(non-profit & community\)/);
+  assert.match(md, /Mission-first, not platform-first/);
+  assert.match(md, /Calm pricing/);
+  assert.match(md, /Privacy as a marketing surface/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {

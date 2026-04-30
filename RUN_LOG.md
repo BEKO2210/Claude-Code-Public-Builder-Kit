@@ -2,6 +2,54 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #033 — 2026-04-30 — Domain depth: eleventh domain (`non-profit & community`)
+
+**Trigger:** Owner: *"Domain-Tiefe wieder"* — resume the depth pivot after the reach + viral work landed. Same pipeline as Runs #008 / #010 / #013 / #015 / #017 / #018 / #019 / #020 / #021. Picked `non-profit & community` over `government & civic` for two reasons: (a) wider relevance for typical builder-kit ideas (more people building volunteer-coord / donor / fundraising tools than gov-tech), (b) cleaner test surface (`non-profit & community` is not used as a non-target domain anywhere in the test suite, so this is a zero-prior-test-adjustment run).
+
+**What changed**
+
+- Added `"non-profit & community"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): charity registration + tax-deductible-status compliance jurisdictionally specific (US 501(c)(3) + IRS Form 990; UK Charity Commission; German Gemeinnützigkeit per §52 AO + Freistellungsbescheid); donor-data privacy as special-category-adjacent (GDPR Art. 9 territory because donations reveal political/religious/social beliefs, vulnerable-populations exposure); restricted vs. unrestricted funds as a hard accounting boundary (US fiduciary breach / German gemeinnützigkeitsrechtliche Mittelfehlverwendung); mission-vs-platform trust as fragile (the audience writes about being mistreated, on principle); operational reality is shoestring (volunteer admins, no IT staff, 2018-browser support, flaky-bandwidth-tolerant).
+  - **Positioning** (5 bullets): mission-first not platform-first ("keeps every volunteer in the loop" beats "empowers nonprofits to scale their impact"); calm pricing aligned with annual budget cycles (no per-seat creep, no upsell ladder, predictable beats expansive); audience as 1–20-staff orgs running with volunteers, not enterprise non-profits where Red Cross / Caritas / MSF / UNICEF chapters have IT teams; privacy as a marketing surface (most competitors track aggressively because customer = the org, tracked person = donor — flip it explicitly); quantify in mission-units (volunteers onboarded, donor-retention rate, recurring-donor share, cost-per-acquired-recurring-donor, fund-restriction-compliance rate).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/utils/**`, `src/templates/{masterplan,productBrief,claude}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+- `npm test` → **85/85** pass (was 83 → +2 for the two new subsection-presence tests; SPECIALISED_DOMAINS test now expects eleven entries instead of ten).
+- **No prior tests had to be adjusted this run** — `non-profit & community` was not used as a non-target in either the "non-target domains" or "helpers return empty" lists. Cleanest possible specialisation diff.
+- `npm run generate:examples` → **zero drift**. `git status -- examples` is empty. Both worked examples have non-non-profit domains (`small business`, `professional services`).
+- Live smoke against `node server.js` with `"A volunteer coordination platform for non-profit organisations"`: domain `non-profit & community`, `### Domain-specific risks (non-profit & community)` heading present, "Charity registration" + "501(c)(3)" bullets present, `### Domain-specific positioning (non-profit & community)` heading present, "Mission-first, not platform-first" + "Privacy as a marketing surface" bullets present.
+
+**Drift accounting**
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Coverage milestone**
+Eleven of 21 domain values are now specialised (~52 % by raw count). Remaining 10 unspecialised domains: `small business`, `developer tools`, `government & civic`, `agriculture`, `travel & tourism`, `gaming`, `manufacturing`, `HR & recruiting`, `events & ticketing`, `general`. The "every domain a typical idea would land on is specialised" threshold was already crossed at Run #021 (real estate); this run + future runs are diminishing-return depth additions. At one domain per session, the (a)-tier candidates (`government & civic`, `manufacturing`, `HR & recruiting`, `travel & tourism`, `agriculture`, `events & ticketing`) cover ~6 more sessions of useful work; (b) `developer tools` and `gaming` may not need this depth because the audience for those domains is technical and self-knows the risks; (c) `general` and `small business` stay deliberately generic.
+
+**Known limitations**
+- Non-profit-keyword detection (`nonprofit`, `non-profit`, `charity`, `volunteer`, `ngo`, `fundraising`) covers the obvious surfaces but misses adjacent ones — `donor`, `donation`, `philanthropy`, `civic`, `community-led`, `mutual aid`, `member organisation`, `Verein` (German), `Gemeinnützig` (German), `association` (French/UK). Same explicit limitation as prior runs — domain inference is a heuristic; users sharpen it in `MASTERPLAN.md`.
+- Risk bullets cite specific named regulations. Names age — they're correct as of April 2026 but US 501(c)(3) form numbers, UK Charity Commission filing thresholds, and German §52 AO interpretive notes all evolve. The text is written so a stale specific reads as a concrete example, not a load-bearing reference.
+- The "vulnerable-populations exposure" bullet is broad on purpose — it covers donors to political causes, addiction-recovery support, domestic-abuse shelters, refugee-aid orgs, etc. Each has more specific obligations (e.g. addiction-recovery is HIPAA-touching in the US, refugee-aid is GDPR-Art-9-with-extra-context); the masterplan doesn't try to enumerate them, but flags the territory explicitly.
+- The "Caritas / MSF / UNICEF" name list is for context, not contractual. Other large enterprise-tier non-profits (Save the Children, Oxfam, ICRC, Diakonie, Médecins du Monde) are equivalent; the bullet doesn't claim to be exhaustive.
+
+**Decisions**
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** Adding `donor / donation / philanthropy / community-led / Verein / Gemeinnützig` would broaden which ideas land here; that's a separate keyword-heuristic run, not a domain-depth run. (Same call as Runs #015 / #017 / #018 / #019 / #020 / #021.)
+- **Test idea uses `volunteer` and `non-profit` for unambiguity**: "A volunteer coordination platform for non-profit organisations" — matches via `volunteer` and `non-profit`, audience parses cleanly to `non-profit organisations`.
+- **No prior tests adjusted this run** — fourth run with this property since the depth runs began (others: #018, #019, #020). Run #021 (real estate) needed swap-out work because real-estate had been the canonical non-target since Run #017's earlier swap; the current non-target lists (gaming / travel & tourism / general / small business) keep the right unspecialised set for non-profit too.
+- **Non-profit picked over government & civic** for the eleventh slot. Both have substantive depth. Non-profit won on (a) more frequent appearance in builder-kit-style ideas, (b) the donor-privacy + restricted-funds bullets give the kit unusual concreteness for an under-specialised audience, (c) the "operational reality is shoestring" framing is uniquely valuable here — most product advice ignores that constraint and recommends features non-profit users can't deploy.
+- **Watermark unchanged** (Run #032 added it to `CLAUDE.md` template). Non-profit kits get the same self-branding footer as every other kit.
+
+**Next session starts with**
+- Domain depth twelfth domain (`government & civic`, `manufacturing`, or `HR & recruiting`) if the owner wants to keep the cadence.
+- Or pivot back to the viral-completion side: real counter / metrics dashboard (Run #034), dynamic OG-image generator (Run #035).
+- Or EN versions of the legal pages (`imprint.html` / `privacy.html`).
+
+---
+
 ## Run #032 — 2026-04-30 — Wizard-Polish in 5 Teilen — Richtung viral
 
 **Trigger:** Owner: *"Wizard-Polish aber in 5 Teilen die speziell auf die Optik und Logistik gehen das gesamte System soll viral gehen wenn es fertig ist (schätze wieweit wie davon entfernt sind und lenke unseren Plan in die Richtung)"*. Strategic pivot: every UI improvement from now on serves two ends — better UX *and* a concrete step toward a tool that gets shared, talked about, used by strangers' strangers.
