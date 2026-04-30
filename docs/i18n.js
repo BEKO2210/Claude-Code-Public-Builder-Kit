@@ -122,9 +122,9 @@
 
       "flow.kicker": "Das ganze Bild",
       "flow.h2": "Von einem Wort bis zum laufenden Projekt.",
-      "flow.subtitle": "Der Wizard ist nur die Eingangstür. Hier ist, was wirklich zwischen „Ich hab eine Idee" und „Claude liefert für mich Code" passiert.",
+      "flow.subtitle": "Der Wizard ist nur die Eingangstür. Hier ist, was wirklich zwischen „Ich hab eine Idee” und „Claude liefert für mich Code” passiert.",
       "flow.s1.title": "Ein Wort rein.",
-      "flow.s1.body": "Du tippst etwas Kurzes — auch nur einen Begriff wie <em>„Training Plan App"</em>. Kein Aufsatz nötig, keine Formulare, kein Fachjargon erwartet.",
+      "flow.s1.body": "Du tippst etwas Kurzes — auch nur einen Begriff wie <em>„Training Plan App”</em>. Kein Aufsatz nötig, keine Formulare, kein Fachjargon erwartet.",
       "flow.s1.demo": "Training Plan App",
       "flow.s2.title": "Der Wizard schärft die Idee.",
       "flow.s2.body": "Drei kurze Folge-Fragen: für wen, was soll es besser machen, und falls etwas zu knapp war — dann eine kurze Zusammenfassung. Hast du nur ein Wort getippt, fragt der Wizard kurz nach.",
@@ -167,7 +167,7 @@
 
       "ex.kicker": "Echte Ausgabe",
       "ex.h2": "Das hier kriegst du vom Kit.",
-      "ex.subtitle.html": "Ein Auszug aus einer echten <code>MASTERPLAN.md</code> für die Idee <em>„A SaaS dashboard for small business accountants\"</em>. Den vollen 12-Datei-Output gibt's auf GitHub.",
+      "ex.subtitle.html": "Ein Auszug aus einer echten <code>MASTERPLAN.md</code> für die Idee <em>„A SaaS dashboard for small business accountants”</em>. Den vollen 12-Datei-Output gibt's auf GitHub.",
       "ex.tag": "MASTERPLAN.md",
       "ex.meta": "~280 Zeilen · 1 von 12 Dateien",
       "ex.foot.browse": "Alle 12 Dateien anschauen →",
@@ -260,23 +260,65 @@
   // adds .is-visible to a stage when it enters the viewport so its
   // animations fire. Idempotent — once a stage is visible, we stop
   // observing it. No-op if there are no stages on the page.
+  //
+  // Robustness: a 1.5 s fallback timer reveals all stages unconditionally
+  // if IO never fires (Samsung Browser edge cases, content-blockers,
+  // viewport math glitches on long mobile pages). The user should never
+  // see permanently-hidden stages because of a JS hiccup.
   function initFlowReveal() {
     var stages = document.querySelectorAll(".deep-stage");
     if (!stages.length) return;
-    if (typeof IntersectionObserver === "undefined") {
-      // Fallback for ancient browsers — just show everything.
+
+    function revealAll() {
       for (var i = 0; i < stages.length; i++) stages[i].classList.add("is-visible");
+    }
+
+    // Manual initial-viewport check — IntersectionObserver implementations
+    // sometimes don't fire their first callback reliably (Samsung Browser,
+    // long mobile pages). Reveal anything already visible immediately.
+    function isInViewport(el) {
+      var r = el.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight;
+      return r.bottom > 0 && r.top < vh;
+    }
+    var alreadyShownCount = 0;
+    for (var i = 0; i < stages.length; i++) {
+      if (isInViewport(stages[i])) {
+        stages[i].classList.add("is-visible");
+        alreadyShownCount++;
+      }
+    }
+
+    // Belt-and-suspenders fallback: if nothing has shown after 1.2s, just
+    // reveal everything. Better a non-animated visible page than an
+    // invisible one.
+    var fallback = setTimeout(revealAll, 1200);
+
+    if (typeof IntersectionObserver === "undefined") {
+      clearTimeout(fallback);
+      revealAll();
       return;
     }
+
     var io = new IntersectionObserver(function (entries) {
-      for (var i = 0; i < entries.length; i++) {
-        if (entries[i].isIntersecting) {
-          entries[i].target.classList.add("is-visible");
-          io.unobserve(entries[i].target);
+      var anyHit = false;
+      for (var k = 0; k < entries.length; k++) {
+        if (entries[k].isIntersecting) {
+          entries[k].target.classList.add("is-visible");
+          io.unobserve(entries[k].target);
+          anyHit = true;
         }
       }
-    }, { threshold: 0.25, rootMargin: "0px 0px -10% 0px" });
-    for (var j = 0; j < stages.length; j++) io.observe(stages[j]);
+      if (anyHit) clearTimeout(fallback);
+    }, { threshold: 0.1, rootMargin: "0px 0px -5% 0px" });
+
+    for (var j = 0; j < stages.length; j++) {
+      // Skip already-revealed stages — no need to observe them.
+      if (!stages[j].classList.contains("is-visible")) io.observe(stages[j]);
+    }
+
+    // If we already showed some on init, the fallback isn't needed.
+    if (alreadyShownCount > 0) clearTimeout(fallback);
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initFlowReveal);

@@ -2,6 +2,65 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #028b — 2026-04-30 — Hotfix: SyntaxError in i18n.js (broken DE quotes) + IO fallback
+
+**Trigger:** Owner reported on mobile after Run #028 deploy: deep-flow section showed only the heading + tagline + a vertical line, then complete black space — none of the 5 stages visible. Plus the persist-checkbox in the app still showed the old "Also write files to output/<slug>/" text from before the Run #026 hotfix.
+
+**Root cause: SyntaxError in both i18n.js modules**
+
+I introduced ASCII `"` (U+0022) inside German strings that should have used Unicode close-quotes (`"`, U+201D / U+201C). The mismatched ASCII quotes accidentally **closed the JavaScript string mid-sentence**, leaving the rest of the line as parser tokens (e.g. `und` became "Unexpected identifier"). The browser silently aborted the entire `i18n.js` module on parse error, which meant:
+
+- `applyTranslations()` never ran → static `data-i18n` elements stayed English (explains the previous "translations not working" reports)
+- The IntersectionObserver setup never ran → the deep-flow stages stayed at their initial CSS state of `opacity: 0` → permanently invisible
+- The lang-switcher click handler never registered → DE button click did nothing
+
+10 affected positions across both files (`docs/i18n.js` line 125, 127, 170; `public/i18n.js` line 184, 197, etc.). Pattern: `„X"` / `„<em>X</em>"` where the closing `"` was ASCII instead of Unicode.
+
+The bug was invisible to humans reading the code (the glyph looks identical) and to the linter (it never ran on i18n.js because there's no lint step). Only `node -c <file>` catches it.
+
+**Fix**
+
+1. **Auto-replaced all 10 broken DE quote pairs** with Unicode close-quote `"` (U+201D) using a Python regex that matches `„...content...\\?"` and replaces just the closing quote. Both files now parse cleanly.
+
+2. **Added a CI-time syntax test** in `tests/a11y.test.js`:
+   ```js
+   for (const file of [public/i18n.js, docs/i18n.js]) {
+     test(`syntax: ${file} parses as valid JavaScript`, () => {
+       const r = spawnSync("node", ["-c", file]);
+       assert.equal(r.status, 0, ...);
+     });
+   }
+   ```
+   Catches this entire class of bug before deploy. 83/83 tests pass.
+
+3. **Belt-and-suspenders fallback in the IntersectionObserver setup** (separate from the syntax fix, but related — defends against future Samsung-Browser-style IO edge-cases):
+   - **Manual initial-viewport check** — `getBoundingClientRect()` on each stage at init; any stage already in viewport is revealed immediately, without waiting for IO's first callback.
+   - **1.2 s timeout fallback** — if no stage has revealed itself by then, force-reveal everything. Better an un-animated visible page than an invisible one.
+   - **IO threshold relaxed** to `0.1` (was `0.25`) so partial visibility counts.
+
+**Files touched**
+- Auto-fixed: `public/i18n.js` (4 broken patterns), `docs/i18n.js` (6 broken patterns).
+- Modified: `docs/i18n.js` (improved IO fallback + initial viewport check), `tests/a11y.test.js` (new syntax-validation tests), `RUN_LOG.md`.
+- **Untouched:** server, src, examples, all other UI files.
+
+**Tests run**
+- `npm test` → **83/83** pass (was 81; +2 syntax tests).
+- `npm run audit:a11y` → 0 violations on either page; all 13 contrast pairs pass WCAG AA.
+- Both i18n.js files: `node -c` exits 0 (was failing before).
+
+**Drift accounting**
+None.
+
+**Lessons**
+- **Type matters.** `"` and `"` look identical to a human and identical-ish in many fonts. Use `node -c` (or any AST parser) at CI time to catch the difference. The new test does that.
+- **Fail loud, not silent.** A SyntaxError in a `<script defer>` aborts the script silently — no console log without devtools, no visible UI degradation that points at the cause. The fallback timer in the IO setup means that even if a *future* JS bug breaks i18n.js again, at least the deep-flow stages will still show up after 1.2s.
+- **Both Run #026 ("translations not working" report)** and **Run #028 ("stages invisible" report)** had the same root cause — but I diagnosed Run #026 as a "Bootstrap timing race" and added the auto-apply hook, which papered over the symptom without fixing the cause. The proper diagnosis ("the entire module fails to load") was only obvious once I tried `node -c`. Adding `node -c` to CI was the lesson learned this run.
+
+**Next session starts with**
+- Whatever the user picks from the existing shortlist (Run #029 — eleventh domain, EN versions of legal pages, or per-locale URLs).
+
+---
+
 ## Run #028 — 2026-04-30 — Wizard-Narrative (5 animierte Stages) + dynamische Folge-Fragen
 
 **Trigger:** Owner request, two parts:
