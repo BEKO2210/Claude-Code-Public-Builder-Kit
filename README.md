@@ -79,9 +79,9 @@ The MASTERPLAN and product-brief get **domain-specific depth** for ten domains: 
 
 1. **Describe your idea** in plain language (the wizard guides you).
 2. **Get the 12 files** as a ZIP — substantial content, no placeholder text.
-3. **Open Claude** (free at [claude.ai](https://claude.ai)), drop in `MASTERPLAN.md`, paste the pre-filled starter prompt. Claude walks you through Phase 1 / Step 1 in plain language, one question at a time.
+3. **Open in Claude Code** — either via a free GitHub repo (browser-based Claude Code) or in your terminal (`npx @anthropic-ai/claude-code` in the unzipped folder). Claude Code reads every file and walks you through Phase 1 / Step 1, one decision at a time.
 
-> The wizard is the **entry door** — Claude is where you sharpen the plan into a real project. Each chat session iterates on a piece of the masterplan; over time the plan stops being a generated stub and becomes the spec your project actually runs on.
+> The wizard is the **entry door** — Claude Code is where you sharpen the plan into a real project. Each session iterates on a piece of the masterplan; over time the plan stops being a generated stub and becomes the spec your project actually runs on. Note: this kit is built for Claude Code specifically, not for the regular claude.ai chat — Claude Code can actually read every file and edit them, the chat can't.
 
 ## Worked examples
 

@@ -519,6 +519,30 @@ button.primary:hover {
   .kit-prompt-copy { top: auto; right: 10px; bottom: 8px; }
 }
 
+/* ---------- Sub-steps inside a kit-step (e.g. GitHub how-to) ---------- */
+
+.kit-substeps {
+  margin-top: 8px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}
+.kit-substeps > summary {
+  list-style: none; cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  color: var(--accent);
+  padding: 4px 0;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.kit-substeps > summary::-webkit-details-marker { display: none; }
+.kit-substeps > summary::before {
+  content: "▸"; color: var(--muted);
+  transition: transform var(--t-fast);
+}
+.kit-substeps[open] > summary::before { transform: rotate(90deg); }
+.kit-substeps > summary:hover { color: var(--accent-press); }
+.kit-substeps .alt-steps { margin-top: 10px; padding-left: 22px; gap: 10px; }
+.kit-substeps .alt-steps li { font-size: 13px; }
+
 /* ---------- Alt-paths (other ways to use your kit) ---------- */
 
 .alt-paths {
@@ -549,6 +573,10 @@ button.primary:hover {
   grid-template-columns: 1fr 1fr;
   gap: 18px;
   margin-top: 14px;
+}
+.alt-paths-body-single {
+  grid-template-columns: 1fr;
+  max-width: 720px;
 }
 @media (max-width: 820px) {
   .alt-paths-body { grid-template-columns: 1fr; }

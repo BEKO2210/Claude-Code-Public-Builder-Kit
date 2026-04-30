@@ -2,6 +2,68 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #031 — 2026-04-30 — Whole-flow consistency: Claude Code (web + terminal), no chat
+
+**Trigger:** Owner: *"schau das alles konsistent ist im wizard auf der webseite ! es ist speziell für claude code im web (dann mit github) oder über terminal.. keine chat claude da das da nichts bringt mit denn .md datein!"*. The previous Run #030 added GitHub + terminal as alternative paths, but kept claude.ai-chat as the primary. That was wrong — uploading 12 markdown files into a chat that can read but not edit them is busywork; the kit only earns its keep when used with **Claude Code**, which can read and write files. The kit was generating output for the wrong tool.
+
+**The conceptual fix**
+
+Two paths, both Claude Code:
+1. **Claude Code in the browser** (primary, non-tech) — push the kit to a free GitHub repo, open Claude Code on `claude.com/claude-code`, connect the repo. Claude Code reads all 12 files and can edit them.
+2. **Claude Code in the terminal** (secondary, devs) — unzip locally, `cd`, `npx @anthropic-ai/claude-code`. Same capability, no GitHub round-trip.
+
+**No claude.ai chat anywhere.** That was the half-truth.
+
+**What changed across the surface**
+
+- **App result panel** (`public/index.html`):
+  - Subtitle now says: *"Built for Claude Code — in your browser via GitHub, or in your terminal. No regular chat — Claude Code can actually read and edit the files in your kit."*
+  - **Step 1**: Download ZIP (unchanged).
+  - **Step 2** (NEW): Upload to GitHub. Includes a `<details class="kit-substeps">` with the 5-substep beginner guide (sign up → new repo → uploading an existing file → drag → commit). The CTA button links straight to `https://github.com/new`.
+  - **Step 3** (NEW): Open Claude Code with your repo. CTA button links to `https://claude.com/claude-code`. The starter prompt at the bottom is rewritten for Claude Code semantics — "Read MASTERPLAN.md and CLAUDE.md from this kit" — instead of the chat-style "Please read the attached MASTERPLAN.md".
+  - **Removed**: The previous step 3 (attach 12 files to claude.ai chat) — wrong tool. The whole `alt.github.*` path block from Run #030 is collapsed into step 2 itself; the alt-paths section is now single-card with just the Terminal flow.
+- **Landing page deep-flow stage 4** (`docs/index.html` + `docs/i18n.js`):
+  - Title: *"You sharpen the plan with Claude Code."* (was: with Claude).
+  - Body: *"Use Claude Code — in your browser via your GitHub repo, or in your terminal in the unzipped folder. Claude Code reads every file in the kit and can edit them directly."*
+  - Chat-bubble dialog rewritten to read like a Claude Code session, not a chat upload: *📂 12 files loaded from your repo* → *"Read MASTERPLAN.md and CLAUDE.md, walk me through Phase 1 / Step 1."* → *"Got it. First decision: are users tracking the same plan or each their own?"* → *"Each their own. Add that to the masterplan."*
+- **Landing page short "How it works" step 3**: same correction. Mock chat now shows *📂 GitHub repo: my-kit* / *Reading MASTERPLAN.md…* instead of *📎 MASTERPLAN.md / Sure! Let's start with…*.
+- **README.md** "How it works" section: step 3 now says *"Open in Claude Code — either via a free GitHub repo (browser-based Claude Code) or in your terminal (`npx @anthropic-ai/claude-code` in the unzipped folder). Claude Code reads every file and walks you through Phase 1 / Step 1."* Plus an explicit note that the kit is built for Claude Code, not regular claude.ai chat.
+- **Starter prompt** (the one the user copies into Claude Code):
+  - English: *"Read MASTERPLAN.md and CLAUDE.md from this kit. The project is \"{name}\". Summarise the plan back to me in your own words, then walk me through Phase 1 — Step 1 of the roadmap in plain language. Ask me one question at a time if you need more from me before we start coding."*
+  - German: full DE parity, also rewritten.
+
+**Files touched**
+- Modified: `public/index.html`, `public/i18n.js`, `public/style.css` (added `.kit-substeps` + `.alt-paths-body-single`), `public/app.js` (removed dead `altGithubPromptEl` / `copyGithubPromptBtn` references and the GitHub-mini-prompt logic — that path doesn't exist anymore), `docs/index.html`, `docs/i18n.js`, `README.md`, `RUN_LOG.md`, `CLAUDE.md`.
+- **Untouched:** server, src, tests, examples, scripts.
+
+**Tests run**
+- `npm test` → **83/83** pass.
+- `npm run audit:a11y` → **0 violations** on either page; all 13 contrast pairs pass WCAG AA.
+- HTTP smoke against `node server.js`: `claude.ai/new` references in the served HTML: **0** (was 2 before this run). 8 references to `github.com/new` / `github.com/signup` / `claude.com/claude-code` / `kit-substeps` / `result.step2.s[1-5]`. The `prompt.starter` in served `i18n.js` now starts with "Read MASTERPLAN.md and CLAUDE.md from this kit" — the Claude-Code-style framing.
+- Both i18n.js files parse cleanly (the syntax tests from Run #028b still guarding).
+
+**Drift accounting**
+None. Generator behaviour, examples, templates, and tests are byte-identical.
+
+**Known limitations**
+- **Claude Code's web URL** is canonically `https://claude.com/claude-code`. If Anthropic changes that URL or restructures the product (e.g. moving Web Claude Code into `claude.ai/something`), the deep-link button breaks. Pragmatic; no good way to track that without a probe job.
+- **The README still mentions claude.ai once** — in the privacy notice copy on the landing/Datenschutz page (correct: that's a third-party data-flow disclosure, not a recommended path). And in a single sentence under "How it works" the README clarifies the kit is *not* built for that tool, so the mention is intentional disambiguation.
+- **The flow-stage-4 chat bubbles still use a chat-bubble visual metaphor** even though Claude Code is more IDE-like than chat. The alternative — a fake file-tree + diff viewer — would be a much heavier visual to maintain. Acceptable trade; the bubbles read clearly in 3 seconds and the flow story is what the user takes away.
+- **No deep-link to "open this specific repo in Claude Code"** because Anthropic doesn't publicly document a URL scheme for that. The user has to open Claude Code, then connect their repo from inside. One extra click; documented in step 3.
+- **The CLI command stays `npx @anthropic-ai/claude-code`** rather than the shorter `claude` alias. `npx` works for any user with Node ≥16 without a separate install step; `claude` only works after `npm install -g @anthropic-ai/claude-code`. The hint line under the command notes that subsequent runs are instant once the package is cached.
+
+**Decisions**
+- **Two paths, both Claude Code** — over one path (chat) plus two backups, or three paths with chat as a "fallback if Claude Code isn't available". Chat as a fallback would re-introduce the half-truth: the user would think "fall back to chat" is roughly equivalent, when it's actually inferior because the tool can't edit. Removing it from the visible flow forces honesty.
+- **Step 2 as a `<details>` for the GitHub how-to** — the 5 sub-steps are heavy reading, especially for users who already know GitHub. Collapsing them lets returning users skip past while keeping them one click away for first-timers. Defaults to closed.
+- **CTA button on step 2 goes to `github.com/new`** rather than to the user's freshly-created repo (we don't know its URL). One extra navigation hop, but it preserves the "I just clicked a button and a fresh repo form is in front of me" experience.
+- **Starter prompt opens with "Read MASTERPLAN.md and CLAUDE.md from this kit"** — assumes the tool can read files. That's a hard assumption that *is* true for Claude Code and not for chat. The prompt fails informatively if pasted into the wrong tool: chat would say "I don't have access to those files; could you paste them?" — which is itself a useful signal that the user is in the wrong tool.
+- **Removed the alt-paths GitHub block** (Run #030's path 2). It became step 2 of the primary flow, so duplicating it as a sub-card under "Other ways" is dead weight. The terminal path stays as the only alt-path.
+
+**Next session starts with**
+- Owner picks: domain depth eleventh domain (`non-profit & community` / `government & civic`), EN versions of the legal pages (`imprint.html` / `privacy.html`), or further wizard polish.
+
+---
+
 ## Run #030 — 2026-04-30 — "Use your kit" — three honest paths instead of one half-truth
 
 **Trigger:** Owner caught a real inconsistency: the post-generate panel told the user to upload **just MASTERPLAN.md** to claude.ai — but the kit hands them **12 files**. The other 11 vanished from the user's view of the flow. Plus, the panel pretended that claude.ai was the only path; the GitHub-and-terminal options were silently invisible. Owner: *"warum soll ich nur master plan hochladen wenn ich 2 datein bekomme??!! entweder man läd die in github.com hoch (erkläre auch für super Anfänger wie oder man startet claude code in dem ordern über terminal"*.

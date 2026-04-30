@@ -20,8 +20,6 @@ const galleryEl = document.getElementById("example-cards");
 const previewLineEl = document.getElementById("preview-line");
 const kitPromptEl = document.getElementById("kit-prompt-text");
 const copyPromptBtn = document.getElementById("copy-prompt");
-const altGithubPromptEl = document.getElementById("alt-github-prompt");
-const copyGithubPromptBtn = document.getElementById("copy-github-prompt");
 
 let currentFiles = [];
 let activeIndex = -1;
@@ -341,26 +339,6 @@ copyPromptBtn?.addEventListener("click", async () => {
   }
 });
 
-// Render the GitHub-flow mini-prompt with the current locale's text. Updates
-// on each renderResult so the user always sees a copy that matches their
-// chosen language. The {URL} placeholder stays literal — the user replaces
-// it with their actual repo URL on github.com.
-function renderGithubPrompt() {
-  if (!altGithubPromptEl) return;
-  altGithubPromptEl.textContent = t("alt.github.prompt");
-}
-
-copyGithubPromptBtn?.addEventListener("click", async () => {
-  if (!altGithubPromptEl) return;
-  try {
-    await navigator.clipboard.writeText(altGithubPromptEl.textContent || "");
-    copyGithubPromptBtn.textContent = t("result.step3.copied");
-    setTimeout(() => { copyGithubPromptBtn.textContent = t("alt.github.copy"); }, 1500);
-  } catch {
-    copyGithubPromptBtn.textContent = t("result.step3.copy-failed");
-    setTimeout(() => { copyGithubPromptBtn.textContent = t("alt.github.copy"); }, 1500);
-  }
-});
 
 downloadZipBtn.addEventListener("click", async () => {
   if (!lastIdea) return;
@@ -747,7 +725,6 @@ function refreshWizardPreview() {
 // ---- Bootstrap ----
 
 applyTranslations();
-renderGithubPrompt();
 detectHostedMode();
 loadExamples();
 if (wizardSection) renderWizard();
@@ -766,8 +743,6 @@ onLocaleChange(() => {
   if (kitPromptEl && projectName.textContent) {
     kitPromptEl.textContent = buildStarterPrompt(projectName.textContent);
   }
-  // GitHub-flow mini-prompt always reflects the active locale.
-  renderGithubPrompt();
   // Source badge respects the new locale.
   if (resultSource === "example") setSourceBadge(t("label.example-badge"));
   // Persisted "Written to:" / "Note:" labels rebuild from the underlying flags.
