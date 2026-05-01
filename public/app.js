@@ -587,8 +587,7 @@ const wzPanels = wizardSection?.querySelectorAll(".wizard-panel") ?? [];
 const wzBack = document.getElementById("wz-back");
 const wzNext = document.getElementById("wz-next");
 const wzGenerate = document.getElementById("wz-generate");
-const wzSkip = document.getElementById("wz-skip");
-const wzBackToWizard = document.getElementById("wz-back-to-wizard");
+const modeTabs = document.querySelectorAll("[data-mode-set]");
 const wzAudienceInput = document.getElementById("wz-audience");
 const wzBenefitInput = document.getElementById("wz-benefit");
 const wzSummary = document.getElementById("wz-summary");
@@ -871,16 +870,24 @@ if (wizardSection) {
     }
   });
 
-  wzSkip.addEventListener("click", () => {
-    wizardSection.hidden = true;
-    generatorSection.hidden = false;
-    ideaInput.focus();
-  });
-  wzBackToWizard?.addEventListener("click", () => {
-    generatorSection.hidden = true;
-    wizardSection.hidden = false;
-    renderWizard();
-  });
+  function setMode(mode) {
+    const isDirect = mode === "direct";
+    if (wizardSection) wizardSection.hidden = isDirect;
+    if (generatorSection) generatorSection.hidden = !isDirect;
+    for (const tab of modeTabs) {
+      const matches = tab.getAttribute("data-mode-set") === mode;
+      tab.classList.toggle("is-active", matches);
+      tab.setAttribute("aria-selected", matches ? "true" : "false");
+    }
+    if (isDirect) {
+      ideaInput?.focus();
+    } else {
+      renderWizard();
+    }
+  }
+  for (const tab of modeTabs) {
+    tab.addEventListener("click", () => setMode(tab.getAttribute("data-mode-set")));
+  }
 }
 
 let wzPreviewTimer = null;
@@ -937,9 +944,15 @@ if (wizardSection) {
     if (!idea) return;
     const trimmed = idea.trim();
     if (!trimmed || trimmed.length > 500) return;
-    // Switch from wizard to direct form for clarity.
+    // Switch from wizard to direct form for clarity, and update the
+    // mode tabs so the user sees they landed in direct-input mode.
     if (wizardSection) wizardSection.hidden = true;
     if (generatorSection) generatorSection.hidden = false;
+    for (const tab of document.querySelectorAll("[data-mode-set]")) {
+      const matches = tab.getAttribute("data-mode-set") === "direct";
+      tab.classList.toggle("is-active", matches);
+      tab.setAttribute("aria-selected", matches ? "true" : "false");
+    }
     if (ideaInput) {
       ideaInput.value = trimmed;
       ideaInput.dispatchEvent(new Event("input", { bubbles: true }));

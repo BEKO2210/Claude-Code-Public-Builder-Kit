@@ -1,4 +1,5 @@
 import express from "express";
+import { readFile } from "node:fs/promises";
 import { dirname, resolve, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { generateKit } from "./src/index.js";
@@ -6,6 +7,7 @@ import { buildContext } from "./src/context.js";
 import { writeKit } from "./src/utils/write.js";
 import { buildZipBuffer } from "./src/utils/zip.js";
 import { EXAMPLES, findExample, isSafeExampleId } from "./src/examples.js";
+import { renderOgPng, renderStaticOgPng } from "./src/og.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PORT = process.env.PORT ? Number(process.env.PORT) : 5173;
@@ -63,7 +65,85 @@ function rateLimit(req, res, next) {
 
 const app = express();
 app.use(express.json({ limit: "64kb" }));
-app.use(express.static(resolve(__dirname, "public")));
+
+// HTML-template patcher for `GET /` and `GET /index.html` when `?idea=X`
+// is in the query string. We intercept *before* express.static so we can
+// rewrite the og:image / twitter:image / og:title / twitter:title meta
+// tags to point at the dynamic /api/og?idea=X URL. Without this, every
+// shared kit on Twitter/Slack/LinkedIn shows the same generic preview.
+//
+// Three-tier fallback: malformed query, oversize idea, or read failure
+// all fall through to next() — express.static then serves the unmodified
+// HTML. Crawlers see the default OG card; humans still get the app.
+const PUBLIC_DIR = resolve(__dirname, "public");
+const INDEX_HTML_PATH = resolve(PUBLIC_DIR, "index.html");
+
+let indexHtmlPromise = null;
+function loadIndexHtml() {
+  if (!indexHtmlPromise) indexHtmlPromise = readFile(INDEX_HTML_PATH, "utf8");
+  return indexHtmlPromise;
+}
+
+function htmlEscape(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function shortIdeaForTitle(idea, max = 70) {
+  const cleaned = idea.replace(/\s+/g, " ").trim();
+  if (cleaned.length <= max) return cleaned;
+  return cleaned.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
+}
+
+async function serveIndexWithOgPatch(req, res, next) {
+  const idea = typeof req.query.idea === "string" ? req.query.idea.trim() : "";
+  if (!idea || idea.length > 500) return next();
+  try {
+    const html = await loadIndexHtml();
+    const encoded = encodeURIComponent(idea);
+    const ogUrl = `/api/og?idea=${encoded}`;
+    const titleFragment = htmlEscape(shortIdeaForTitle(idea));
+    const ogTitle = `${titleFragment} — Builder Kit`;
+    let patched = html;
+    patched = patched.replace(/content="\/api\/og"/g, `content="${ogUrl}"`);
+    patched = patched.replace(
+      /<meta property="og:title" content="[^"]*"/,
+      `<meta property="og:title" content="${ogTitle}"`
+    );
+    patched = patched.replace(
+      /<meta name="twitter:title" content="[^"]*"/,
+      `<meta name="twitter:title" content="${ogTitle}"`
+    );
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=300");
+    return res.send(patched);
+  } catch {
+    return next();
+  }
+}
+
+app.get("/", serveIndexWithOgPatch);
+app.get("/index.html", serveIndexWithOgPatch);
+
+app.get("/api/og", async (req, res) => {
+  const rawIdea = typeof req.query.idea === "string" ? req.query.idea.trim() : "";
+  try {
+    const buf = rawIdea ? await renderOgPng(rawIdea) : await renderStaticOgPng();
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Content-Length", buf.length);
+    // 1 day on dynamic, 7 days on static. Crawlers re-fetch on cache miss.
+    res.setHeader("Cache-Control", rawIdea ? "public, max-age=86400" : "public, max-age=604800");
+    res.end(buf);
+  } catch (err) {
+    res.status(500).json({ error: err.message || "OG render failed." });
+  }
+});
+
+app.use(express.static(PUBLIC_DIR));
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, hosted: IS_HOSTED });

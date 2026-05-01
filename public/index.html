@@ -4,8 +4,19 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Claude Code Public Builder Kit</title>
+    <meta name="description" content="Turn a one-line project idea into 12 ready-to-use planning documents — vision, roadmap, risks, architecture. Free, MIT-licensed, no install." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="stylesheet" href="/style.css" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Claude Code Public Builder Kit" />
+    <meta property="og:description" content="From one sentence to a complete project plan. 12 ready-to-use planning documents, free." />
+    <meta property="og:image" content="/api/og" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Claude Code Public Builder Kit" />
+    <meta name="twitter:description" content="From one sentence to a complete project plan. 12 ready-to-use planning documents, free." />
+    <meta name="twitter:image" content="/api/og" />
   </head>
   <body>
     <a class="skip-link" href="#main" data-i18n="header.skip">Skip to main content</a>
@@ -30,6 +41,17 @@
     </header>
 
     <main id="main" class="container" tabindex="-1">
+      <div class="mode-toggle" role="tablist" data-i18n-aria-label="mode.toggle.aria" aria-label="Choose how to enter your idea">
+        <button type="button" class="mode-tab is-active" data-mode-set="wizard" role="tab" aria-selected="true">
+          <span class="mode-tab-title" data-i18n="mode.wizard.title">Guided steps</span>
+          <span class="mode-tab-sub" data-i18n="mode.wizard.sub">Four short questions</span>
+        </button>
+        <button type="button" class="mode-tab" data-mode-set="direct" role="tab" aria-selected="false">
+          <span class="mode-tab-title" data-i18n="mode.direct.title">Just type my idea</span>
+          <span class="mode-tab-sub" data-i18n="mode.direct.sub">One sentence is enough</span>
+        </button>
+      </div>
+
       <section id="wizard" class="wizard" aria-labelledby="wizard-heading">
         <header class="wizard-top">
           <h2 id="wizard-heading" data-i18n="wizard.title">Tell me about your idea</h2>
@@ -122,13 +144,13 @@
               id="wz-audience"
               class="wz-input"
               maxlength="160"
-              placeholder="e.g. parents of small children, busy restaurant owners, music teachers"
+              placeholder="e.g. small business owners, freelance designers, hobby photographers, junior developers"
               data-i18n-placeholder="step2.placeholder"
               autocomplete="off"
             />
             <aside id="wz-nudge-audience" class="wz-nudge" hidden>
               <p class="wz-nudge-title" data-i18n="step2.nudge.title">A bit more specific would help.</p>
-              <p class="wz-nudge-body" data-i18n-html="step2.nudge.body">Try: "<em>parents of kindergarten children</em>", "<em>working parents with toddlers</em>", or "<em>single parents with school-age kids</em>". The kit can do a lot more for a sharper audience.</p>
+              <p class="wz-nudge-body" data-i18n-html="step2.nudge.body">Try: "<em>solo developers building side projects</em>", "<em>independent cafe owners under 10 staff</em>", or "<em>community theatre directors</em>". The kit can do a lot more for a sharper audience.</p>
             </aside>
             <div class="wizard-suggestions" aria-label="Audience suggestions">
               <button type="button" class="wz-pill" data-fill-audience="small business owners" data-i18n="step2.pill.smb">small business owners</button>
@@ -187,10 +209,6 @@
           <button type="button" id="wz-generate" hidden data-i18n="nav.generate">Generate my kit</button>
         </footer>
 
-        <p class="wizard-skip">
-          <span data-i18n="wizard.skip-prompt">Already know what to type?</span>
-          <button type="button" id="wz-skip" class="linkish" data-i18n="wizard.skip-link">Switch to direct input</button>.
-        </p>
         <p id="status" class="status" role="status" aria-live="polite"></p>
       </section>
 
@@ -219,9 +237,6 @@
             </label>
             <button type="submit" id="submit" data-i18n="direct.submit">Generate kit</button>
           </div>
-          <p class="wizard-skip">
-            <button type="button" id="wz-back-to-wizard" class="linkish" data-i18n="wizard.back-to-wizard">← Back to guided steps</button>
-          </p>
         </form>
       </section>
 

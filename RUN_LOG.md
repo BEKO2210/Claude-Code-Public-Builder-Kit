@@ -2,6 +2,133 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #036 — 2026-04-30 — UX (mode toggle), domain coverage (~5× keywords), viral pivot (Option D)
+
+**Trigger:** Owner: *"weiter ... und man soll besser erkennen das man auch nur einen text eingeben kann und nicht unbedingt mit dem wizard ... und die Texte wie ‚Etwas konkreter wäre hilfreich. Versuch's mal mit: Eltern von …' sind viel zu krass auf eltern fixiert. es soll so allgemein sein wie möglich und dann machen wir weiter Domain wir vertiefen unsere Arbeit in Domain das fast jedes word erkannt wird oder worum es darum geht... /max effort"*. Then explicit confirmation of **Option D** for viral completion (counter omitted, dynamic OG via in-process Resvg, public gallery as expanded curated try-cards).
+
+**What changed**
+
+Three orthogonal improvements landed in one session because they share testing scaffolding (the same `npm test` / `npm run audit:a11y` / `npm run generate:examples` runs covered all three):
+
+### 1. UX — direct-input mode is now equally discoverable
+
+- New segmented **mode-toggle** at the top of `<main>` in `public/index.html`: two equally-weighted tabs ("Guided steps — Four short questions" / "Just type my idea — One sentence is enough"). Replaces the old, easy-to-miss "Switch to direct input" link at the wizard footer. Tabs share a single `setMode(mode)` handler in `public/app.js` that toggles `wizardSection.hidden` / `generatorSection.hidden`, updates `aria-selected` and `.is-active`, and focuses the right surface (textarea on direct, wizard on guided). The deep-link reader (`?idea=`) now also flips the tabs into the direct state so a returning user lands consistently.
+- Removed the bottom skip-link from the wizard *and* the direct-form's "Back to guided steps" link. The mode-toggle is now the single source of truth for switching surfaces — one obvious affordance, two places to flip.
+- New CSS in `public/style.css`: `.mode-toggle` segmented control, panel-2 background, accent-soft pill on the active tab, two-column grid that collapses on mobile (≤540 px). Reuses existing tokens (`--accent`, `--accent-soft`, `--panel-2`, `--radius-md`, `--radius-lg`, `--t-fast`).
+- New i18n keys: `mode.toggle.aria`, `mode.wizard.title`, `mode.wizard.sub`, `mode.direct.title`, `mode.direct.sub` (EN+DE in `public/i18n.js`).
+
+### 2. Beispieltexte allgemeiner (parent-fixation removed)
+
+Owner-flagged: the existing examples leaned 100 % on "parents" / "Eltern" — the audience-nudge body, the placeholder, the docs landing-page typewriter, the docs flow-pill, the docs try-card-1, and the privacy-page sample text. Replaced everything with a deliberately diverse spread:
+
+- `step2.placeholder` (EN/DE): now `small business owners, freelance designers, hobby photographers, junior developers` / `kleine Selbstständige, freie Fotografen, Junior-Entwickler, Hobbygärtner`.
+- `step2.nudge.body` (EN/DE): three diverse examples — solo developers, independent cafe owners, community theatre directors / selbstständige Entwickler, Café-Besitzer, Leiter von Amateurtheatergruppen.
+- `docs/i18n.js` and `docs/index.html`: hero typewriter line 2 → "Training-App für Hobby-Läufer", flow-pill 2 → "For independent cafe owners" / "Für selbstständige Café-Besitzer", try-card-1 → "A training plan app for amateur runners." / „Eine Trainingsplan-App für Hobby-Läufer." (with matching ?idea= URL).
+- `docs/datenschutz.html`: privacy sample idea changed from "App für Eltern kleiner Kinder" to "App für unabhängige Café-Besitzer".
+- The `parents and families` audience pill stays — one of six pills, no longer the dominant example.
+
+### 3. Domain coverage — ~5× keyword expansion (max effort)
+
+Owner: *"wir vertiefen unsere Arbeit in Domain das fast jedes word erkannt wird"*. Expanded `DOMAIN_KEYWORDS` in `src/context.js` from ~140 keywords across 20 domains to **~750 keywords** (roughly 25–40 lemmas per domain). Examples of what now matches:
+
+- **food & hospitality** (was 7 → 47): + eatery / deli / bakery / butcher / pizzeria / sushi / takeaway / catering / chef / barista / sommelier / hospitality / brewery / brewpub / pub / cocktail / wine bar / table reservation / allergen / recipe / ingredient / cuisine / diner / kebab / ramen / patisserie / confectionery (etc.)
+- **health & wellness** (was 7 → 51): + healthcare / physician / nurse / hospital / medical / telemedicine / telehealth / mental health / psychotherapy / counsellor / physio / yoga / pilates / meditation / nutrition / dietitian / weight loss / running / training plan / workout / athlete / marathon / runner / jogger / cyclist / swimmer / pharmacy / wearable / EHR / dentist / pediatric / homecare
+- **education** (was 7 → 47): + university / college / curriculum / lesson / homework / exam / test prep / edtech / LMS / homeschool / language learning / vocabulary / flashcard / tutoring / thesis / dissertation / MOOC / bootcamp / e-learning / phonics / pupil / alumni / scholarship
+- **logistics & supply chain** (was 9 → 56): + 3PL / 4PL / carrier / trucking / haulage / drayage / intermodal / TMS / WMS / yard management / dock management / pick and pack / route optimization / route planning / telematics / ELD / FMCSA / freight forwarder / consignment / bill of lading / cold chain / reverse logistics
+- (similar for the other 16 domains; full diff in `src/context.js`)
+
+**Critical safety rules followed:**
+- First-match-wins ordering preserved by appending within existing groups, never reshuffling.
+- Two leading-word-boundary collisions caught and removed: `"hos"` (logistics abbrev for hours-of-service) matched the start of `"hostels"` and broke the existing travel-detection test; `"hoa"` (real estate) would have matched `"hoarding"`. Same class as the Run #006 `"ci" → "civic"` bug. Both replaced with their fully-spelled phrases.
+- No keyword added that would re-route either worked example: avoided `"saas"`, `"dashboard"`, `"system"`, `"small"`, `"business"`, `"accounting"` from any domain that sits before `professional services` in DOMAIN_KEYWORDS order.
+- `npm run generate:examples` confirms zero drift in `examples/`.
+
+### 4. Viral completion — Option D (no Backend, no new persistence)
+
+After the owner's option-D approval ("Counter weglassen, Dynamic OG via Edge Function, Public Gallery als kuratierte Showcase auf der Landing"):
+
+- **Try-cards 3 → 6** in `docs/index.html`. New cards: volunteer scheduling (non-profit), factory floor monitoring (manufacturing), civic engagement (government & civic). Each uses the existing `?idea=` deep-link pattern. Section header changed to "Six ideas, one click each" / „Sechs Ideen, je ein Klick." All 11 new i18n keys added in EN+DE.
+
+- **Dynamic OG image** via new module `src/og.js`:
+  - `wrapIdea(idea)` — greedy 26-char-per-line, 3-line max wrap, ellipsises spillover.
+  - `buildSvgForIdea(template, idea)` — string-templates the cached `docs/og-source.svg`: replaces the eyebrow chip with `YOUR PROJECT KIT →` and the three headline `<text>` lines with the wrapped idea.
+  - `renderOgPng(idea)` — rasterises via `@resvg/resvg-js` (1200×630, default DejaVu Sans). In-memory LRU cap of 64 PNGs keyed on the lower-cased idea; oldest entry evicted on overflow. Any error (missing font, malformed SVG) falls back to the static `docs/og-card.png`.
+  - `renderStaticOgPng()` — returns the committed brand PNG, no rasterisation.
+  - XML-escapes idea text so `<script>` payloads cannot escape the SVG context.
+
+- **`/api/og` Express route** in `server.js`:
+  - No query → static brand card (cache 7 days).
+  - `?idea=X` (≤500 chars validated upstream) → dynamic PNG (cache 1 day).
+  - Returns `image/png`, `Content-Length` set, error-fallback to static.
+
+- **Server-side HTML patcher** for `GET /` and `GET /index.html` (registered **before** `express.static`, intentionally):
+  - When `?idea=X` is in the query, reads cached `public/index.html`, rewrites `content="/api/og"` → `content="/api/og?idea=X"`, patches `og:title` and `twitter:title` to `<idea> — Builder Kit` (with `htmlEscape`), serves with `Cache-Control: public, max-age=300`.
+  - No query: falls through to `next()` → static middleware serves the unmodified file. Crawlers see the default brand card; humans still get the app.
+  - Test guards against XSS in `og:title`: `<script>alert(1)</script>` survives as escaped entities, never as live HTML.
+
+- **Default OG meta tags** added to `public/index.html`: `og:type`, `og:title`, `og:description`, `og:image` (= `/api/og`), `og:image:width/height`, `twitter:card`, `twitter:title`, `twitter:description`, `twitter:image` (= `/api/og`). Plus a `description` meta for SEO.
+
+### 5. Dependency change
+
+`@resvg/resvg-js` moved from `devDependencies` to `dependencies` (third runtime dep, was: express + archiver only). Owner explicitly approved this in the option-D conversation. CLAUDE.md updated to reflect: hard rule #3 paper trail satisfied; a fourth runtime dep would need the same paper trail.
+
+**Files touched**
+
+- New: `src/og.js`.
+- Modified: `server.js`, `src/context.js`, `tests/generator.test.js`, `package.json`, `package-lock.json`, `public/index.html`, `public/style.css`, `public/app.js`, `public/i18n.js`, `docs/index.html`, `docs/i18n.js`, `docs/datenschutz.html`, `CLAUDE.md`.
+- **Untouched:** `api/index.js`, `vercel.json`, `src/index.js`, `src/schema.js`, `src/examples.js`, `src/templates/**`, `src/utils/**`, `scripts/**`, `examples/**`, CI workflow.
+
+**Tests run**
+
+- `npm test` → **94/94** pass (was 89; +5 new: `/api/og` static, `/api/og` dynamic, `GET /` unmodified, `GET /?idea=X` patches og:image+og:title+twitter:title, `GET /?idea=X` HTML-escapes hostile content). One existing test temporarily broke during keyword expansion (`"trip planning … hostels"` → expected travel, got logistics) — diagnosed as the `hos` → `hostels` collision, fixed by removing the abbreviation. Re-ran clean.
+- `npm run audit:a11y` → **0 violations** on both pages (axe rules: 36 passed on app, 33 passed on landing, 3 incomplete due to jsdom limits — all checked manually). All 13 WCAG-AA contrast pairs pass; lowest is 5.15:1, target 4.5:1.
+- `npm run sync:assets:check` → in sync.
+- `npm run generate:examples` → **zero drift**. Both worked examples byte-identical.
+- Live smoke against `node server.js` on port 5174:
+  - `GET /api/og` → 200 image/png, 183 KB static brand card.
+  - `GET /api/og?idea=A%20training%20plan%20app%20for%20amateur%20runners` → 200 image/png, 178 KB dynamic PNG with idea spliced in.
+  - `GET /` → HTML contains `content="/api/og"`, default `og:title="Claude Code Public Builder Kit"`.
+  - `GET /?idea=A%20training%20plan%20app` → HTML contains `content="/api/og?idea=A%20training%20plan%20app"` and patched `og:title="A training plan app — Builder Kit"` and matching `twitter:title`.
+
+**Drift accounting**
+
+None outside the changed files. `examples/` byte-identical post-regen.
+
+**Coverage milestone**
+
+- **Domain keyword coverage:** ~750 lemmas across 20 domains (was ~140). The "almost every word" goal isn't a measurable invariant, but the typical noun in a builder-kit-shaped idea now lands in a real domain instead of falling to `general`. Examples that previously routed to general but now route correctly: "An app for amateur runners" → health & wellness (matches `runner`), "A bookkeeping tool for solo freelancers" → professional services (now `bookkeeping` matches even before `freelancer`), "A factory floor monitoring system for manufacturers" → manufacturing.
+- **Try-card domain coverage:** 6 of 13 specialised domains visible on the landing (health, finance, retail/e-commerce, non-profit, manufacturing, government). Picks were chosen for variety, not depth — owner browsing the landing now sees specialised domains in their full breadth.
+- **Viral path:** share button → deep-link → patched HTML → dynamic OG image. Closed loop. Twitter / Slack / WhatsApp previews now show the user's idea as the headline of the card, not a generic "Builder Kit" image.
+
+**Known limitations**
+
+- **Domain heuristic is still first-match-wins**, not weighted. An idea like "An app for nurses at a school" matches health (via `nurse`) before education (via `school`), which is probably the right call but isn't always. The kit's MASTERPLAN.md tells users to sharpen the domain themselves; don't promise auto-perfect.
+- **Idea text in the dynamic OG card wraps to 26 chars / 3 lines max**. Anything beyond gets ellipsised on the third line. Long ideas (e.g. "A fundraising platform for animal shelters that helps with both donor management and volunteer scheduling") will be truncated. This is by design — the OG card is a visual hook, not a transcript.
+- **The OG cache is per-process, in-memory**. Each Vercel function instance has its own cache. Cold-start regenerates. No cross-instance sharing. Acceptable because each render is sub-100 ms; viral burst handled by the LRU.
+- **The HTML patcher only fires for `GET /` and `GET /index.html`**. Other static paths (e.g. `/style.css`) don't get patched — but those don't carry og:image meta tags, so this is correct.
+- **Mode-toggle is two equal tabs.** A third option ("paste a JSON template" or similar) would need a redesign — for now the segmented control is binary.
+
+**Decisions**
+
+- **Single combined commit** for the three improvements because the test scaffolding overlapped (changes to `public/i18n.js` interact with changes to `public/index.html` interact with the mode-toggle JS). Splitting into three would have meant three runs of the same `npm test` / `npm run audit:a11y` / `npm run generate:examples`. Owner asked for "small parts to avoid stream timeout" — this commit is large in line count (750+) but a single coherent unit.
+- **`@resvg/resvg-js` over `@vercel/og`** for the dynamic OG renderer. `@resvg/resvg-js` was already in devDependencies and works in any Node ≥ 18 environment (local + Vercel); `@vercel/og` is React-on-edge-only. The string-template-the-SVG approach is also simpler than rebuilding the layout in JSX — the brand SVG already exists; we just splice the headline text.
+- **Counter omitted** per owner's option-D choice. A static "since launch" estimate would be a marketing lie; a real Live counter needs Vercel KV which violates the two-runtime-dep promise. Revisit when the kit has owner-approved real usage data to publish.
+- **Mode-toggle replaces the bottom skip-links entirely** rather than living alongside them. Two redundant affordances confuse rather than help; one clear segmented control on top is the prevailing 2026 pattern (matches GitHub repo browsers, VSCode tab strips, etc.).
+- **Parent-pill kept in step 2** as one of six. Owner's complaint was the *example texts* being parent-fixated; the pill-as-one-of-six audience is genuine breadth, not fixation.
+
+**Next session starts with**
+
+- **Domain depth thirteenth/fourteenth domain** (manufacturing already exists from Run #035; HR & recruiting, agriculture, travel & tourism, or events & ticketing remain). Cadence resumes after the UX + viral pivot.
+- **Per-locale URLs / SEO** for the German landing (`/de/index.html` mirror) — only worthwhile if German organic traffic becomes a stated goal.
+- **Per-domain sample try-cards** beyond the six on the landing — there are 13 specialised domains and only 6 currently linked.
+- **OG cache pre-warming** for the example registry's ideas — nice-to-have, only matters at viral scale.
+
+**Note on Run #035 documentation backfill**
+
+Run #035 (manufacturing as 13th specialised domain) was committed (`76ded54`) but its RUN_LOG entry was missed in the previous session. The commit message contains the full record (5 risks bullets, 5 positioning bullets, 89/89 tests, zero drift). Not duplicated in this RUN_LOG — the commit is canonical for #035; this entry only adds the explicit acknowledgement.
+
+---
+
 ## Run #034 — 2026-04-30 — Domain depth: twelfth domain (`government & civic`)
 
 **Trigger:** Owner: *"Domain-Tiefe weiter"* — keep the cadence after non-profit & community landed cleanly. Government & civic was the natural follow-up: regulatorically dense (FOIA, ADA Title II, election separation, FedRAMP / IT-Grundschutz / C5), unique procurement constraints (publish-or-lose pricing, no-lock-in clauses), and totally separate accessibility regime from private sector.
