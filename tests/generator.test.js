@@ -196,10 +196,10 @@ test("schema: every generated example's context is valid", () => {
   }
 });
 
-test("domain depth: SPECIALISED_DOMAINS has exactly the thirteen expected entries", () => {
+test("domain depth: SPECIALISED_DOMAINS has exactly the fourteen expected entries", () => {
   assert.deepEqual(
     [...SPECIALISED_DOMAINS].sort(),
-    ["climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "government & civic", "health & wellness", "logistics & supply chain", "manufacturing", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
+    ["HR & recruiting", "climate & sustainability", "creative & media", "education", "finance", "food & hospitality", "government & civic", "health & wellness", "logistics & supply chain", "manufacturing", "non-profit & community", "professional services", "real estate", "retail & e-commerce"]
   );
 });
 
@@ -405,6 +405,23 @@ test("domain depth: manufacturing — DOCS/product-brief.md has the positioning 
   assert.match(md, /Brownfield-first/);
   assert.match(md, /Operations-first/);
   assert.match(md, /Air-gap-tolerant/);
+});
+
+test("domain depth: HR & recruiting — MASTERPLAN.md has the risks subsection", () => {
+  const md = fileFromKit("A recruiting CRM for small-team hiring pipelines", "MASTERPLAN.md");
+  assert.match(md, /### Domain-specific risks \(HR & recruiting\)/);
+  assert.match(md, /Algorithmic-decision regulation/);
+  assert.match(md, /EU AI Act/);
+  assert.match(md, /FCRA/);
+  assert.match(md, /Betriebsrat|works-council/i);
+});
+
+test("domain depth: HR & recruiting — DOCS/product-brief.md has the positioning subsection", () => {
+  const md = fileFromKit("A recruiting CRM for small-team hiring pipelines", "DOCS/product-brief.md");
+  assert.match(md, /### Domain-specific positioning \(HR & recruiting\)/);
+  assert.match(md, /Compliance-by-default/);
+  assert.match(md, /time-to-fill|time-to-hire/);
+  assert.match(md, /Candidate experience/);
 });
 
 test("domain depth: non-target domains get no domain-specific subsection (no orphan headings)", () => {

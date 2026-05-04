@@ -56,7 +56,7 @@ The most important file is `src/index.js`, which orchestrates the 12 templates i
 │   ├── small-business-website-system/   # "A website system for small local businesses"
 │   └── smb-accounting-saas-dashboard/   # "A SaaS dashboard for small business accountants"
 ├── tests/
-│   └── generator.test.js     # node:test suite (94 tests, no external deps)
+│   └── generator.test.js     # node:test suite (96 tests, no external deps)
 └── output/                   # Runtime-generated kits (git-ignored)
 ```
 

@@ -2,6 +2,61 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #037 — 2026-05-04 — Domain depth: fourteenth domain (`HR & recruiting`)
+
+**Trigger:** Owner: *"Domain-Tiefe weiter"* — resume the depth pivot after the UX + viral pivot landed (#036). Picked `HR & recruiting` over the other remaining candidates (`travel & tourism`, `agriculture`, `gaming`, `events & ticketing`) because it has the most substantively different risks vs. any prior domain — employment law is its own legal regime, distinct from privacy / safety / financial / governmental compliance, and AI-in-hiring has just become directly regulated under the EU AI Act high-risk classification + a sprawling US state-by-state algorithmic-discrimination patchwork.
+
+**What changed**
+
+- Added `"HR & recruiting"` to both tables in `src/templates/domain-blocks.js`:
+  - **Risks** (5 bullets): Algorithmic-decision regulation as a fully arrived regime — EU AI Act Annex III high-risk classification with full obligations from August 2026 (risk management, technical documentation, post-market monitoring), NYC Local Law 144 (in force since July 2023, mandatory annual independent bias audit + 10-business-day candidate notice), Illinois AIVIA + Maryland HB 1202 + Colorado AI Act (effective February 2026) covering different angles, EEOC Title VII disparate-impact + four-fifths rule applies regardless of human-in-the-loop; background-checks as a regulated workflow not a feature toggle (FCRA pre-screen disclosure + authorisation + pre-adverse-action waiting period + adverse-action letter, EEOC ban-the-box in 37+ US states / 150+ cities, GDPR Art. 10 EU criminal-record restrictions, UK DBS as its own track); employee-data special-category-adjacency + retention-conflict (GDPR contract / legitimate-interest basis vs. Art. 9 special-category protections for sick leave + biometric + trade-union, statutory retention floors HMRC 6y / IRS 4y / German § 257 HGB 6–10y / French Code du travail 5y vs. GDPR right-to-erasure + EU AI Act training-data documentation, plus active litigation hold); EU works-council / co-determination consultation rights as binding (German Betriebsrat §§ 87, 90, 95 BetrVG, French CSE Article L.2312-8, parallel regimes in Austria / Netherlands / Sweden / Denmark / Finland / Belgium / Italy — failure to consult invalidates the system's use); candidate-data privacy as the trust-or-die surface (GDPR purpose limitation + talent-pool reuse traps, end-to-end right-to-erasure across ATS + screening vendor + email-marketing + analytics warehouse, H&M €35.3M GDPR fine in 2020 as the canonical "this gets enforced" example).
+  - **Positioning** (5 bullets): compliance-by-default not compliance-as-add-on (procurement gate is HR ops + legal counsel; bias-audit reports + GDPR records + EU-AI-Act technical docs + FCRA templates + retention table need to be visible deliverables published on the marketing site); audience framing as 50–2,000-employee companies / in-house TA teams (1–15 recruiters) + agencies + boutique RPOs (Workday / SuccessFactors / SAP own enterprise; solo founders aren't the market); quantify in recruiting-ops units (time-to-fill, time-to-hire, cost-per-hire, offer-acceptance rate, quality-of-hire at 90/180 days, source-of-hire mix, pipeline conversion at each stage, diversity at each stage); candidate experience as part of the product not a separate concern (recruiting market is bilateral; Glassdoor / Reddit / Blind name-and-shame ATSes that ghost candidates / force long forms / autoreject without human review; default to status-visible at every stage, sub-five-minute application surface, named-rejection, downloadable submitted-data-on-request, working delete-my-account); honest about where AI helps vs. doesn't (helpful: CV parsing, JD generation, sourcing, interview-note summarisation, skill-extraction; legally fraught + operationally unreliable: automated rejection / shortlist scoring / video-interview personality scoring — those land in EU-AI-Act high-risk + NYC LL 144 audit obligations + disparate-impact litigation + genuinely high false-reject rate).
+- Module-load key check picks up the new key automatically; load passes.
+
+**Files touched**
+
+- Modified: `src/templates/domain-blocks.js`, `tests/generator.test.js`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `public/**`, `docs/**`, `src/index.js`, `src/context.js`, `src/schema.js`, `src/examples.js`, `src/og.js`, `src/utils/**`, `src/templates/{masterplan,productBrief,claude}.js`, `scripts/**`, `examples/**`, `package.json`, CI workflow.
+
+**Tests run**
+
+- `npm test` → **96/96** pass (was 94 → +2 for HR & recruiting risks + positioning subsection-presence tests; SPECIALISED_DOMAINS test now expects fourteen entries instead of thirteen).
+- **No prior tests had to be adjusted this run.** `HR & recruiting` is in `DOMAIN_DETECTION_CASES` (positive detection list) and `recruiting` is in the keyword list, but neither is in a non-target list, so adding the specialisation triggers no test changes beyond the additions. Seventh run in the depth series with this property (others: #018, #019, #020, #033, #034, #035).
+- `npm run generate:examples` → **zero drift**. Both worked examples have non-HR domains (`small business`, `professional services`).
+- `npm run audit:a11y` → **0 violations** on both pages; all 13 WCAG-AA contrast pairs pass. (HR specialisation only adds markdown content, no UI surface change — but the audit is run unconditionally per the run protocol.)
+
+**Drift accounting**
+
+None outside the specialisation table itself. Worked examples byte-identical post-regen.
+
+**Coverage milestone**
+
+Fourteen of 21 domain values are now specialised (~67 %). Remaining 7 unspecialised: `small business` (deliberately generic), `developer tools` (technical audience self-serves), `agriculture`, `travel & tourism`, `gaming`, `events & ticketing`, `general` (always generic). Of these, the (a)-tier candidates (`agriculture`, `travel & tourism`, `events & ticketing`, `gaming`) cover ~4 more sessions of useful work; (b) `developer tools` and `small business` stay deliberately generic.
+
+**Known limitations**
+
+- **HR keyword detection** in `src/context.js` covers the obvious surfaces (`recruiting`, `hiring`, `applicant tracking`, `payroll`, `onboarding`, `human resources`, `recruiter`, `recruitment`, `talent acquisition`, `talent pipeline`, `job board`, `applicant tracking system`, `ats`, `resume parser`, `cv parser`, `cv screening`, `candidate experience`, `headhunter`, `headhunting`, `executive search`, `interview scheduling`, `background check`, `reference check`, `offer letter`, `compensation`, `compensation planning`, `benefits administration`, `401k`, `retirement benefits`, `health benefits`, `stock options`, `rsu`, `esop`, `performance review`, `performance management`, `1:1 meeting`, `okr`, `kpi review`, `people ops`, `peopleops`, `hris`, `hr information system`, `hr business partner`, `hrbp`, `diversity hiring`, `diversity equity inclusion`, `dei`) but misses adjacent ones — `Bewerber` / `Personalabteilung` / `Mitarbeiter` (German), `embauche` / `recrutement` (French), `talent management` (which could be HR or product strategy). Users sharpen in `MASTERPLAN.md`.
+- **The bias-regulation bullet specifies the most-cited regimes** (EU AI Act, NYC LL 144, Illinois AIVIA, Maryland HB 1202, Colorado AI Act, Title VII / EEOC) but doesn't enumerate everything (California ABAB 331 was vetoed; Texas HB 2060 is pending; Connecticut + Vermont have task-force-stage proposals). The bullet is calibrated for what's enforceable today; pending legislation isn't load-bearing yet.
+- **Works-council bullet lists the most-frequent EU member-state regimes** but doesn't catalog every European jurisdiction (Greece, Portugal, Romania each have their own; Eastern European member states have lighter regimes). The bullet's value is "this is real, plan for it", not "here is every jurisdiction".
+- **The candidate-experience bullet leans on Glassdoor / Reddit / Blind** as the public reputation surfaces. Those are accurate for English-language markets; in continental EU the equivalents are Kununu (DE/AT), Glassdoor (less dominant), and word-of-mouth in narrow professional networks. Doesn't change the bullet's substance — candidate trust is the brand — but the named platforms shift by market.
+- **The "where AI helps vs. doesn't" bullet is opinionated.** Some vendors successfully sell automated shortlist scoring with audit reports + opt-in flows + bias-audit transparency; the bullet doesn't say it's impossible, only that it requires its own audit / its own opt-in / its own kill-switch / its own published bias report.
+
+**Decisions**
+
+- **Five bullets each, matching prior specialisations** for visual consistency.
+- **No keyword-list expansion in this run.** The keyword table got its major expansion in Run #036; this run is depth on an existing domain, not breadth. Same call as Runs #015 / #017 / #018 / #019 / #020 / #021 / #033 / #034 / #035.
+- **Test idea uses `recruiting CRM for small-team hiring pipelines`** — already in `DOMAIN_DETECTION_CASES`, intentionally — keeps the test surface coherent. Matches via `recruiting` and `hiring`.
+- **HR picked over travel/agriculture/gaming/events for the fourteenth slot.** All have substantive depth. HR won on (a) regulatory novelty (EU AI Act high-risk classification for recruitment AI is the most aggressive AI regulation enforced anywhere as of 2026), (b) the candidate-vs-customer bilateral framing creates unusually clear positioning bullets, (c) wider relevance for builder-kit-shaped ideas (recruiting tools, ATS sidekicks, sourcing extensions, reference-check workflows, payroll integrations all common). Travel/agriculture/gaming/events stay queued for runs #038–#041.
+
+**Next session starts with**
+
+- Domain depth fifteenth domain (`travel & tourism` — Package Travel Directive + ATOL + GDS-integration patchwork; `agriculture` — CAP / FSMA / weather-and-yield risk; `events & ticketing` — BOTS Act + venue safety + licensing; `gaming` — loot-box regulation + rating boards + DMCA).
+- Or pivot to OG-card visual polish (current implementation just substitutes the headline text — could be visually richer).
+- Or expand try-cards on the landing to cover more specialised domains (currently 6 of 14 specialised domains visible; could add food, education, real estate, climate as additional cards).
+- Or `/de/index.html` mirror for German SEO.
+
+---
+
 ## Run #036 — 2026-04-30 — UX (mode toggle), domain coverage (~5× keywords), viral pivot (Option D)
 
 **Trigger:** Owner: *"weiter ... und man soll besser erkennen das man auch nur einen text eingeben kann und nicht unbedingt mit dem wizard ... und die Texte wie ‚Etwas konkreter wäre hilfreich. Versuch's mal mit: Eltern von …' sind viel zu krass auf eltern fixiert. es soll so allgemein sein wie möglich und dann machen wir weiter Domain wir vertiefen unsere Arbeit in Domain das fast jedes word erkannt wird oder worum es darum geht... /max effort"*. Then explicit confirmation of **Option D** for viral completion (counter omitted, dynamic OG via in-process Resvg, public gallery as expanded curated try-cards).
