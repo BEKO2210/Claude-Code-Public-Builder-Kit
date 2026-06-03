@@ -2,6 +2,52 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #038 — 2026-06-03 — Diagnose: Wizard erfasst die Domain-tragende Sache nicht (kein Code-Change)
+
+**Trigger:** Owner: *"schau dir den Wizard und die Ausgabe an … ich habe das Gefühl der Wizard führt nicht 100% zum Erfolg … man gibt alles ein, aber nicht was genau man haben will. Teste mal wie ein Benutzer, der eine Webseite für mobile Geräte für seinen Bio-Laden machen will."* Auftrag war **nur Diagnose** (per `AskUserQuestion` bestätigt) — keine Wizard-Änderung in diesem Run.
+
+**Was getestet wurde**
+
+Der Bio-Laden-Fall durch den 4-Schritt-Wizard gespielt und die Inferenz (`buildContext`, `src/context.js`) gegengeprüft. Typische Eingabe: Schritt 1 Kachel „A website", Schritt 2 Audience „my customers", Schritt 3 (Nutzen) leer.
+
+`composeWizardIdea()` (`public/app.js:678`) baut daraus: **`"A website for my customers."`** → `productType: website`, **`domain: general`**, `audience: my customers`, projectName „Website for My Customers".
+
+**Befund (Kern):** Der Wizard fragt **Was** (Produkttyp), **Wer** (Zielgruppe), **Warum** (Nutzen) — aber **nie, worum es geht** (die Domain-tragende Sache, hier „Bio-Laden"). Genau dieses Substantiv steuert `inferDomain` und damit den gesamten fachspezifischen Kit-Inhalt. Da es im komponierten Satz fehlt, fällt die Domain auf `general` zurück und die vorhandene Spezialisierung für `retail & e-commerce` wird nie ausgelöst. Das ist die Ursache des Owner-Gefühls „man gibt alles ein, aber nicht was genau man haben will".
+
+Gegenprobe bestätigt den Hebel:
+
+| Komponierter Satz | domain | Ergebnis |
+|---|---|---|
+| `A website for my customers.` (was der Wizard heute baut) | `general` | generisch |
+| `A website for customers of my organic store.` | `retail & e-commerce` | fachspezifisch |
+| `A mobile website for my organic food store` (Direkt-Eingabe) | `retail & e-commerce` | fachspezifisch |
+
+**Zwei Nebenbefunde**
+
+1. **„Mobil" geht verloren.** Kein Slot im Wizard; der explizite Wunsch („für mobile Geräte") landet nie im Satz.
+2. **Deutsche Begriffe werden nicht erkannt.** `eine mobile Webseite für meinen Bio-Laden` → `productType: product`, `domain: general`, Default-Audience. Weder `bio`, `Laden` noch `Bio-Laden` sind Keywords (nur englisches `shop`/`store`/`organic`). Die deutsche UI suggeriert Verständnis, das die englische Keyword-Tabelle nicht leistet. (Bewusste Designentscheidung laut #026: Output bleibt englisch — aber für die *Inferenz* ist das eine echte Lücke.)
+
+**Empfohlener Fix (für einen Folge-Run, vom Owner noch nicht freigegeben)**
+
+Dem Wizard ein **„Worum geht es?"-Feld** geben (z. B. „ein Bio-Laden", „eine Zahnarztpraxis", „ein Café"), das mit in den komponierten Satz einfließt → schaltet `general` auf die echte Domain um. Optional: Mobil-Hinweis als expliziter Satzbestandteil; deutsche Keywords (`bio`, `laden`, `hofladen`, `bioladen` …) für `retail & e-commerce` ergänzen. Drei Umfangsstufen wurden dem Owner skizziert; Auswahl in diesem Run: **„Nur Diagnose"**.
+
+**Files touched**
+
+- Modified: `RUN_LOG.md` (nur dieser Eintrag).
+- **Untouched:** alles andere — kein Code-, Template-, Test- oder UI-Change.
+
+**Tests run**
+
+- Keine Code-Änderung, daher keine Testpflicht. Manuelle Inferenz-Checks via `node -e` (Tabelle oben) zur Beweisführung.
+
+**Known limitations / offene Punkte**
+
+- Befund ist dokumentiert, aber **nicht behoben**. Der Wizard produziert für jede Idee ohne Domain-Substantiv in Audience/Nutzen weiterhin ein `general`-Kit.
+
+**Nächster empfohlener Run**
+
+„Worum geht es?"-Feld im Wizard (Stufe 1 oder 2 der skizzierten Optionen). Höchster Hebel pro Aufwand: macht aus generischen Wizard-Kits fachspezifische, ohne den Direkt-Modus oder das englische Output-Pattern anzutasten.
+
 ## Run #037 — 2026-05-04 — Domain depth: fourteenth domain (`HR & recruiting`)
 
 **Trigger:** Owner: *"Domain-Tiefe weiter"* — resume the depth pivot after the UX + viral pivot landed (#036). Picked `HR & recruiting` over the other remaining candidates (`travel & tourism`, `agriculture`, `gaming`, `events & ticketing`) because it has the most substantively different risks vs. any prior domain — employment law is its own legal regime, distinct from privacy / safety / financial / governmental compliance, and AI-in-hiring has just become directly regulated under the EU AI Act high-risk classification + a sprawling US state-by-state algorithmic-discrimination patchwork.
