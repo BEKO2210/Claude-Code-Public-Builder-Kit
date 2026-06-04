@@ -46,7 +46,10 @@ const DOMAIN_KEYWORDS = {
     "hospitality", "gastropub", "gastronom", "brewery", "brewpub", "taproom",
     "pub", "cocktail", "wine bar", "foodservice", "restaurateur", "food truck",
     "table reservation", "table booking", "allergen", "recipe", "ingredient",
-    "cuisine", "diner", "kebab", "ramen", "patisserie", "confectionery"
+    "cuisine", "diner", "kebab", "ramen", "patisserie", "confectionery",
+    // German lemmas
+    "bäckerei", "konditorei", "metzgerei", "fleischerei", "gaststätte",
+    "gasthaus", "gasthof", "imbiss", "kneipe", "weinhandlung", "weingut", "wirtshaus"
   ],
   "retail & e-commerce": [
     "shop", "store", "retail", "ecommerce", "e-commerce", "boutique",
@@ -56,7 +59,12 @@ const DOMAIN_KEYWORDS = {
     "product catalog", "product catalogue", "stockroom", "till", "epos",
     "consumer goods", "direct-to-consumer", "dtc", "indie crafter",
     "etsy", "amazon seller", "ebay", "shopify", "woocommerce", "magento",
-    "abandoned cart", "outlet", "showroom", "till receipt", "merchandiser"
+    "abandoned cart", "outlet", "showroom", "till receipt", "merchandiser",
+    // German lemmas — let a German-speaking shop owner ("Bio-Laden", "Hofladen")
+    // land in retail without translating their idea to English first.
+    "bioladen", "bio-laden", "hofladen", "laden", "ladengeschäft", "einzelhandel",
+    "einzelhändler", "lebensmittelladen", "supermarkt", "kiosk", "onlineshop",
+    "online-shop", "buchladen", "blumenladen"
   ],
   "health & wellness": [
     "clinic", "doctor", "patient", "therapy", "wellness", "fitness", "gym",
@@ -69,7 +77,10 @@ const DOMAIN_KEYWORDS = {
     "runners", "jogger", "cyclist", "cycling", "swimmer", "swim",
     "pharma", "pharmacy", "diagnostic", "wearable", "ehr", "emr",
     "hrt", "physical therapy", "chiropractic", "dentist", "dental",
-    "pediatric", "paediatric", "geriatric", "elderly care", "homecare"
+    "pediatric", "paediatric", "geriatric", "elderly care", "homecare",
+    // German lemmas
+    "praxis", "arztpraxis", "zahnarztpraxis", "zahnarzt", "apotheke",
+    "heilpraktiker", "physiopraxis", "pflegedienst", "fitnessstudio", "krankengymnastik"
   ],
   "education": [
     "school", "student", "course", "learning", "tutor", "teacher", "classroom",
@@ -80,7 +91,10 @@ const DOMAIN_KEYWORDS = {
     "language learning", "vocabulary", "flashcard", "tutoring", "study group",
     "academia", "thesis", "dissertation", "mooc", "bootcamp", "e-learning",
     "online learning", "stem education", "literacy", "numeracy", "phonics",
-    "tutorial", "pupil", "schooling", "alumni", "scholarship", "school district"
+    "tutorial", "pupil", "schooling", "alumni", "scholarship", "school district",
+    // German lemmas
+    "schule", "kita", "nachhilfe", "volkshochschule", "fahrschule",
+    "musikschule", "sprachschule", "ausbildung", "weiterbildung", "lerngruppe"
   ],
   "creative & media": [
     "artist", "designer", "photographer", "studio", "music", "podcast",
@@ -103,7 +117,10 @@ const DOMAIN_KEYWORDS = {
     "interpreter", "consultancy", "professional services", "billable hours",
     "client portal", "self-employed", "sole proprietor", "tradesperson",
     "tradesman", "contractor", "freelance", "freelance designers",
-    "estate planner", "tax preparer", "compliance officer", "executive coach"
+    "estate planner", "tax preparer", "compliance officer", "executive coach",
+    // German lemmas
+    "kanzlei", "anwaltskanzlei", "steuerberater", "steuerberatung", "rechtsanwalt",
+    "notariat", "unternehmensberatung", "buchhaltung", "handwerksbetrieb", "handwerker"
   ],
   "small business": [
     "small business", "local business", "shop owner", "smb",
@@ -134,7 +151,9 @@ const DOMAIN_KEYWORDS = {
     "anti money laundering", "psd2", "open banking", "iso 20022", "swift",
     "remittance", "cross-border payment", "fx", "forex", "treasury",
     "actuarial", "pension", "retirement plan", "tax filing", "tax return",
-    "credit score", "credit bureau", "stripe", "adyen", "paypal"
+    "credit score", "credit bureau", "stripe", "adyen", "paypal",
+    // German lemmas
+    "versicherung", "sparkasse", "kreditvermittlung", "vermögensverwaltung", "hausbank"
   ],
   "real estate": [
     "property", "realtor", "rental", "lease", "house",
@@ -146,7 +165,10 @@ const DOMAIN_KEYWORDS = {
     "apartment", "flat", "townhouse", "single-family", "duplex", "studio rental",
     "short-term rental", "vacation rental", "airbnb host", "vrbo", "lease agreement",
     "rental agreement", "tenancy", "subletting", "sublease", "escrow", "title insurance",
-    "appraisal", "valuation", "square footage", "fair housing", "section 8"
+    "appraisal", "valuation", "square footage", "fair housing", "section 8",
+    // German lemmas
+    "immobilien", "immobilienmakler", "makler", "hausverwaltung",
+    "mietwohnung", "eigentumswohnung", "immobilienverwaltung"
   ],
   "logistics & supply chain": [
     "logistics", "shipping", "freight", "warehouse", "fleet", "dispatch", "courier", "supply chain", "last-mile",
@@ -325,6 +347,13 @@ function deriveProjectName(idea, audience, productType) {
     .replace(/^\s*(i\s+want\s+to\s+(build|create|make)|build\s+me|create|make|let's\s+build)\s+/i, "")
     .replace(/^\s*(an?|the)\s+/i, "")
     .trim();
+  // Use only the first sentence for the name. Wizard-composed ideas are two
+  // sentences ("A website for an organic grocery store. Built for local
+  // customers.") — without this the project name would carry a period and a
+  // trailing clause mid-string. Single-sentence ideas (the worked examples)
+  // are unaffected: with no internal "." the split is a no-op.
+  const firstSentence = cleaned.split(/(?<=[.!?])\s+/)[0];
+  if (firstSentence) cleaned = firstSentence;
   if (!cleaned) cleaned = `${audience} ${productType}`;
   // Cap length, drop trailing punctuation
   cleaned = cleaned.replace(/[.!?]+$/g, "").trim();

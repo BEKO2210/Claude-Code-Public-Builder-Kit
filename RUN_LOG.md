@@ -2,6 +2,51 @@
 
 Append-only journal of every working session. Newest entry on top.
 
+## Run #039 — 2026-06-04 — Wizard: „Worum geht es?"-Schritt + deutsche Keyword-Erkennung (Fix für #038)
+
+**Trigger:** Owner: *"ok setze das um, achte auf deutsch und englisch … danach soll es komplett einsatzbereit / Produktions ready sein, checke den kompletten Flow wie ihn ein Endbenutzer erlebt … du darfst entscheiden."* Umsetzung des in Run #038 diagnostizierten Mangels (Wizard erfasst die Domain-tragende Sache nicht). Voller Umfang gewählt: Themen-Feld + Mobil-Option + deutsche Keywords.
+
+**Goal (one sentence):** Den Wizard so erweitern, dass die Domain-tragende Sache („Worum geht es?", z. B. ein Bio-Laden) erfasst wird und der Generator daraus ein fachspezifisches statt generisches Kit erzeugt — zweisprachig und produktionsreif.
+
+**Was geändert wurde**
+
+- **Wizard von 4 auf 5 Schritte** (`public/index.html`): **Was → Worum → Wer → Warum → Erzeugen**. Neues Pflicht-Panel `data-step="2"` („Worum geht es — dein Geschäft, Thema oder Schwerpunkt?") mit Text-Input `#wz-about`, Nudge `#wz-nudge-about` und 6 Quick-Pick-Pills (`data-fill-about`: an online shop / a local store / a café or restaurant / fitness or wellness / a school or course / property or real estate). Audience-, Benefit- und Generate-Panels auf `data-step` 3/4/5 umnummeriert; Schritt-Indikator auf 5 `<li>` erweitert (neues Label `wizard.step.about`).
+- **Komposition umgebaut** (`composeWizardIdea`, `public/app.js`): von `"<opener> for <audience>. It <benefit>."` auf **`"<opener> for <subject>. Built for <audience>, it <benefit>."`**. Das `Built for` trifft bewusst das höher priorisierte erste Muster in `AUDIENCE_HINTS` (`(built|made|designed|tailored) for`), sodass die `for …`-Klausel des Subjects (Satz 1) NICHT als Audience missverstanden wird. Subject ist Pflicht (Schritt 2), Audience bleibt Pflicht (Schritt 3), Benefit optional (Schritt 4).
+- **`other`-Pfad-Fix** (`public/app.js`): führende Artikel in der Frei-Eingabe werden gestrippt, bevor wir unseren eigenen voranstellen — kein „An a Slack bot" mehr.
+- **`deriveProjectName`** (`src/context.js`): nimmt jetzt nur den ersten Satz. Mehrsatz-Wizard-Ideen ergeben damit saubere Namen („Website for an Organic Grocery Store" statt „… . Built for …"). Einsätzige Ideen (beide Worked Examples) sind unberührt → **zero drift**.
+- **Deutsche Keyword-Erkennung** (`src/context.js`, `DOMAIN_KEYWORDS`): deutsche Lemmas ergänzt für retail (`bioladen`, `bio-laden`, `hofladen`, `laden`, `ladengeschäft`, `einzelhandel`, `supermarkt`, `onlineshop` …), food (`bäckerei`, `metzgerei`, `gaststätte` …), health (`praxis`, `zahnarztpraxis`, `apotheke`, `fitnessstudio` …), education (`schule`, `fahrschule`, `nachhilfe` …), professional services (`kanzlei`, `steuerberater`, `notariat` …), real estate (`immobilien`, `makler`, `hausverwaltung` …), finance (`versicherung`, `sparkasse` …). Frei eingetippte deutsche Ideen landen jetzt im richtigen Bereich.
+- **i18n EN + DE** (`public/i18n.js`): neue Keys `about.*` (question/help/placeholder/aria/nudge.title/nudge.body/6 Pills), `wizard.step.about`, `step3.pill.mobile`. Untertitel/Tab-Sub von „Four short questions" / „Vier kurze Fragen" auf „Five short steps" / „Fünf kurze Schritte" angepasst. Pills füllen weiterhin englischen Kanon-Text (wie bei Audience-Pills) → Komposition bleibt englisch (Design-Entscheidung aus #026), die Anzeige ist übersetzt.
+- **Mobile-Wunsch** über neue Benefit-Pill „works great on phones" / „läuft super auf dem Handy" (füllt `works smoothly on phones and tablets`) — landet im Idea-Text und damit im Kit-Inhalt.
+
+**Files touched**
+
+- Modified: `public/index.html`, `public/app.js`, `public/i18n.js`, `public/style.css` (nur ein Kommentar), `src/context.js`, `tests/generator.test.js`, `CLAUDE.md`, `RUN_LOG.md`.
+- **Untouched:** `server.js`, `api/index.js`, `vercel.json`, `docs/**` (Landing-Page nennt keine Schrittzahl), `src/index.js`, `src/schema.js`, `src/examples.js`, `src/og.js`, `src/templates/**`, `scripts/**`, `examples/**`, `package.json`.
+
+**Verifikation (kompletter End-User-Flow)**
+
+- `npm test` → **105/105** (war 96; +9: 7 deutsche Domain-Cases, 1 Kompositions-Test, 1 Projektname-Test).
+- `npm run generate:examples` → **zero drift** (`git status examples/` leer). Beide Beispiele byte-identisch.
+- `npm run sync:assets:check` → in sync.
+- `npm run audit:a11y` → **0 Violations** auf beiden Seiten (36/33 Regeln), alle 13 WCAG-AA-Kontraste bestehen. (Neue Step-2-Felder liegen in einem `hidden` Panel — axe wertet sie ohnehin nur sichtbar aus; zusätzlich `aria-label` am `#wz-about` gesetzt.)
+- **Live-Smoke** (`node server.js`): `/api/health` → `{ok,hosted:false}`. `/api/preview` für den exakten vom Wizard komponierten Bio-Laden-Satz → `productType: website`, **`domain: retail & e-commerce`**, **`audience: local customers`**, **projectName „Website for an Organic Grocery Store"**. `/api/generate` → 12 Dateien, Retail-Risiken **und** Retail-Positionierung vorhanden, „phones/mobile" im Inhalt. `/api/generate.zip` → HTTP 200, ~24 KB. Ausgelieferte `index.html` enthält 5 Step-Panels + `#wz-about` + 6 About-Pills.
+- **Pfad-Matrix** (composeWizardIdea simuliert für 6 Kombinationen inkl. „other"-Typ, fehlendem Benefit, deutscher Frei-Eingabe): alle erzeugen grammatikalisch saubere Sätze und korrekte Inferenz (retail/food/health/education/professional services).
+
+**Vater-Test (Bio-Laden, mobil) — Vorher/Nachher**
+
+- Vorher: Wizard baute `"A website for my customers."` → `domain: general`, generisches Kit.
+- Nachher: `"A website for an organic grocery store. Built for local customers, it works smoothly on phones and tablets."` → `domain: retail & e-commerce`, Audience „local customers", fachspezifisches Kit mit Retail-Risiken + Positionierung + Mobile-Bezug. ✅
+
+**Known limitations**
+
+- Bare `laden` (retail) kann theoretisch das englische Adjektiv „laden" (z. B. „feature-laden") fälschlich als retail klassifizieren — sehr seltener Fall, bewusst akzeptiert zugunsten der deutschen Abdeckung; deutsche Compound-Formen (`bioladen`, `hofladen`, `ladengeschäft`) sind eindeutig.
+- Die deutsche Keyword-Abdeckung ist auf die häufigsten Small-Business-Bereiche fokussiert, nicht erschöpfend (z. B. gaming/manufacturing/logistics haben weiterhin überwiegend englische Lemmas). Nutzer schärfen den Rest in `MASTERPLAN.md`.
+- Subject-Pills füllen englischen Kanon-Text; ein deutscher Nutzer, der eine Pill wählt, bekommt englische Subject-Wörter im (englischen) Output — gewollt, konsistent mit dem Output-Sprache-Design aus #026.
+
+**Nächster empfohlener Run**
+
+Domain-Tiefe fortsetzen (nächste unspezialisierte Domain) **oder** deutsche Keyword-Abdeckung auf die restlichen Bereiche ausweiten, falls deutscher Traffic ein erklärtes Ziel wird.
+
 ## Run #038 — 2026-06-03 — Diagnose: Wizard erfasst die Domain-tragende Sache nicht (kein Code-Change)
 
 **Trigger:** Owner: *"schau dir den Wizard und die Ausgabe an … ich habe das Gefühl der Wizard führt nicht 100% zum Erfolg … man gibt alles ein, aber nicht was genau man haben will. Teste mal wie ein Benutzer, der eine Webseite für mobile Geräte für seinen Bio-Laden machen will."* Auftrag war **nur Diagnose** (per `AskUserQuestion` bestätigt) — keine Wizard-Änderung in diesem Run.

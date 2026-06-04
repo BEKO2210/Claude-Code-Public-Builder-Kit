@@ -21,15 +21,16 @@ const STRINGS = {
     "header.tagline": "Turn a one-line project idea into a clean, structured planning foundation: vision, roadmap, acceptance criteria, architecture, prompts.",
 
     "wizard.title": "Tell me about your idea",
-    "wizard.subtitle": "Four short questions. We turn your answers into a complete project plan in 12 files.",
+    "wizard.subtitle": "Five short steps. We turn your answers into a complete project plan in 12 files.",
 
     "mode.toggle.aria": "Choose how to enter your idea",
     "mode.wizard.title": "Guided steps",
-    "mode.wizard.sub": "Four short questions",
+    "mode.wizard.sub": "Five short steps",
     "mode.direct.title": "Just type my idea",
     "mode.direct.sub": "One sentence is enough",
 
     "wizard.step.what": "What",
+    "wizard.step.about": "About",
     "wizard.step.who": "Who",
     "wizard.step.why": "Why",
     "wizard.step.generate": "Generate",
@@ -65,6 +66,19 @@ const STRINGS = {
     "step1.other.label": "Describe what you want to build:",
     "step1.other.placeholder": "e.g. a Slack bot, a browser extension, a CLI tool, a newsletter, a podcast",
 
+    "about.question": "What is it about — your business, topic, or focus?",
+    "about.help": "A word or two is enough. This is what makes the plan specific to your field instead of generic.",
+    "about.placeholder": "e.g. an organic grocery store, a dental practice, a yoga studio, a coffee shop",
+    "about.aria": "What is it about",
+    "about.nudge.title": "A concrete field sharpens the whole plan.",
+    "about.nudge.body": "Name the actual thing: \"<em>an organic grocery store</em>\", \"<em>a physiotherapy practice</em>\", or \"<em>a neighbourhood bakery</em>\". That's what unlocks field-specific risks and positioning.",
+    "about.pill.shop": "an online shop",
+    "about.pill.store": "a local store",
+    "about.pill.food": "a café or restaurant",
+    "about.pill.health": "fitness or wellness",
+    "about.pill.education": "a school or course",
+    "about.pill.realestate": "property or real estate",
+
     "step2.question": "Who is it for?",
     "step2.help": "In your own words. The clearer you are about the audience, the more useful the kit will be.",
     "step2.placeholder": "e.g. small business owners, freelance designers, hobby photographers, junior developers",
@@ -87,6 +101,7 @@ const STRINGS = {
     "step3.pill.simpler": "is simpler than alternatives",
     "step3.pill.cheaper": "costs less than alternatives",
     "step3.pill.no-curve": "works without a learning curve",
+    "step3.pill.mobile": "works great on phones",
 
     "step4.question": "Here's your idea — does this look right?",
     "step4.help": "If anything is off, go back and edit. Otherwise, generate your kit.",
@@ -206,15 +221,16 @@ const STRINGS = {
     "header.tagline": "Verwandle eine einzeilige Projektidee in eine saubere, strukturierte Planungsbasis: Vision, Roadmap, Akzeptanzkriterien, Architektur, Prompts.",
 
     "wizard.title": "Erzähl mir von deiner Idee",
-    "wizard.subtitle": "Vier kurze Fragen. Wir machen daraus einen vollständigen Projektplan in 12 Dateien.",
+    "wizard.subtitle": "Fünf kurze Schritte. Wir machen daraus einen vollständigen Projektplan in 12 Dateien.",
 
     "mode.toggle.aria": "Wähle, wie du deine Idee eingeben willst",
     "mode.wizard.title": "Geführte Schritte",
-    "mode.wizard.sub": "Vier kurze Fragen",
+    "mode.wizard.sub": "Fünf kurze Schritte",
     "mode.direct.title": "Idee direkt eintippen",
     "mode.direct.sub": "Ein Satz reicht",
 
     "wizard.step.what": "Was",
+    "wizard.step.about": "Worum",
     "wizard.step.who": "Für wen",
     "wizard.step.why": "Wofür",
     "wizard.step.generate": "Erzeugen",
@@ -250,6 +266,19 @@ const STRINGS = {
     "step1.other.label": "Beschreib, was du bauen möchtest:",
     "step1.other.placeholder": "z.B. ein Slack-Bot, ein Browser-Plugin, ein CLI-Tool, ein Newsletter, ein Podcast",
 
+    "about.question": "Worum geht es — dein Geschäft, Thema oder Schwerpunkt?",
+    "about.help": "Ein, zwei Wörter reichen. Das macht den Plan für deine Branche spezifisch statt allgemein.",
+    "about.placeholder": "z.B. ein Bioladen, eine Zahnarztpraxis, ein Yogastudio, ein Café",
+    "about.aria": "Worum geht es",
+    "about.nudge.title": "Ein konkretes Feld schärft den ganzen Plan.",
+    "about.nudge.body": "Benenne die Sache konkret: „<em>ein Bioladen</em>”, „<em>eine Physiotherapie-Praxis</em>” oder „<em>eine Bäckerei um die Ecke</em>”. Genau das schaltet branchenspezifische Risiken und Positionierung frei.",
+    "about.pill.shop": "ein Online-Shop",
+    "about.pill.store": "ein Ladengeschäft",
+    "about.pill.food": "ein Café oder Restaurant",
+    "about.pill.health": "Fitness oder Wellness",
+    "about.pill.education": "eine Schule oder ein Kurs",
+    "about.pill.realestate": "Immobilien",
+
     "step2.question": "Für wen ist es?",
     "step2.help": "In deinen eigenen Worten. Je klarer die Zielgruppe, desto nützlicher wird das Kit.",
     "step2.placeholder": "z.B. kleine Selbstständige, freie Fotografen, Junior-Entwickler, Hobbygärtner",
@@ -272,6 +301,7 @@ const STRINGS = {
     "step3.pill.simpler": "ist einfacher als andere Lösungen",
     "step3.pill.cheaper": "ist günstiger als die Konkurrenz",
     "step3.pill.no-curve": "funktioniert ohne lange Einarbeitung",
+    "step3.pill.mobile": "läuft super auf dem Handy",
 
     "step4.question": "Hier ist deine Idee — passt das so?",
     "step4.help": "Wenn etwas nicht stimmt, geh zurück und ändere es. Sonst los: Kit erzeugen.",

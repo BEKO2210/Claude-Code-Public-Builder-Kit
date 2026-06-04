@@ -588,10 +588,12 @@ const wzBack = document.getElementById("wz-back");
 const wzNext = document.getElementById("wz-next");
 const wzGenerate = document.getElementById("wz-generate");
 const modeTabs = document.querySelectorAll("[data-mode-set]");
+const wzAboutInput = document.getElementById("wz-about");
 const wzAudienceInput = document.getElementById("wz-audience");
 const wzBenefitInput = document.getElementById("wz-benefit");
 const wzSummary = document.getElementById("wz-summary");
 const wzPreview = document.getElementById("wz-preview");
+const wzNudgeAbout = document.getElementById("wz-nudge-about");
 const wzNudgeAudience = document.getElementById("wz-nudge-audience");
 const wzNudgeBenefit = document.getElementById("wz-nudge-benefit");
 const wzOtherWrap = document.getElementById("wz-other-wrap");
@@ -636,7 +638,7 @@ const productPhrases = {
   "game": "A game"
 };
 
-const wizardState = { step: 1, productType: null, otherText: "", audience: "", benefit: "" };
+const wizardState = { step: 1, productType: null, otherText: "", subject: "", audience: "", benefit: "" };
 
 // localStorage save/restore — survives accidental reloads.
 const WIZARD_STORAGE_KEY = "bk-wizard-state";
@@ -645,6 +647,7 @@ function saveWizardState() {
     localStorage.setItem(WIZARD_STORAGE_KEY, JSON.stringify({
       productType: wizardState.productType,
       otherText: wizardState.otherText,
+      subject: wizardState.subject,
       audience: wizardState.audience,
       benefit: wizardState.benefit
       // step is NOT saved — every reload starts at step 1, but the user
@@ -659,6 +662,7 @@ function restoreWizardState() {
     const saved = JSON.parse(raw);
     if (typeof saved.productType === "string") wizardState.productType = saved.productType;
     if (typeof saved.otherText === "string") wizardState.otherText = saved.otherText;
+    if (typeof saved.subject === "string") wizardState.subject = saved.subject;
     if (typeof saved.audience === "string") wizardState.audience = saved.audience;
     if (typeof saved.benefit === "string") wizardState.benefit = saved.benefit;
     // Reflect into the DOM
@@ -670,6 +674,7 @@ function restoreWizardState() {
         if (wzOtherInput) wzOtherInput.value = wizardState.otherText;
       }
     }
+    if (wzAboutInput) wzAboutInput.value = wizardState.subject;
     if (wzAudienceInput) wzAudienceInput.value = wizardState.audience;
     if (wzBenefitInput) wzBenefitInput.value = wizardState.benefit;
   } catch { /* corrupted JSON — start fresh */ }
@@ -678,19 +683,36 @@ function restoreWizardState() {
 function composeWizardIdea() {
   let opener;
   if (wizardState.productType === "other") {
-    const txt = wizardState.otherText.trim();
+    // Strip any article the user already typed ("a Slack bot", "an API")
+    // before we prepend our own, so we never produce "An a Slack bot".
+    const txt = wizardState.otherText.trim().replace(/^(a|an|the)\s+/i, "");
     opener = txt ? `${articleFor(txt)} ${txt}` : "A product";
   } else {
     opener = productPhrases[wizardState.productType] || "A product";
   }
-  let s = opener;
+  const subject = wizardState.subject.trim();
   const audience = wizardState.audience.trim();
   const benefit = wizardState.benefit.trim();
-  if (audience) s += ` for ${audience}`;
+
+  // First sentence: opener + the subject. The subject is the domain-bearing
+  // noun ("an organic grocery store") — without it the kit can't tell retail
+  // from real estate and falls back to a generic plan. Reads as
+  // "A website for an organic grocery store."
+  let s = opener;
+  if (subject) s += ` for ${subject}`;
   s += ".";
-  // Two sentences — keeps the audience phrase from running into the
-  // benefit clause when the inference parses `for X` against punctuation.
-  if (benefit) s += ` It ${benefit}.`;
+
+  // Second sentence: the audience, phrased as "Built for X". This deliberately
+  // hits the higher-priority "(built|made|designed|tailored) for" pattern in
+  // the server's audience inference, so the subject's own "for …" clause in
+  // sentence one is never mistaken for the audience. Benefit rides along.
+  if (audience && benefit) {
+    s += ` Built for ${audience}, it ${benefit}.`;
+  } else if (audience) {
+    s += ` Built for ${audience}.`;
+  } else if (benefit) {
+    s += ` It ${benefit}.`;
+  }
   return s;
 }
 
@@ -700,9 +722,10 @@ function isWizardStepValid(step) {
     if (wizardState.productType === "other") return wizardState.otherText.trim().length > 0;
     return true;
   }
-  if (step === 2) return wizardState.audience.trim().length > 0;
-  if (step === 3) return true;  // optional
-  if (step === 4) return true;  // ready to generate
+  if (step === 2) return wizardState.subject.trim().length > 0;   // what it's about (required)
+  if (step === 3) return wizardState.audience.trim().length > 0;  // who it's for (required)
+  if (step === 4) return true;  // benefit — optional
+  if (step === 5) return true;  // ready to generate
   return false;
 }
 
@@ -718,8 +741,9 @@ function renderWizard() {
     if (n === wizardState.step) li.setAttribute("aria-current", "step");
     else li.removeAttribute("aria-current");
   });
-  // Progress-bar fill: 0% before step 1 starts to count, 100% at step 4.
-  // Step 1 = 0%, Step 2 = 33%, Step 3 = 67%, Step 4 = 100%.
+  // Progress-bar fill: 0% before step 1 starts to count, 100% at the last
+  // step. Computed from the live step count, so 5 steps land at
+  // 0 / 25 / 50 / 75 / 100%.
   const stepCount = wzSteps.length || 4;
   const progress = stepCount <= 1 ? 100 : ((wizardState.step - 1) / (stepCount - 1)) * 100;
   const stepsList = wizardSection?.querySelector(".wizard-steps");
@@ -743,7 +767,8 @@ function renderWizard() {
   });
   wizardLastStep = wizardState.step;
   wzBack.disabled = wizardState.step === 1;
-  if (wizardState.step === 4) {
+  const lastStep = wzSteps.length || 5;
+  if (wizardState.step === lastStep) {
     wzNext.hidden = true;
     wzGenerate.hidden = false;
   } else {
@@ -751,7 +776,7 @@ function renderWizard() {
     wzGenerate.hidden = true;
     wzNext.disabled = !isWizardStepValid(wizardState.step);
   }
-  if (wizardState.step === 4) {
+  if (wizardState.step === lastStep) {
     wzSummary.textContent = composeWizardIdea();
     refreshWizardPreview();
   }
@@ -761,16 +786,19 @@ function renderWizard() {
       || wizardSection.querySelector(".wz-option");
     sel?.focus({ preventScroll: true });
   } else if (wizardState.step === 2) {
-    wzAudienceInput.focus({ preventScroll: true });
+    wzAboutInput.focus({ preventScroll: true });
   } else if (wizardState.step === 3) {
-    wzBenefitInput.focus({ preventScroll: true });
+    wzAudienceInput.focus({ preventScroll: true });
   } else if (wizardState.step === 4) {
+    wzBenefitInput.focus({ preventScroll: true });
+  } else if (wizardState.step === lastStep) {
     wzGenerate.focus({ preventScroll: true });
   }
 }
 
 function gotoWizardStep(n) {
-  wizardState.step = Math.max(1, Math.min(4, n));
+  const lastStep = wzSteps.length || 5;
+  wizardState.step = Math.max(1, Math.min(lastStep, n));
   renderWizard();
 }
 
@@ -809,6 +837,23 @@ if (wizardSection) {
       e.preventDefault();
       gotoWizardStep(2);
     }
+  });
+
+  wzAboutInput.addEventListener("input", () => {
+    wizardState.subject = wzAboutInput.value;
+    wzNext.disabled = !isWizardStepValid(wizardState.step);
+    if (wzNudgeAbout) wzNudgeAbout.hidden = !isSparseInput(wzAboutInput.value);
+    saveWizardState();
+  });
+  wizardSection.querySelectorAll("[data-fill-about]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      wzAboutInput.value = btn.dataset.fillAbout;
+      wizardState.subject = wzAboutInput.value;
+      wzNext.disabled = !isWizardStepValid(wizardState.step);
+      if (wzNudgeAbout) wzNudgeAbout.hidden = true;
+      saveWizardState();
+      wzAboutInput.focus();
+    });
   });
 
   wzAudienceInput.addEventListener("input", () => {
