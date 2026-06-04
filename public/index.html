@@ -58,9 +58,10 @@
           <p class="muted" data-i18n="wizard.subtitle">Four short questions. We turn your answers into a complete project plan in 12 files.</p>
           <ol class="wizard-steps" aria-label="Progress">
             <li data-step="1" class="active" aria-current="step"><span class="step-num">1</span><span class="step-label" data-i18n="wizard.step.what">What</span></li>
-            <li data-step="2"><span class="step-num">2</span><span class="step-label" data-i18n="wizard.step.who">Who</span></li>
-            <li data-step="3"><span class="step-num">3</span><span class="step-label" data-i18n="wizard.step.why">Why</span></li>
-            <li data-step="4"><span class="step-num">4</span><span class="step-label" data-i18n="wizard.step.generate">Generate</span></li>
+            <li data-step="2"><span class="step-num">2</span><span class="step-label" data-i18n="wizard.step.about">About</span></li>
+            <li data-step="3"><span class="step-num">3</span><span class="step-label" data-i18n="wizard.step.who">Who</span></li>
+            <li data-step="4"><span class="step-num">4</span><span class="step-label" data-i18n="wizard.step.why">Why</span></li>
+            <li data-step="5"><span class="step-num">5</span><span class="step-label" data-i18n="wizard.step.generate">Generate</span></li>
           </ol>
         </header>
 
@@ -137,6 +138,34 @@
           </fieldset>
 
           <fieldset class="wizard-panel" data-step="2" hidden>
+            <legend class="wizard-question" data-i18n="about.question">What is it about — your business, topic, or focus?</legend>
+            <p class="wizard-help" data-i18n="about.help">A word or two is enough. This is what makes the plan specific to your field instead of generic.</p>
+            <input
+              type="text"
+              id="wz-about"
+              class="wz-input"
+              maxlength="120"
+              placeholder="e.g. an organic grocery store, a dental practice, a yoga studio, a coffee shop"
+              data-i18n-placeholder="about.placeholder"
+              data-i18n-aria-label="about.aria"
+              aria-label="What is it about"
+              autocomplete="off"
+            />
+            <aside id="wz-nudge-about" class="wz-nudge" hidden>
+              <p class="wz-nudge-title" data-i18n="about.nudge.title">A concrete field sharpens the whole plan.</p>
+              <p class="wz-nudge-body" data-i18n-html="about.nudge.body">Name the actual thing: "<em>an organic grocery store</em>", "<em>a physiotherapy practice</em>", or "<em>a neighbourhood bakery</em>". That's what unlocks field-specific risks and positioning.</p>
+            </aside>
+            <div class="wizard-suggestions" aria-label="Topic suggestions">
+              <button type="button" class="wz-pill" data-fill-about="an online shop" data-i18n="about.pill.shop">an online shop</button>
+              <button type="button" class="wz-pill" data-fill-about="a local store" data-i18n="about.pill.store">a local store</button>
+              <button type="button" class="wz-pill" data-fill-about="a café or restaurant" data-i18n="about.pill.food">a café or restaurant</button>
+              <button type="button" class="wz-pill" data-fill-about="fitness or wellness" data-i18n="about.pill.health">fitness or wellness</button>
+              <button type="button" class="wz-pill" data-fill-about="a school or course" data-i18n="about.pill.education">a school or course</button>
+              <button type="button" class="wz-pill" data-fill-about="property or real estate" data-i18n="about.pill.realestate">property or real estate</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="wizard-panel" data-step="3" hidden>
             <legend class="wizard-question" data-i18n="step2.question">Who is it for?</legend>
             <p class="wizard-help" data-i18n="step2.help">In your own words. The clearer you are about the audience, the more useful the kit will be.</p>
             <input
@@ -162,7 +191,7 @@
             </div>
           </fieldset>
 
-          <fieldset class="wizard-panel" data-step="3" hidden>
+          <fieldset class="wizard-panel" data-step="4" hidden>
             <legend class="wizard-question">
               <span data-i18n="step3.question">What problem should it solve, or what should it do better?</span>
               <span class="wz-optional" data-i18n="step3.optional">(optional)</span>
@@ -186,10 +215,11 @@
               <button type="button" class="wz-pill" data-fill-benefit="is simpler than existing alternatives" data-i18n="step3.pill.simpler">is simpler than alternatives</button>
               <button type="button" class="wz-pill" data-fill-benefit="costs less than current solutions" data-i18n="step3.pill.cheaper">costs less than alternatives</button>
               <button type="button" class="wz-pill" data-fill-benefit="works without a steep learning curve" data-i18n="step3.pill.no-curve">works without a learning curve</button>
+              <button type="button" class="wz-pill" data-fill-benefit="works smoothly on phones and tablets" data-i18n="step3.pill.mobile">works great on phones</button>
             </div>
           </fieldset>
 
-          <fieldset class="wizard-panel" data-step="4" hidden>
+          <fieldset class="wizard-panel" data-step="5" hidden>
             <legend class="wizard-question" data-i18n="step4.question">Here's your idea — does this look right?</legend>
             <p class="wizard-help" data-i18n="step4.help">If anything is off, go back and edit. Otherwise, generate your kit.</p>
             <div class="wz-summary-card">

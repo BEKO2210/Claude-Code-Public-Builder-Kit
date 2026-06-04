@@ -840,7 +840,7 @@ button.primary:hover {
   counter-reset: step;
   position: relative;
 }
-/* Progress-bar background line connecting all 4 step pills */
+/* Progress-bar background line connecting the step pills */
 .wizard-steps::before {
   content: "";
   position: absolute;

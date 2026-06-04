@@ -111,6 +111,48 @@ for (const c of DOMAIN_DETECTION_CASES) {
   });
 }
 
+// German lemmas — a German-speaking small-business owner can describe their
+// idea in German (the wizard's "What is it about?" step or the direct form)
+// and still land in the right domain. Added in Run #039.
+const GERMAN_DOMAIN_CASES = [
+  { domain: "retail & e-commerce",     idea: "A website for einen Bio-Laden." },
+  { domain: "retail & e-commerce",     idea: "A website for einen Hofladen." },
+  { domain: "food & hospitality",      idea: "A website for eine Bäckerei." },
+  { domain: "health & wellness",       idea: "An app for eine Zahnarztpraxis." },
+  { domain: "education",               idea: "A website for eine Fahrschule." },
+  { domain: "professional services",   idea: "A platform for eine Anwaltskanzlei." },
+  { domain: "real estate",             idea: "A website for Immobilien." }
+];
+
+for (const c of GERMAN_DOMAIN_CASES) {
+  test(`domain heuristic (German): "${c.idea}" → ${c.domain}`, () => {
+    const ctx = buildContext(c.idea);
+    assert.equal(ctx.domain, c.domain);
+  });
+}
+
+// The wizard composes a two-sentence idea: "<opener> for <subject>. Built for
+// <audience>, it <benefit>." This shape must (a) take the domain from the
+// subject, (b) take the audience from the high-priority "built for" clause —
+// NOT from the subject's own "for …" clause — and (c) produce a clean,
+// single-sentence project name. Locks in the Run #039 wizard fix.
+test("wizard composition: subject drives domain, 'built for' drives audience", () => {
+  const ctx = buildContext(
+    "A website for an organic grocery store. Built for local customers, it works smoothly on phones and tablets."
+  );
+  assert.equal(ctx.productType, "website");
+  assert.equal(ctx.domain, "retail & e-commerce");
+  assert.equal(ctx.audience, "local customers");
+  assert.equal(ctx.projectName, "Website for an Organic Grocery Store");
+  assert.equal(ctx.slug, "website-for-an-organic-grocery-store");
+});
+
+test("project name uses only the first sentence of a multi-sentence idea", () => {
+  const ctx = buildContext("A tool for a coffee shop. Built for baristas, it speeds up orders.");
+  assert.equal(ctx.projectName, "Tool for a Coffee Shop");
+  assert.doesNotMatch(ctx.projectName, /\./, "project name must not carry a mid-string period");
+});
+
 test("schema: PRODUCT_TYPE_VALUES contains the 8 expected values", () => {
   const expected = ["mobile app", "web app", "website", "platform", "tool", "service", "app", "product"];
   assert.deepEqual([...PRODUCT_TYPE_VALUES].sort(), [...expected].sort());
